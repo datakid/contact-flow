@@ -1,16 +1,17 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../io/codec.dart';
+import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../search/fuzzy.dart';
 import '../services/incoming.dart';
 import '../state/app_state.dart';
+import 'batch_screen.dart';
 import 'detail.dart';
 import 'export_screen.dart';
 import 'import_sheet.dart';
@@ -56,9 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     for (final f in files) {
       try {
         final name = f.name;
-        results.add(
-          await compute((Uint8List b) => Codec.decode(name, b), f.bytes),
-        );
+        results.add(await decodeInBackground(DecodeJob(name, f.bytes)));
       } catch (_) {}
     }
     final total = results.fold<int>(0, (a, r) => a + r.people.length);
@@ -206,6 +205,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: Type.label(p).copyWith(color: p.inkSoft),
               ),
               const Spacer(),
+              if (hasPeople)
+                IconButton(
+                  onPressed: () => openBatchEditor(
+                    context,
+                    s.searching ? s.visible : s.people,
+                  ),
+                  icon: Icon(Icons.table_rows_outlined, color: p.ink, size: 22),
+                  tooltip: l.t('batchEdit'),
+                ),
               IconButton(
                 onPressed: () => showSettings(context),
                 icon: Icon(Icons.tune_rounded, color: p.ink, size: 22),
@@ -226,8 +234,9 @@ class _HomeScreenState extends State<HomeScreen> {
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: hasPeople
-                ? Row(
+                ? Wrap(
                     key: ValueKey('${s.people.length}-${s.phoneCount}'),
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         l.n(s.people.length, 'contacts_one', 'contacts_many'),
@@ -269,70 +278,92 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _searchBar(AppState s, L l, Palette p) {
     final focused = _focus.hasFocus;
+    final enabled = s.people.isNotEmpty;
+    // The whole pill is the touch target: tapping the icon, the padding or
+    // the text all focus the field (previously only the thin text line did).
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        height: 52,
-        decoration: BoxDecoration(
-          color: p.sheet,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: focused ? p.ink.withValues(alpha: 0.5) : p.hairline,
-            width: 1.2,
-          ),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 16),
-            Icon(
-              Icons.search_rounded,
-              size: 21,
-              color: focused ? p.ink : p.inkFaint,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? _focus.requestFocus : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 52,
+          decoration: BoxDecoration(
+            color: p.sheet,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: focused ? p.accent.withValues(alpha: 0.7) : p.hairline,
+              width: focused ? 1.6 : 1.2,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: TextField(
-                controller: _search,
-                focusNode: _focus,
-                enabled: s.people.isNotEmpty,
-                onChanged: s.setQuery,
-                textInputAction: TextInputAction.search,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: p.ink,
-                ),
-                decoration: InputDecoration(
-                  isCollapsed: true,
-                  border: InputBorder.none,
-                  hintText: l.t('search'),
-                  hintStyle: TextStyle(
-                    color: p.inkFaint,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15,
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 16),
+              Icon(
+                Icons.search_rounded,
+                size: 21,
+                color: focused ? p.ink : p.inkFaint,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: TextField(
+                  controller: _search,
+                  focusNode: _focus,
+                  enabled: enabled,
+                  onChanged: s.setQuery,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _focus.unfocus(),
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  textAlignVertical: TextAlignVertical.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: p.ink,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 15,
+                    ),
+                    hintText: l.t('search'),
+                    hintMaxLines: 1,
+                    hintStyle: TextStyle(
+                      color: p.inkFaint,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ),
-            ),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 180),
-              child: s.query.isEmpty
-                  ? const SizedBox(width: 12)
-                  : IconButton(
-                      key: const ValueKey('x'),
-                      onPressed: () {
-                        _search.clear();
-                        s.setQuery('');
-                      },
-                      icon: Icon(
-                        Icons.close_rounded,
-                        size: 19,
-                        color: p.inkSoft,
-                      ),
+              if (s.query.isNotEmpty)
+                SizedBox(
+                  width: 48,
+                  height: 52,
+                  child: IconButton(
+                    key: const ValueKey('x'),
+                    tooltip: l.t('clearSel'),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      _search.clear();
+                      s.setQuery('');
+                      _focus.requestFocus();
+                    },
+                    icon: Icon(
+                      Icons.cancel_rounded,
+                      size: 20,
+                      color: p.inkFaint,
                     ),
-            ),
-          ],
+                  ),
+                )
+              else
+                const SizedBox(width: 12),
+            ],
+          ),
         ),
       ),
     );
@@ -355,21 +386,25 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () => s.setSort(SortMode.recent),
           ),
           const Spacer(),
-          TextButton(
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              if (s.selected.length == s.people.length) {
-                s.clearSelection();
-              } else {
-                s.selectAll(s.people);
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: p.ink),
-            child: Text(
-              s.selected.length == s.people.length
-                  ? l.t('clearSel')
-                  : l.t('selectAll'),
-              style: const TextStyle(fontWeight: FontWeight.w700),
+          Flexible(
+            child: TextButton(
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                if (s.selected.length == s.people.length) {
+                  s.clearSelection();
+                } else {
+                  s.selectAll(s.people);
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: p.ink),
+              child: Text(
+                s.selected.length == s.people.length
+                    ? l.t('clearSel')
+                    : l.t('selectAll'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
           ),
         ],
@@ -383,11 +418,14 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.fromLTRB(24, 4, 12, 4),
       child: Row(
         children: [
-          Text(
-            l.n(list.length, 'contacts_one', 'contacts_many'),
-            style: Type.label(p),
+          Expanded(
+            child: Text(
+              l.n(list.length, 'contacts_one', 'contacts_many'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Type.label(p),
+            ),
           ),
-          const Spacer(),
           TextButton.icon(
             onPressed: () {
               HapticFeedback.selectionClick();
@@ -549,6 +587,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         onAction: () => s.restore(gone),
                       );
                     }),
+                    const SizedBox(width: 10),
+                    _roundIcon(
+                      p,
+                      Icons.table_rows_outlined,
+                      () => openBatchEditor(context, s.selectedPeople),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: PrimaryButton(

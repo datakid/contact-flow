@@ -539,3 +539,14 @@ class SheetHandle extends StatelessWidget {
     ),
   );
 }
+
+/// One short, human line for an exception — never a stack dump.
+String friendlyError(Object e) {
+  var s = e.toString().split('\n').first.trim();
+  s = s.replaceFirst(
+    RegExp(r'^(PlatformException|Exception|FileSystemException)\(?'),
+    '',
+  );
+  if (s.length > 120) s = '${s.substring(0, 117)}…';
+  return s.isEmpty ? 'Something went wrong' : s;
+}

@@ -5,18 +5,27 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+/// Opens the system "Save as" dialog (Storage Access Framework on Android).
+/// Returns the saved path/uri, or null if the user cancelled.
 Future<String?> saveBytes(Uint8List bytes, String name, String mime) async {
-  final ext = name.contains('.') ? name.split('.').last : null;
-  return FilePicker.saveFile(
-    fileName: name,
-    bytes: bytes,
-    type: ext == null ? FileType.any : FileType.custom,
-    allowedExtensions: ext == null ? null : [ext],
-  );
+  final ext = name.contains('.') ? name.split('.').last.toLowerCase() : null;
+  try {
+    return await FilePicker.saveFile(
+      fileName: name,
+      bytes: bytes,
+      type: ext == null ? FileType.any : FileType.custom,
+      allowedExtensions: ext == null ? null : [ext],
+    );
+  } catch (_) {
+    // Some devices reject the custom filter; retry with no filter.
+    return FilePicker.saveFile(fileName: name, bytes: bytes);
+  }
 }
 
 Future<bool> shareBytes(Uint8List bytes, String name, String mime) async {
-  final dir = await getTemporaryDirectory();
+  final base = await getTemporaryDirectory();
+  final dir = Directory('${base.path}/share');
+  if (!dir.existsSync()) dir.createSync(recursive: true);
   final f = File('${dir.path}/$name');
   await f.writeAsBytes(bytes, flush: true);
   final r = await SharePlus.instance.share(

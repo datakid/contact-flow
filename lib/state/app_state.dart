@@ -330,6 +330,42 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Replaces contacts (matched by id) with edited copies in one write.
+  /// Returns the previous versions (same ids) so the caller can offer undo
+  /// by passing them straight back into [replaceMany].
+  Future<List<Person>> replaceMany(List<Person> edited) async {
+    if (edited.isEmpty) return const [];
+    final byId = {for (final p in edited) p.id: p};
+    final before = <Person>[];
+    final next = <Person>[];
+    for (final p in _people) {
+      final e = byId[p.id];
+      if (e != null) {
+        before.add(p);
+        next.add(e);
+      } else {
+        next.add(p);
+      }
+    }
+    _people = next;
+    for (final id in byId.keys) {
+      _keyCache.remove(id);
+      _letterCache.remove(id);
+    }
+    await _store.putAll(edited);
+    _dirtyIndex = true;
+    _resort();
+    notifyListeners();
+    return before;
+  }
+
+  Person? byId(String id) {
+    for (final p in _people) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+
   Future<void> clearAll() async {
     _people = [];
     selected.clear();

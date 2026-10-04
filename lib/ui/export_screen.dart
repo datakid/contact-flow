@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../io/codec.dart';
+import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../services/device_contacts.dart';
@@ -124,10 +124,7 @@ class _ExportScreenState extends State<ExportScreen> {
       final f = _f;
       final o = _o.copyWith(rtl: l.rtl);
       final headers = _headers(l);
-      final bytes = await compute(
-        (_) => Codec.encode(people, f, o, headers: headers),
-        0,
-      );
+      final bytes = await encodeInBackground(EncodeJob(people, f, o, headers));
       final name = _fileName;
       if (share) {
         await shareBytes(bytes, name, _f.mime);
@@ -138,7 +135,7 @@ class _ExportScreenState extends State<ExportScreen> {
         }
       }
     } catch (e) {
-      if (mounted) toast(context, '$e');
+      if (mounted) toast(context, friendlyError(e));
     }
     if (mounted) setState(() => _busy = false);
   }
@@ -178,7 +175,7 @@ class _ExportScreenState extends State<ExportScreen> {
         );
       }
     } catch (e) {
-      if (mounted) toast(context, '$e');
+      if (mounted) toast(context, friendlyError(e));
     }
     if (mounted) setState(() => _progress = null);
   }

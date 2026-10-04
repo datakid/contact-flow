@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../data/sample.dart';
 import '../io/codec.dart';
+import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../services/device_contacts.dart';
@@ -101,7 +102,7 @@ class _ImportSheetState extends State<_ImportSheet> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _note = '$e';
+          _note = friendlyError(e);
         });
       }
     }
@@ -138,9 +139,7 @@ class _ImportSheetState extends State<_ImportSheet> {
       }
       try {
         final name = f.name;
-        results.add(
-          await compute((Uint8List b) => Codec.decode(name, b), bytes),
-        );
+        results.add(await decodeInBackground(DecodeJob(name, bytes)));
       } catch (_) {
         failed.add(f.name);
       }
