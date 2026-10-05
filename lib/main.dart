@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -10,6 +11,7 @@ import 'ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerFontLicenses();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   final state = AppState();
   await state.init();
@@ -65,5 +67,27 @@ class ContactFlowApp extends StatelessWidget {
         home: const HomeScreen(),
       ),
     );
+  }
+}
+
+bool _fontsRegistered = false;
+
+/// Bundled fonts are SIL OFL 1.1; the license must travel with the app.
+void registerFontLicenses() {
+  if (_fontsRegistered) return;
+  _fontsRegistered = true;
+  LicenseRegistry.addLicense(_fontLicenses);
+}
+
+Stream<LicenseEntry> _fontLicenses() async* {
+  for (final (pkg, file) in const [
+    ('Manrope', 'assets/fonts/OFL-Manrope.txt'),
+    ('Instrument Serif', 'assets/fonts/OFL-InstrumentSerif.txt'),
+  ]) {
+    try {
+      yield LicenseEntryWithLineBreaks([
+        pkg,
+      ], await rootBundle.loadString(file));
+    } catch (_) {}
   }
 }

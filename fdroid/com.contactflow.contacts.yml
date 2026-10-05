@@ -1,0 +1,42 @@
+# Draft recipe for https://gitlab.com/fdroid/fdroiddata
+# Copy to fdroiddata/metadata/com.contactflow.contacts.yml in your merge request.
+# Replace YOUR_GIT_HOST/YOUR_USER with your repo; AuthorName is optional.
+Categories:
+  - Phone & SMS
+  - System
+License: MIT
+AuthorName: YOUR_NAME
+SourceCode: https://YOUR_GIT_HOST/YOUR_USER/contact-flow
+IssueTracker: https://YOUR_GIT_HOST/YOUR_USER/contact-flow/issues
+Changelog: https://YOUR_GIT_HOST/YOUR_USER/contact-flow/releases
+
+AutoName: Contact Flow
+
+RepoType: git
+Repo: https://YOUR_GIT_HOST/YOUR_USER/contact-flow.git
+
+Builds:
+  - versionName: 2.0.1
+    versionCode: 3
+    commit: v2.0.1
+    output: build/app/outputs/flutter-apk/app-release.apk
+    srclibs:
+      - flutter@3.35.4
+    rm:
+      - web
+      - test
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/flutter pub get --enforce-lockfile
+    scandelete:
+      - .pub-cache
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter build apk --release
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+UpdateCheckData: pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
+CurrentVersion: 2.0.1
+CurrentVersionCode: 3

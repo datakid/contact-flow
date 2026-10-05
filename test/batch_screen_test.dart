@@ -109,7 +109,7 @@ void main() {
     expect(find.text('050 111 2222'), findsOneWidget);
     expect(find.text('Robert'), findsOneWidget);
 
-    await t.tap(find.text('Save 1 changes'));
+    await t.tap(find.text('Save 1 change'));
     await t.pumpAndSettle();
     expect(find.text('Batch edit'), findsNothing);
     expect(s.people.map((p) => p.name).toSet(), {'ali hassan', 'Robert'});

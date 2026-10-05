@@ -27,6 +27,8 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 ## Features
 
+- **Batch edit in a table**: edit names, numbers and companies inline; bulk operations (find & replace, prefix/suffix, numbered rename patterns, change case, swap first/last, clean up names, add/remove country code, change prefix, reformat, remove repeated numbers, set label, set company, add note), each with a before/after preview and undo
+
 - **Whole address book in one tap** on Android, or many files at once, or pasted text
 - **Open with Contact Flow**: share or open a `.vcf`, `.csv`, `.xlsx`, `.numbers` or `.json` file from WhatsApp, email or Files and it goes straight to review
 - **Smart column detection**: finds name, phone, email, company and note columns from headers in English, Arabic, Chinese, French, Spanish and more, or from the cell contents when there is no header
@@ -42,7 +44,7 @@ Batch import and export phone contacts in every common format, with fuzzy search
   - Partial numbers, including Arabic-Indic digits
 - **Five languages**: English, العربية (right-to-left), 中文, Español, Français
 - **Light and dark themes**, following the system by default
-- **Private**: everything stays on the device, with no network calls and no analytics
+- **Private**: no internet permission at all, no network calls, no analytics, no ads
 
 ## Performance
 
@@ -84,18 +86,30 @@ Without it, release builds fall back to debug signing.
 
 ```
 lib/
-  io/        csv · vcard · xlsx · numbers · txt · json codecs
+  batch/     pure batch operations (rename, numbers, company, notes)
+  io/        csv · vcard · xlsx · numbers · txt · json codecs, background jobs
   search/    text folding and the fuzzy index
   services/  device contacts, local store, save and share
   state/     app state
   ui/        screens and design system
-test/        format round-trips, real .numbers files, search, performance
+test/        format round-trips, real .numbers files, search, performance,
+             batch operations, batch editor and full-app smoke tests
+fastlane/    store listing (en, ar) used by F-Droid / IzzyOnDroid
+fdroid/      draft F-Droid build recipe
 ```
 
 ## Permissions
 
 `READ_CONTACTS` and `WRITE_CONTACTS` (Android), requested only when you import from or save to the phone.
 
+## Install
+
+Releases are signed APKs. Use `app-release.apk` if unsure, or
+`app-arm64-v8a-release.apk` for most phones from 2017 onward.
+
 ## License
 
-MIT
+Code: MIT, see `LICENSE`.
+Fonts: Manrope and Instrument Serif, SIL Open Font License 1.1, see
+`assets/fonts/OFL-*.txt`. All licenses are also listed in the app under
+Settings → Open-source licenses.

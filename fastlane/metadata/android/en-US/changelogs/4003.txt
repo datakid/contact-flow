@@ -1,0 +1,12 @@
+2.0.1
+• Removed Google's dependency metadata from the build
+• Added an Open-source licenses page and bundled the font licenses
+• About now shows the correct version
+• Fixed text running off narrow screens in Settings
+• Batch edit and Export now follow your sort order
+• "Save 1 change" instead of "Save 1 changes"
+
+2.0.0
+• Fixed Share and Save crashing
+• New batch editor: edit contacts in a table, rename in bulk, add or remove country codes, change prefixes, reformat numbers, with preview and undo
+• Easier search: tap anywhere on the search bar

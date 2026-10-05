@@ -207,10 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Spacer(),
               if (hasPeople)
                 IconButton(
-                  onPressed: () => openBatchEditor(
-                    context,
-                    s.searching ? s.visible : s.people,
-                  ),
+                  onPressed: () => openBatchEditor(context, s.visible),
                   icon: Icon(Icons.table_rows_outlined, color: p.ink, size: 22),
                   tooltip: l.t('batchEdit'),
                 ),
@@ -619,10 +616,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         haptic: true,
                         onTap: s.people.isEmpty
                             ? null
-                            : () => openExport(
-                                context,
-                                s.searching ? s.visible : s.people,
-                              ),
+                            : () => openExport(context, s.visible),
                         child: Container(
                           height: 58,
                           decoration: BoxDecoration(

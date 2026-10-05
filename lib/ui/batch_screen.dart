@@ -191,7 +191,7 @@ class _BatchScreenState extends State<BatchScreen> {
       _rows = [for (final r in _rows) byId[r.id] ?? r];
     });
     HapticFeedback.mediumImpact();
-    toast(context, L.of(context).t('opApplied', {'n': res.length}));
+    toast(context, L.of(context).n(res.length, 'opAppliedOne', 'opApplied'));
   }
 
   Future<void> _save() async {
@@ -212,7 +212,7 @@ class _BatchScreenState extends State<BatchScreen> {
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l.t('updatedN', {'n': changed.length})),
+          content: Text(l.n(changed.length, 'updatedOne', 'updatedN')),
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
@@ -382,7 +382,7 @@ class _BatchScreenState extends State<BatchScreen> {
                       child: PrimaryButton(
                         label: changed == 0
                             ? l.t('done')
-                            : l.t('saveN', {'n': changed}),
+                            : l.n(changed, 'saveOne', 'saveN'),
                         icon: Icons.check_rounded,
                         busy: _saving,
                         onTap: _save,
@@ -764,7 +764,7 @@ class _OpDialogState extends State<_OpDialog> {
         FilledButton(
           onPressed: res.isEmpty ? null : () => Navigator.pop(context, op),
           child: Text(
-            res.isEmpty ? l.t('apply') : l.t('applyN', {'n': res.length}),
+            res.isEmpty ? l.t('apply') : l.n(res.length, 'applyOne', 'applyN'),
           ),
         ),
       ],

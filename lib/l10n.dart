@@ -128,6 +128,7 @@ class L {
       'sortRecent': 'Recent',
       'all': 'All',
       'about': 'About',
+      'licenses': 'Open-source licenses',
       'aboutBody':
           'One job, done well: move contacts in and out in every common format.',
       'privacy': 'Everything stays on this device.',
@@ -171,6 +172,10 @@ class L {
       'tapCell': 'Tap any cell to edit',
       'changedN': '{n} changed',
       'saveN': 'Save {n} changes',
+      'saveOne': 'Save 1 change',
+      'updatedOne': 'Updated 1 contact',
+      'opAppliedOne': 'Changed 1 contact',
+      'applyOne': 'Apply to 1',
       'updatedN': 'Updated {n} contacts',
       'noChanges': 'No changes',
       'opApplied': 'Changed {n} contacts',
@@ -335,6 +340,7 @@ class L {
       'sortRecent': 'الأحدث',
       'all': 'الكل',
       'about': 'حول',
+      'licenses': 'تراخيص المصادر المفتوحة',
       'aboutBody':
           'مهمة واحدة بإتقان: نقل جهات الاتصال دخولاً وخروجاً بكل الصيغ الشائعة.',
       'privacy': 'كل شيء يبقى على هذا الجهاز.',

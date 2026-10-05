@@ -6,6 +6,9 @@ import '../state/app_state.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
+/// Keep in sync with pubspec.yaml `version:`.
+const appVersion = '2.0.1';
+
 Future<void> showSettings(BuildContext context) {
   return showModalBottomSheet(
     context: context,
@@ -156,18 +159,41 @@ class _Settings extends StatelessWidget {
                   children: [
                     Icon(Icons.lock_outline_rounded, size: 15, color: p.sage),
                     const SizedBox(width: 6),
-                    Text(
-                      l.t('privacy'),
-                      style: TextStyle(
-                        color: p.sage,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
+                    Expanded(
+                      child: Text(
+                        l.t('privacy'),
+                        style: TextStyle(
+                          color: p.sage,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
-                Text('Contact Flow 1.0', style: Type.label(p)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Contact Flow $appVersion · MIT',
+                        style: Type.label(p),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => showLicensePage(
+                        context: context,
+                        applicationName: 'Contact Flow',
+                        applicationVersion: appVersion,
+                      ),
+                      style: TextButton.styleFrom(foregroundColor: p.accent),
+                      child: Text(
+                        l.t('licenses'),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

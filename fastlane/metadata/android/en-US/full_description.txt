@@ -1,0 +1,44 @@
+<p>Contact Flow moves contacts between your phone and files in bulk, and lets you clean them up in between. It never connects to the internet.</p>
+
+<p><b>Import from anywhere</b></p>
+<ul>
+<li>Read the whole address book in one tap</li>
+<li>Open many files at once: CSV, vCard (.vcf), Excel (.xlsx), Apple Numbers, JSON or plain text</li>
+<li>Paste any list and the numbers are found automatically</li>
+<li>Open or share a file from WhatsApp, email or your file manager straight into the app</li>
+<li>Finds name, phone, email and company columns automatically, with or without headers</li>
+<li>Review before importing: duplicates are spotted by phone number and merged</li>
+</ul>
+
+<p><b>Batch edit in a table</b></p>
+<ul>
+<li>Edit names, numbers and companies in a spreadsheet-style table</li>
+<li>Rename many contacts at once: find and replace, prefix or suffix, numbered patterns like "Client 001 {name}", change case, swap first and last name</li>
+<li>Fix numbers in bulk: add or remove a country code, change a prefix (050 to 055), reformat, remove repeated numbers</li>
+<li>Set the company or add a note to many contacts at once</li>
+<li>Every operation shows a before-and-after preview, and you can undo</li>
+</ul>
+
+<p><b>Export your way</b></p>
+<ul>
+<li>Export everything, a search result or a hand-picked selection</li>
+<li>Choose the number style and the fields to include, with a live preview</li>
+<li>Save the file, share it, or write the contacts back into the phone without creating duplicates</li>
+</ul>
+
+<p><b>Search that forgives</b></p>
+<ul>
+<li>Tolerates typos and accents: "jonatan" finds Jonathan, "jose" finds José</li>
+<li>Arabic, ignoring vowel marks and letter variants</li>
+<li>Chinese by pinyin or initials: "wang" finds 王伟</li>
+<li>Across scripts: "mohamed" finds محمد</li>
+<li>Partial numbers, including Arabic-Indic digits</li>
+</ul>
+
+<p><b>Private by design</b></p>
+<ul>
+<li>No internet permission, no ads, no analytics, no account</li>
+<li>Contacts permission is requested only when you import from or save to the phone</li>
+</ul>
+
+<p>Available in English, Arabic (right-to-left), Chinese, Spanish and French, with light and dark themes.</p>

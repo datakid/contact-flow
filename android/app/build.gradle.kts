@@ -46,6 +46,12 @@ android {
         }
     }
 
+    // F-Droid / IzzyOnDroid: don't embed Google's encrypted dependency blob.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     buildTypes {
         release {
             signingConfig = if (keystorePropertiesFile.exists()) {
@@ -53,6 +59,8 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // No git metadata in the APK (keeps F-Droid builds reproducible).
+            vcsInfo.include = false
             isMinifyEnabled = false
             isShrinkResources = false
         }
