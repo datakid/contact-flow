@@ -7,9 +7,12 @@ import '../io/codec.dart';
 import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
-import '../services/device_contacts.dart';
+import '../data/contact_source.dart';
+import '../domain/change_set.dart';
 import '../services/file_out.dart';
 import '../state/app_state.dart';
+import '../state/phone_book.dart';
+import 'pipeline.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -55,14 +58,13 @@ class _ExportScreenState extends State<ExportScreen> {
   late ExportOptions _o;
   late final TextEditingController _name;
   bool _busy = false;
-  double? _progress;
 
   @override
   void initState() {
     super.initState();
     final s = context.read<AppState>();
     _f = s.lastFormat;
-    _o = s.exportOptions;
+    _o = s.exportOptions.copyWith(contactId: s.includeContactId);
     final d = DateTime.now();
     _name = TextEditingController(
       text: 'contacts-${d.year}${_two(d.month)}${_two(d.day)}',
@@ -76,6 +78,8 @@ class _ExportScreenState extends State<ExportScreen> {
     _name.dispose();
     super.dispose();
   }
+
+  bool get _hasIds => widget.people.any((p) => p.phoneId != null);
 
   String get _fileName {
     final base = _name.text.trim().isEmpty
@@ -142,42 +146,34 @@ class _ExportScreenState extends State<ExportScreen> {
 
   Future<void> _toPhone() async {
     final l = L.of(context);
-    if (!DeviceContacts.supported) {
-      toast(context, l.t('webDevice').split('.').first);
-      return;
-    }
-    final access = await DeviceContacts.request(write: true);
-    if (!mounted) return;
-    if (access != DeviceAccess.granted) {
-      toast(
-        context,
-        access == DeviceAccess.blocked ? l.t('permBlocked') : l.t('permDenied'),
-        action: access == DeviceAccess.blocked ? l.t('openSettings') : null,
-        onAction: DeviceContacts.openSettings,
-      );
-      return;
-    }
-    setState(() => _progress = 0);
-    try {
-      final (n, skipped) = await DeviceContacts.writeAll(
-        widget.people,
-        progress: (v) {
-          if (mounted) setState(() => _progress = v);
-        },
-      );
-      if (mounted) {
-        final msg = l.t('written', {'n': n});
+    final book = context.read<PhoneBook>();
+    if (!book.granted) {
+      final a = await book.requestAccess();
+      if (!mounted) return;
+      if (a != Access.granted) {
         toast(
           context,
-          skipped == 0
-              ? msg
-              : '$msg · ${l.t('skippedOnPhone', {'n': skipped})}',
+          a == Access.blocked
+              ? l.t('permBlocked')
+              : (a == Access.unsupported
+                    ? l.t('webDevice').split('.').first
+                    : l.t('permDenied')),
+          action: a == Access.blocked ? l.t('openSettings') : null,
+          onAction: book.openSettings,
         );
+        return;
       }
-    } catch (e) {
-      if (mounted) toast(context, friendlyError(e));
     }
-    if (mounted) setState(() => _progress = null);
+    final set = ChangeSet(ChangeIntent.create, [
+      for (final p in widget.people)
+        if (p.phoneId == null || book.byPhoneId(p.phoneId!) == null)
+          CreateChange(p.copy(clearPhoneId: true)),
+    ]);
+    if (set.isEmpty) {
+      toast(context, l.t('alreadyOnPhone'));
+      return;
+    }
+    await applyChanges(context, set);
   }
 
   @override
@@ -193,20 +189,14 @@ class _ExportScreenState extends State<ExportScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          if (DeviceContacts.supported)
+          if (widget.people.any((p) => p.phoneId == null))
             IconButton(
               tooltip: l.t('saveToPhone'),
-              onPressed: _progress != null ? null : _toPhone,
+              onPressed: _toPhone,
               icon: const Icon(Icons.phone_iphone_rounded),
             ),
           const SizedBox(width: 6),
         ],
-        bottom: _progress == null
-            ? null
-            : PreferredSize(
-                preferredSize: const Size.fromHeight(2),
-                child: LinearProgressIndicator(value: _progress, minHeight: 2),
-              ),
       ),
       body: SafeArea(
         top: false,
@@ -570,6 +560,11 @@ class _ExportScreenState extends State<ExportScreen> {
             _o.includeNote,
             (v) => _o = _o.copyWith(includeNote: v),
           ),
+        if (_hasIds && tabular)
+          sw(l.t('includeContactId'), _o.contactId, (v) {
+            _o = _o.copyWith(contactId: v);
+            context.read<AppState>().setIncludeContactId(v);
+          }),
       ],
     );
   }

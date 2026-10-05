@@ -50,6 +50,24 @@ class VCard {
           cur.note = _unescape(v);
         case 'NICKNAME':
           cur.nick = _unescape(v);
+        case 'TITLE':
+          cur.title = _unescape(v);
+        case 'CATEGORIES':
+          cur.groups.addAll(
+            _splitList(v).map(_unescape).where((e) => e.isNotEmpty),
+          );
+        case 'X-CONTACTFLOW-NONAME':
+          cur.noName = true;
+        case 'X-CONTACTFLOW-ID':
+          cur.phoneId = _unescape(v);
+        case 'X-CONTACTFLOW-STARRED':
+          cur.starred = _unescape(v) == '1';
+        case 'X-CONTACTFLOW-ACCOUNT':
+          final parts = _splitEscaped(v).map(_unescape).toList();
+          cur.account = AccountRef(
+            parts.isNotEmpty ? parts[0] : '',
+            parts.length > 1 ? parts[1] : '',
+          );
       }
     }
     return out;
@@ -151,6 +169,27 @@ class VCard {
     return out;
   }
 
+  static List<String> _splitList(String v) {
+    final out = <String>[];
+    final b = StringBuffer();
+    for (var i = 0; i < v.length; i++) {
+      final c = v[i];
+      if (c == '\\' && i + 1 < v.length) {
+        b
+          ..write(c)
+          ..write(v[i + 1]);
+        i++;
+      } else if (c == ',') {
+        out.add(b.toString());
+        b.clear();
+      } else {
+        b.write(c);
+      }
+    }
+    out.add(b.toString());
+    return out;
+  }
+
   static String _unescape(String v) => v
       .replaceAll(r'\n', '\n')
       .replaceAll(r'\N', '\n')
@@ -217,7 +256,11 @@ class VCard {
     return (parts.last, parts.sublist(0, parts.length - 1).join(' '));
   }
 
-  static String write(List<Person> people, {String Function(String)? number}) {
+  static String write(
+    List<Person> people, {
+    String Function(String)? number,
+    bool lossless = false,
+  }) {
     final b = StringBuffer();
     for (final p in people) {
       final (family, given) = splitName(p.name.isEmpty ? '' : p.name);
@@ -231,6 +274,16 @@ class VCard {
         for (final e in p.emails) 'EMAIL;TYPE=INTERNET:${_esc(e)}',
         if (p.org.isNotEmpty) 'ORG:${_esc(p.org)}',
         if (p.note.isNotEmpty) 'NOTE:${_esc(p.note)}',
+        if (lossless) ...[
+          if (p.name.isEmpty) 'X-CONTACTFLOW-NONAME:1',
+          if (p.jobTitle.isNotEmpty) 'TITLE:${_esc(p.jobTitle)}',
+          if (p.groups.isNotEmpty) 'CATEGORIES:${p.groups.map(_esc).join(',')}',
+          if (p.phoneId != null) 'X-CONTACTFLOW-ID:${_esc(p.phoneId!)}',
+          if (p.starred) 'X-CONTACTFLOW-STARRED:1',
+          if (p.account != null)
+            'X-CONTACTFLOW-ACCOUNT:${_esc(p.account!.name)};${_esc(p.account!.type)}',
+        ] else if (p.jobTitle.isNotEmpty)
+          'TITLE:${_esc(p.jobTitle)}',
         'END:VCARD',
       ];
       for (final l in lines) {
@@ -259,8 +312,14 @@ class _Card {
   String nick = '';
   String org = '';
   String note = '';
+  String title = '';
+  String? phoneId;
+  bool starred = false;
+  bool noName = false;
+  AccountRef? account;
   final phones = <PhoneEntry>[];
   final emails = <String>[];
+  final groups = <String>[];
 
   Person? build(String source) {
     var name = fn;
@@ -275,14 +334,22 @@ class _Card {
       }
     }
     if (name.isEmpty) name = nick;
-    if (phones.isEmpty && emails.isEmpty && name.isEmpty) return null;
+    if (noName) name = '';
+    if (phones.isEmpty && emails.isEmpty && name.isEmpty && org.isEmpty) {
+      return null;
+    }
     return Person(
       name: name,
       phones: phones,
       emails: emails,
       org: org,
+      jobTitle: title,
       note: note,
       source: source,
+      phoneId: phoneId,
+      account: account,
+      starred: starred,
+      groups: groups,
     );
   }
 }

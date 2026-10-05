@@ -9,7 +9,18 @@ import '../state/app_state.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-Future<void> openBatchEditor(BuildContext context, List<Person> people) {
+typedef BatchSave =
+    Future<bool> Function(
+      BuildContext context,
+      List<Person> originals,
+      List<Person> edited,
+    );
+
+Future<void> openBatchEditor(
+  BuildContext context,
+  List<Person> people, {
+  BatchSave? onSave,
+}) {
   final l = L.of(context);
   if (people.isEmpty) {
     toast(context, l.t('nothingToEdit'));
@@ -19,7 +30,7 @@ Future<void> openBatchEditor(BuildContext context, List<Person> people) {
   return Navigator.of(context).push(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (_) => BatchScreen(people: people),
+      builder: (_) => BatchScreen(people: people, onSave: onSave),
     ),
   );
 }
@@ -28,7 +39,8 @@ enum _Col { name, phone1, phone2, company }
 
 class BatchScreen extends StatefulWidget {
   final List<Person> people;
-  const BatchScreen({super.key, required this.people});
+  final BatchSave? onSave;
+  const BatchScreen({super.key, required this.people, this.onSave});
 
   @override
   State<BatchScreen> createState() => _BatchScreenState();
@@ -206,6 +218,18 @@ class _BatchScreenState extends State<BatchScreen> {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
+    final custom = widget.onSave;
+    if (custom != null) {
+      final originals = [for (final c in changed) _orig[c.id]!];
+      final ok = await custom(context, originals, changed);
+      if (!mounted) return;
+      if (ok) {
+        nav.pop();
+      } else {
+        setState(() => _saving = false);
+      }
+      return;
+    }
     try {
       final before = await s.replaceMany(changed);
       nav.pop();

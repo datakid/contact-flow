@@ -313,12 +313,16 @@ class GhostButton extends StatelessWidget {
               Icon(icon, size: 20, color: p.ink),
               const SizedBox(width: 8),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: p.ink,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: p.ink,
+                ),
               ),
             ),
           ],

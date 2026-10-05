@@ -18,9 +18,11 @@ import 'import_sheet.dart';
 import 'settings_sheet.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'workspace.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final ValueChanged<int>? onTab;
+  const HomeScreen({super.key, this.onTab});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -191,19 +193,29 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: p.accent,
-                  shape: BoxShape.circle,
+              if (widget.onTab != null)
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: WorkspaceSwitch(tab: 1, onChanged: widget.onTab!),
+                  ),
+                )
+              else ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: p.accent,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                l.t('appTitle').toUpperCase(),
-                style: Type.label(p).copyWith(color: p.inkSoft),
-              ),
+                const SizedBox(width: 10),
+                Text(
+                  l.t('appTitle').toUpperCase(),
+                  style: Type.label(p).copyWith(color: p.inkSoft),
+                ),
+              ],
               const Spacer(),
               if (hasPeople)
                 IconButton(
@@ -276,8 +288,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _searchBar(AppState s, L l, Palette p) {
     final focused = _focus.hasFocus;
     final enabled = s.people.isNotEmpty;
-    // The whole pill is the touch target: tapping the icon, the padding or
-    // the text all focus the field (previously only the thin text line did).
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
       child: GestureDetector(

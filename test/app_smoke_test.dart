@@ -6,8 +6,10 @@ import 'package:contact_flow/state/app_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
+import 'package:contact_flow/data/contact_source.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'harness.dart';
 
 Future<AppState> seeded(String lang) async {
   SharedPreferences.setMockInitialValues({'lang': lang});
@@ -25,10 +27,11 @@ void main() {
       addTearDown(t.view.reset);
       final s = (await t.runAsync(() => seeded(lang)))!;
       expect(s.people, isNotEmpty);
+      final rig = (await t.runAsync(
+        () => makeRig(app: s, access: Access.unsupported),
+      ))!;
 
-      await t.pumpWidget(
-        ChangeNotifierProvider.value(value: s, child: const ContactFlowApp()),
-      );
+      await t.pumpWidget(rig.wrap(const ContactFlowApp()));
       await t.pumpAndSettle();
 
       // Tap the far edge of the search pill (not the text line) — should focus.
@@ -61,9 +64,10 @@ void main() {
     addTearDown(t.view.reset);
     final s = (await t.runAsync(() => seeded('en')))!;
     app.registerFontLicenses();
-    await t.pumpWidget(
-      ChangeNotifierProvider.value(value: s, child: const ContactFlowApp()),
-    );
+    final rig = (await t.runAsync(
+      () => makeRig(app: s, access: Access.unsupported),
+    ))!;
+    await t.pumpWidget(rig.wrap(const ContactFlowApp()));
     await t.pumpAndSettle();
     await t.tap(find.byIcon(Icons.tune_rounded));
     await t.pumpAndSettle();
@@ -72,7 +76,7 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.text('Contact Flow 2.0.1 · MIT'), findsOneWidget);
+    expect(find.text('Contact Flow 2.1.0 · MIT'), findsOneWidget);
     final entries = await t.runAsync(() => LicenseRegistry.licenses.toList());
     final pkgs = entries!.expand((e) => e.packages).toSet();
     expect(pkgs, containsAll(['Manrope', 'Instrument Serif']));

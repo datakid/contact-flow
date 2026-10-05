@@ -54,6 +54,7 @@ class ExportOptions {
   final PhoneStyle phoneStyle;
   final bool txtWithNames;
   final bool rtl;
+  final bool contactId;
 
   const ExportOptions({
     this.header = true,
@@ -64,6 +65,7 @@ class ExportOptions {
     this.phoneStyle = PhoneStyle.original,
     this.txtWithNames = true,
     this.rtl = false,
+    this.contactId = false,
   });
 
   ExportOptions copyWith({
@@ -75,6 +77,7 @@ class ExportOptions {
     PhoneStyle? phoneStyle,
     bool? txtWithNames,
     bool? rtl,
+    bool? contactId,
   }) => ExportOptions(
     header: header ?? this.header,
     includeEmail: includeEmail ?? this.includeEmail,
@@ -84,6 +87,7 @@ class ExportOptions {
     phoneStyle: phoneStyle ?? this.phoneStyle,
     txtWithNames: txtWithNames ?? this.txtWithNames,
     rtl: rtl ?? this.rtl,
+    contactId: contactId ?? this.contactId,
   );
 }
 
@@ -427,6 +431,8 @@ class Codec {
     PhoneStyle.digits => Phones.digits(n),
   };
 
+  static const contactIdHeader = 'contact_id';
+
   static List<List<String>> table(
     List<Person> people,
     ExportOptions o, {
@@ -443,6 +449,7 @@ class Codec {
               .fold<int>(1, (m, p) => p.emails.length > m ? p.emails.length : m)
               .clamp(1, 3)
         : 0;
+    final withId = o.contactId && people.any((p) => p.phoneId != null);
     final h = <String>[
       headers?[0] ?? 'Name',
       for (var i = 0; i < maxPhones; i++)
@@ -455,6 +462,7 @@ class Codec {
             : '${headers?[2] ?? 'Email'} ${i + 1}',
       if (o.includeOrg) headers?[3] ?? 'Company',
       if (o.includeNote) headers?[4] ?? 'Note',
+      if (withId) 'contact_id',
     ];
     final rows = <List<String>>[if (o.header) h];
     for (final p in people) {
@@ -470,6 +478,7 @@ class Codec {
           i < p.emails.length ? p.emails[i] : '',
         if (o.includeOrg) p.org,
         if (o.includeNote) p.note,
+        if (withId) p.phoneId ?? '',
       ]);
     }
     return rows;

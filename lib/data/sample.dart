@@ -59,4 +59,54 @@ class Sample {
       );
     }).toList();
   }
+
+  static const google = AccountRef('you@gmail.com', 'com.google');
+
+  static List<Person> phoneBook() {
+    final base = people();
+    final out = <Person>[];
+    for (var i = 0; i < base.length; i++) {
+      final p = base[i]
+        ..source = 'device'
+        ..account = i % 3 == 0 ? AccountRef.device : google
+        ..starred = i % 7 == 0;
+      if (i % 4 == 1) p.groups = ['Work'];
+      if (i % 9 == 2) p.groups = [...p.groups, 'Family'];
+      out.add(p);
+    }
+    out.addAll([
+      Person(
+        name: 'Amelia Hart',
+        phones: [
+          const PhoneEntry('07700 900461'),
+          const PhoneEntry('+44 20 7946 0001', 'work'),
+        ],
+        emails: ['amelia.hart@gmail.com'],
+        note: 'Studio visit in May',
+        source: 'device',
+        account: AccountRef.device,
+      ),
+      Person(
+        name: 'Mo Ali',
+        phones: [const PhoneEntry('+44 7700 900123')],
+        source: 'device',
+        account: google,
+      ),
+      Person(
+        name: '',
+        phones: [const PhoneEntry('+971 4 555 0000', 'work')],
+        org: 'Front Desk',
+        source: 'device',
+        account: AccountRef.device,
+      ),
+      Person(
+        name: 'Courier',
+        phones: [],
+        emails: ['deliveries@courier.example'],
+        source: 'device',
+        account: google,
+      ),
+    ]);
+    return out;
+  }
 }

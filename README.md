@@ -12,6 +12,15 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 ---
 
+## What's new in 2.1.0
+
+- **Phone workspace** — search, sort, filters (account, starred, group, no number, no name), A–Z scroller, detail, create/edit, bulk star/group/delete, share vCard
+- **Safe changes** — every phone write is a reviewed ChangeSet; affected contacts are backed up as vCard first; undo from the snackbar or Settings → History (30 entries / 30 days)
+- **Sync from a spreadsheet** — export with `contact_id`, edit, import → "Update contacts on this phone"; matching by contact_id → number → exact name; Fill empty / Overwrite / Add numbers; conflicts never guessed
+- **Duplicates & merge** — by shared number or same name, choose who to keep
+- **Reach** — Call, SMS, WhatsApp, Signal, copy numbers; personalised one-by-one message queue that survives restarts; group SMS with warnings. The app never sends anything itself.
+- Permissions: `READ_CONTACTS` and `WRITE_CONTACTS` only. No internet.
+
 ## Formats
 
 | Format | Import | Export | Best for |

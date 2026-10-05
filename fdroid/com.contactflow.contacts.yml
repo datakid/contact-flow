@@ -16,9 +16,9 @@ RepoType: git
 Repo: https://YOUR_GIT_HOST/YOUR_USER/contact-flow.git
 
 Builds:
-  - versionName: 2.0.1
-    versionCode: 3
-    commit: v2.0.1
+  - versionName: 2.1.0
+    versionCode: 4
+    commit: v2.1.0
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
       - flutter@3.35.4
@@ -38,5 +38,5 @@ Builds:
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
-CurrentVersion: 2.0.1
-CurrentVersionCode: 3
+CurrentVersion: 2.1.0
+CurrentVersionCode: 4

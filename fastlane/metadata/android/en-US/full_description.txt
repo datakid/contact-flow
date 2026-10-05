@@ -1,44 +1,33 @@
-<p>Contact Flow moves contacts between your phone and files in bulk, and lets you clean them up in between. It never connects to the internet.</p>
+Contact Flow manages the contacts on your phone and moves them in and out of every common file format — fully offline.
 
-<p><b>Import from anywhere</b></p>
-<ul>
-<li>Read the whole address book in one tap</li>
-<li>Open many files at once: CSV, vCard (.vcf), Excel (.xlsx), Apple Numbers, JSON or plain text</li>
-<li>Paste any list and the numbers are found automatically</li>
-<li>Open or share a file from WhatsApp, email or your file manager straight into the app</li>
-<li>Finds name, phone, email and company columns automatically, with or without headers</li>
-<li>Review before importing: duplicates are spotted by phone number and merged</li>
-</ul>
+<b>Phone workspace</b>
+• Search names, numbers, pinyin and Arabic transliteration
+• Filter by account, starred, group, no number or no name; A–Z scroller
+• Create, edit, star, group, share as vCard and delete — single or in bulk
+• Batch table for hundreds of contacts at once
 
-<p><b>Batch edit in a table</b></p>
-<ul>
-<li>Edit names, numbers and companies in a spreadsheet-style table</li>
-<li>Rename many contacts at once: find and replace, prefix or suffix, numbered patterns like "Client 001 {name}", change case, swap first and last name</li>
-<li>Fix numbers in bulk: add or remove a country code, change a prefix (050 to 055), reformat, remove repeated numbers</li>
-<li>Set the company or add a note to many contacts at once</li>
-<li>Every operation shows a before-and-after preview, and you can undo</li>
-</ul>
+<b>Every change is safe</b>
+• Bulk changes are shown in a Review screen with field-by-field differences
+• A backup of every affected contact is saved before anything is written
+• Undo any change from the snackbar or from Settings → History; share backups as .vcf
+• Deleting from Google or Samsung accounts is clearly warned
 
-<p><b>Export your way</b></p>
-<ul>
-<li>Export everything, a search result or a hand-picked selection</li>
-<li>Choose the number style and the fields to include, with a live preview</li>
-<li>Save the file, share it, or write the contacts back into the phone without creating duplicates</li>
-</ul>
+<b>Sync from a spreadsheet</b>
+• Export with a contact_id column, edit in Excel, import with “Update contacts on this phone”
+• Matches by contact_id, then number, then exact name — shared office numbers are never guessed
+• Fill empty, Overwrite or Add numbers; conflicts are left for you to decide
 
-<p><b>Search that forgives</b></p>
-<ul>
-<li>Tolerates typos and accents: "jonatan" finds Jonathan, "jose" finds José</li>
-<li>Arabic, ignoring vowel marks and letter variants</li>
-<li>Chinese by pinyin or initials: "wang" finds 王伟</li>
-<li>Across scripts: "mohamed" finds محمد</li>
-<li>Partial numbers, including Arabic-Indic digits</li>
-</ul>
+<b>Duplicates</b>
+• Finds contacts with the same number or name and merges them into the one you keep
 
-<p><b>Private by design</b></p>
-<ul>
-<li>No internet permission, no ads, no analytics, no account</li>
-<li>Contacts permission is requested only when you import from or save to the phone</li>
-</ul>
+<b>Reach people</b>
+• Call, SMS, WhatsApp and Signal from any contact; copy numbers in international format
+• Personalised messages with {first}, {last}, {name}, {company} sent one by one through your own apps; the queue resumes if the app is closed
+• Contact Flow never sends anything by itself
 
-<p>Available in English, Arabic (right-to-left), Chinese, Spanish and French, with light and dark themes.</p>
+<b>Files</b>
+• Import and export CSV, vCard, Excel, Numbers, JSON and plain text
+
+<b>Private by design</b>
+• Only the contacts permission. No internet, no analytics, no ads.
+• English, العربية, 中文, Español, Français · MIT licensed

@@ -4,9 +4,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'data/contact_source.dart';
+import 'data/journal.dart';
+import 'data/phone_source.dart';
+import 'data/sample.dart';
+import 'models/person.dart';
 import 'l10n.dart';
+import 'services/launcher.dart';
+import 'services/library_store.dart';
 import 'state/app_state.dart';
-import 'ui/home.dart';
+import 'state/phone_book.dart';
+import 'state/queue_state.dart';
+import 'ui/root.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
@@ -15,13 +24,58 @@ Future<void> main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   final state = AppState();
   await state.init();
+  final ContactSource source = PhoneSource.supported
+      ? PhoneSource()
+      : FakeSource(
+          seed: Sample.phoneBook(),
+          accounts: const [AccountRef.device, Sample.google],
+          access: Access.unsupported,
+        );
+  final book = PhoneBook(source, Journal(HiveJournalStore()));
+  book.sortLang = state.lang;
+  final queue = QueueState(HiveKeyValue(), const SystemLauncher());
+  await queue.load();
   runApp(
-    ChangeNotifierProvider.value(value: state, child: const ContactFlowApp()),
+    AppProviders(
+      state: state,
+      book: book,
+      queue: queue,
+      launcher: const SystemLauncher(),
+      child: const ContactFlowApp(),
+    ),
+  );
+}
+
+class AppProviders extends StatelessWidget {
+  final AppState state;
+  final PhoneBook book;
+  final QueueState queue;
+  final Launcher launcher;
+  final Widget child;
+  const AppProviders({
+    super.key,
+    required this.state,
+    required this.book,
+    required this.queue,
+    required this.launcher,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) => MultiProvider(
+    providers: [
+      ChangeNotifierProvider.value(value: state),
+      ChangeNotifierProvider.value(value: book),
+      ChangeNotifierProvider.value(value: queue),
+      Provider<Launcher>.value(value: launcher),
+    ],
+    child: child,
   );
 }
 
 class ContactFlowApp extends StatelessWidget {
-  const ContactFlowApp({super.key});
+  final Widget? home;
+  const ContactFlowApp({super.key, this.home});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +118,7 @@ class ContactFlowApp extends StatelessWidget {
             child: child!,
           );
         },
-        home: const HomeScreen(),
+        home: home ?? const WorkspaceRoot(),
       ),
     );
   }
@@ -72,7 +126,6 @@ class ContactFlowApp extends StatelessWidget {
 
 bool _fontsRegistered = false;
 
-/// Bundled fonts are SIL OFL 1.1; the license must travel with the app.
 void registerFontLicenses() {
   if (_fontsRegistered) return;
   _fontsRegistered = true;

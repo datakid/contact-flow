@@ -12,6 +12,8 @@ import '../l10n.dart';
 import '../models/person.dart';
 import '../services/device_contacts.dart';
 import '../state/app_state.dart';
+import '../state/phone_book.dart';
+import 'sync_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -723,6 +725,25 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 ],
               ),
             ),
+            if (context.watch<PhoneBook>().granted && !isDevice)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: GhostButton(
+                    key: const ValueKey('updatePhone'),
+                    label: l.t('updatePhone'),
+                    icon: Icons.sync_rounded,
+                    onTap: () {
+                      final rows = plan.incoming;
+                      final nav = Navigator.of(context);
+                      openSync(context, rows).then((_) {
+                        if (nav.mounted && nav.canPop()) nav.pop(-1);
+                      });
+                    },
+                  ),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: PrimaryButton(

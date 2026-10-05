@@ -1,7 +1,20 @@
 import '../models/person.dart';
 import '../search/fold.dart';
 
-enum Col { name, first, middle, last, phone, email, org, note, label, ignore }
+enum Col {
+  name,
+  first,
+  middle,
+  last,
+  phone,
+  email,
+  org,
+  title,
+  note,
+  label,
+  contactId,
+  ignore,
+}
 
 class TableMapping {
   final List<Col> columns;
@@ -187,6 +200,10 @@ class Tabular {
     if (h.isEmpty) return Col.ignore;
     if (h == '姓') return Col.last;
     if (h == '名') return Col.first;
+    if (h == 'contact id' || h == 'contactid') return Col.contactId;
+    if (h == 'job title' || h == 'title' || h == 'المسمى الوظيفي') {
+      return Col.title;
+    }
     if (_has(h, _labelKeys)) return Col.label;
     if (_has(h, _ignoreKeys) && !_has(h, _phoneKeys)) return Col.ignore;
     if (_has(h, _emailKeys)) return Col.email;
@@ -330,6 +347,7 @@ class Tabular {
     for (final r in body) {
       String cell(int i) => i < r.length ? r[i].trim() : '';
       var name = '', first = '', middle = '', last = '', org = '', note = '';
+      var title = '', contactId = '';
       final phones = <PhoneEntry>[];
       final emails = <String>[];
       for (var i = 0; i < m.columns.length; i++) {
@@ -346,6 +364,10 @@ class Tabular {
             last = v;
           case Col.org:
             org = org.isEmpty ? v : org;
+          case Col.title:
+            title = title.isEmpty ? v : title;
+          case Col.contactId:
+            contactId = v;
           case Col.note:
             note = note.isEmpty ? v : '$note\n$v';
           case Col.email:
@@ -378,8 +400,10 @@ class Tabular {
           phones: phones,
           emails: emails,
           org: org,
+          jobTitle: title,
           note: note,
           source: source,
+          phoneId: contactId.isEmpty ? null : contactId,
         ),
       );
     }

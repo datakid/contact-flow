@@ -5,11 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../io/codec.dart';
 import '../models/person.dart';
-import '../search/fold.dart';
-import '../search/fuzzy.dart';
 import '../services/library_store.dart';
+import 'contact_list.dart';
 
-enum SortMode { name, recent }
+export 'contact_list.dart' show SortMode, ListFilter;
 
 class ImportPlan {
   final List<Person> incoming;
@@ -26,59 +25,47 @@ class ImportPlan {
   );
 }
 
-class AppState extends ChangeNotifier {
-  final _store = LibraryStore();
-  final _index = FuzzyIndex();
-  List<Person> _people = [];
-  List<Person> _sorted = [];
-  List<Hit> _hits = [];
-  final Set<String> selected = {};
-  String _query = '';
-  SortMode sort = SortMode.name;
+class AppState extends ContactList {
+  final LibraryStore _store;
   ThemeMode themeMode = ThemeMode.system;
   String lang = 'en';
+  String country = '';
   bool ready = false;
-  bool _dirtyIndex = true;
-  List<Person>? _indexed;
-  Timer? _debounce;
   ExportOptions exportOptions = const ExportOptions();
   Format lastFormat = Format.csv;
+  bool includeContactId = true;
+  int tab = -1;
 
-  List<Person> get people => _people;
-  String get query => _query;
-  bool get searching => _query.trim().isNotEmpty;
-  bool get selecting => selected.isNotEmpty;
-  int get phoneCount => _people.fold(0, (s, p) => s + p.phones.length);
+  AppState({LibraryStore? store}) : _store = store ?? LibraryStore();
 
-  List<Person> get visible =>
-      searching ? _hits.map((h) => h.person).toList() : _sorted;
-  List<Hit> get hits => _hits;
+  LibraryStore get store => _store;
 
-  Hit? hitFor(Person p) {
-    if (!searching) return null;
-    for (final h in _hits) {
-      if (identical(h.person, p)) return h;
-    }
-    return null;
-  }
+  List<Person> get _people => people;
 
-  Future<void> init() async {
+  Future<void> init({bool openStore = true}) async {
     final prefs = await SharedPreferences.getInstance();
     themeMode = ThemeMode.values[(prefs.getInt('theme') ?? 0).clamp(0, 2)];
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     lang =
         prefs.getString('lang') ??
         (const ['en', 'ar', 'zh', 'es', 'fr'].contains(sys) ? sys : 'en');
+    sortLang = lang;
+    country = prefs.getString('country') ?? '';
+    includeContactId = prefs.getBool('contactId') ?? true;
+    tab = (prefs.getInt('tab') ?? -1).clamp(-1, 1);
     sort = SortMode.values[(prefs.getInt('sort') ?? 0).clamp(0, 1)];
     lastFormat = Format
         .values[(prefs.getInt('fmt') ?? 0).clamp(0, Format.values.length - 1)];
-    try {
-      await _store.open();
-      _people = _store.load();
-    } catch (_) {
-      _people = [];
+    var loaded = <Person>[];
+    if (openStore) {
+      try {
+        await _store.open();
+        loaded = _store.load();
+      } catch (_) {
+        loaded = [];
+      }
     }
-    _resort();
+    replacePeople(loaded);
     ready = true;
     notifyListeners();
   }
@@ -91,14 +78,33 @@ class AppState extends ChangeNotifier {
 
   Future<void> setLang(String l) async {
     lang = l;
-    _resort();
+    sortLang = l;
+    resort();
     notifyListeners();
     (await SharedPreferences.getInstance()).setString('lang', l);
   }
 
+  Future<void> setCountry(String c) async {
+    country = c.trim();
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setString('country', country);
+  }
+
+  Future<void> setTab(int t) async {
+    tab = t;
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setInt('tab', t);
+  }
+
+  Future<void> setIncludeContactId(bool v) async {
+    includeContactId = v;
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setBool('contactId', v);
+  }
+
   Future<void> setSort(SortMode s) async {
     sort = s;
-    _resort();
+    resort();
     notifyListeners();
     (await SharedPreferences.getInstance()).setInt('sort', s.index);
   }
@@ -108,119 +114,9 @@ class AppState extends ChangeNotifier {
     (await SharedPreferences.getInstance()).setInt('fmt', f.index);
   }
 
-  static String sortKey(Person p) {
-    final n = p.displayName;
-    if (Fold.hasCjk(n)) {
-      final py = Fold.pinyin(n);
-      if (py.isNotEmpty) return py;
-    }
-    return Fold.basic(n);
-  }
+  static String sortKey(Person p) => sortKeyOf(p);
 
-  final Map<String, String> _letterCache = {};
-
-  String letterFor(Person p) =>
-      _letterCache.putIfAbsent(p.id, () => groupLetter(p));
-
-  static String groupLetter(Person p) {
-    final n = p.displayName.trim();
-    if (n.isEmpty) return '#';
-    final r = n.runes.first;
-    if (Fold.isArabic(r)) {
-      return Fold.basic(String.fromCharCode(r)).toUpperCase();
-    }
-    if (Fold.isCjk(r)) {
-      final py = Fold.pinyin(String.fromCharCode(r));
-      return py.isEmpty ? '#' : py[0].toUpperCase();
-    }
-    final b = Fold.basic(String.fromCharCode(r));
-    if (b.isEmpty) return '#';
-    final c = b[0].toUpperCase();
-    return RegExp(r'\p{L}', unicode: true).hasMatch(c) ? c : '#';
-  }
-
-  final Map<String, String> _keyCache = {};
-
-  void _resort() {
-    _sorted = [..._people];
-    if (sort == SortMode.name) {
-      String k(Person p) => _keyCache.putIfAbsent(p.id, () => sortKey(p));
-      int bucket(Person p) {
-        final n = p.displayName;
-        if (n.isEmpty) return 3;
-        final r = n.runes.first;
-        if (Fold.isArabic(r)) return 1;
-        if (!RegExp(r'\p{L}', unicode: true).hasMatch(String.fromCharCode(r))) {
-          return 2;
-        }
-        return 0;
-      }
-
-      final arFirst = lang == 'ar';
-      int rank(Person p) {
-        final b = bucket(p);
-        if (!arFirst) return b;
-        return b == 1 ? 0 : (b == 0 ? 1 : b);
-      }
-
-      _sorted.sort((a, b) {
-        final ba = rank(a), bb = rank(b);
-        if (ba != bb) return ba.compareTo(bb);
-        return k(a).compareTo(k(b));
-      });
-    } else {
-      _sorted.sort((a, b) => b.added.compareTo(a.added));
-    }
-    if (!identical(_indexed, _people)) _dirtyIndex = true;
-    if (searching) _runSearch();
-  }
-
-  void setQuery(String q) {
-    _query = q;
-    _debounce?.cancel();
-    if (q.trim().isEmpty) {
-      _hits = [];
-      notifyListeners();
-      return;
-    }
-    final delay = _people.length > 3000 ? 140 : 40;
-    _debounce = Timer(Duration(milliseconds: delay), () {
-      _runSearch();
-      notifyListeners();
-    });
-  }
-
-  void _runSearch() {
-    if (_dirtyIndex) {
-      _index.build(_people);
-      _indexed = _people;
-      _dirtyIndex = false;
-    }
-    _hits = _index.search(_query);
-  }
-
-  void toggle(Person p) {
-    if (!selected.remove(p.id)) selected.add(p.id);
-    notifyListeners();
-  }
-
-  void selectAll(Iterable<Person> list) {
-    selected.addAll(list.map((e) => e.id));
-    notifyListeners();
-  }
-
-  void deselect(Iterable<Person> list) {
-    selected.removeAll(list.map((e) => e.id));
-    notifyListeners();
-  }
-
-  void clearSelection() {
-    selected.clear();
-    notifyListeners();
-  }
-
-  List<Person> get selectedPeople =>
-      _sorted.where((p) => selected.contains(p.id)).toList();
+  static String groupLetter(Person p) => groupLetterOf(p);
 
   ImportPlan plan(List<ImportResult> results) {
     final incoming = <Person>[];
@@ -293,12 +189,8 @@ class AppState extends ChangeNotifier {
           ),
         )
         .toList();
-    _people = [..._people, ...added];
     await _store.putAll([...added, ...changed]);
-    _keyCache.clear();
-    _letterCache.clear();
-    _dirtyIndex = true;
-    _resort();
+    replacePeople([..._people, ...added]);
     notifyListeners();
     return added.length;
   }
@@ -306,27 +198,25 @@ class AppState extends ChangeNotifier {
   Future<List<Person>> remove(Iterable<String> ids) async {
     final set = ids.toSet();
     final gone = _people.where((p) => set.contains(p.id)).toList();
-    _people = _people.where((p) => !set.contains(p.id)).toList();
     selected.removeAll(set);
     await _store.deleteAll(set);
-    _resort();
+    replacePeople(_people.where((p) => !set.contains(p.id)).toList());
     notifyListeners();
     return gone;
   }
 
   Future<void> restore(List<Person> list) async {
-    _people = [..._people, ...list];
     await _store.putAll(list);
-    _resort();
+    replacePeople([..._people, ...list]);
     notifyListeners();
   }
 
   Future<void> update(Person p) async {
     await _store.putAll([p]);
-    _dirtyIndex = true;
-    _keyCache.remove(p.id);
-    _letterCache.remove(p.id);
-    _resort();
+    replacePeople(
+      [for (final x in _people) x.id == p.id ? p : x],
+      changedIds: [p.id],
+    );
     notifyListeners();
   }
 
@@ -347,30 +237,16 @@ class AppState extends ChangeNotifier {
         next.add(p);
       }
     }
-    _people = next;
-    for (final id in byId.keys) {
-      _keyCache.remove(id);
-      _letterCache.remove(id);
-    }
     await _store.putAll(edited);
-    _dirtyIndex = true;
-    _resort();
+    replacePeople(next, changedIds: byId.keys);
     notifyListeners();
     return before;
   }
 
-  Person? byId(String id) {
-    for (final p in _people) {
-      if (p.id == id) return p;
-    }
-    return null;
-  }
-
   Future<void> clearAll() async {
-    _people = [];
     selected.clear();
     await _store.clear();
-    _resort();
+    replacePeople([]);
     notifyListeners();
   }
 
@@ -399,12 +275,13 @@ class AppState extends ChangeNotifier {
     }
     if (removed.isEmpty) return 0;
     final set = removed.toSet();
-    _people = _people.where((p) => !set.contains(p.id)).toList();
     selected.removeAll(set);
     await _store.deleteAll(set);
     await _store.putAll(changed);
-    _dirtyIndex = true;
-    _resort();
+    replacePeople(
+      _people.where((p) => !set.contains(p.id)).toList(),
+      changedIds: changed.map((p) => p.id),
+    );
     notifyListeners();
     return removed.length;
   }

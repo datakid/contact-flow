@@ -1,16 +1,7 @@
 import '../models/person.dart';
 
 /// A copy that shares nothing mutable with the original.
-Person clonePerson(Person p) => Person(
-  id: p.id,
-  name: p.name,
-  phones: p.phones.map((e) => PhoneEntry(e.number, e.label)).toList(),
-  emails: [...p.emails],
-  org: p.org,
-  note: p.note,
-  source: p.source,
-  added: p.added,
-);
+Person clonePerson(Person p) => p.copy();
 
 bool samePerson(Person a, Person b) {
   if (a.name != b.name || a.org != b.org || a.note != b.note) return false;

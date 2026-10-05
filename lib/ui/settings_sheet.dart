@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 
 import '../l10n.dart';
 import '../state/app_state.dart';
+import '../state/phone_book.dart';
+import 'history_screen.dart';
+import 'reach_ui.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-/// Keep in sync with pubspec.yaml `version:`.
-const appVersion = '2.0.1';
+const appVersion = '2.1.0';
 
 Future<void> showSettings(BuildContext context) {
   return showModalBottomSheet(
@@ -76,6 +78,35 @@ class _Settings extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+          SectionLabel(l.t('wsPhone')),
+          _Action(
+            key: const ValueKey('set-history'),
+            icon: Icons.history_rounded,
+            label: l.t('history'),
+            sub: l.t('historySub'),
+            onTap: () {
+              Navigator.pop(context);
+              openHistory(context);
+            },
+          ),
+          _Action(
+            key: const ValueKey('set-country'),
+            icon: Icons.public_rounded,
+            label: l.t('defaultCountry'),
+            sub: s.country.isEmpty ? l.t('notSet') : s.country,
+            onTap: () => askCountry(context, force: true),
+          ),
+          Builder(
+            builder: (context) {
+              final book = context.watch<PhoneBook>();
+              return _Action(
+                icon: Icons.contacts_outlined,
+                label: l.t('contactsAccess'),
+                sub: l.t('access_${book.access.name}'),
+                onTap: book.isDevice ? book.openSettings : null,
+              );
+            },
           ),
           SectionLabel(l.t('library')),
           _Action(
@@ -180,16 +211,20 @@ class _Settings extends StatelessWidget {
                         style: Type.label(p),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => showLicensePage(
-                        context: context,
-                        applicationName: 'Contact Flow',
-                        applicationVersion: appVersion,
-                      ),
-                      style: TextButton.styleFrom(foregroundColor: p.accent),
-                      child: Text(
-                        l.t('licenses'),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                    Flexible(
+                      child: TextButton(
+                        onPressed: () => showLicensePage(
+                          context: context,
+                          applicationName: 'Contact Flow',
+                          applicationVersion: appVersion,
+                        ),
+                        style: TextButton.styleFrom(foregroundColor: p.accent),
+                        child: Text(
+                          l.t('licenses'),
+                          maxLines: 2,
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                   ],
@@ -315,7 +350,10 @@ class _Action extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
   final bool danger;
+  final String? sub;
   const _Action({
+    super.key,
+    this.sub,
     required this.icon,
     required this.label,
     required this.onTap,
@@ -336,6 +374,9 @@ class _Action extends StatelessWidget {
           label,
           style: TextStyle(fontWeight: FontWeight.w700, color: c),
         ),
+        subtitle: sub == null
+            ? null
+            : Text(sub!, style: TextStyle(color: p.inkSoft)),
       ),
     );
   }

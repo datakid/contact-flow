@@ -1,0 +1,7 @@
+2.1.0 — a real contact manager
+• New Phone workspace: search, sort, filters, A–Z scroller, detail, create and edit
+• Every phone change is reviewed, backed up and undoable (Settings → History)
+• Update contacts from a spreadsheet with contact_id, number or name matching
+• Find and merge duplicates
+• Call, SMS, WhatsApp, Signal; personalised one-by-one messages that resume
+• Still offline: contacts permission only, no internet

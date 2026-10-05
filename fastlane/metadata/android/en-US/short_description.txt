@@ -1,1 +1,1 @@
-Import, clean up and export contacts in bulk. CSV, vCard, Excel. Fully offline.
+Manage, clean up, sync and merge phone contacts. Undo everything. Offline.
