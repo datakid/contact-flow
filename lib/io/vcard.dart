@@ -49,7 +49,11 @@ class VCard {
         case 'NOTE':
           cur.note = _unescape(v);
         case 'NICKNAME':
-          cur.nick = _unescape(v);
+        case 'X-NICKNAME':
+        case 'X-ANDROID-NICKNAME':
+          cur.nicks.addAll(
+            _splitList(v).map(_unescape).where((e) => e.isNotEmpty),
+          );
         case 'TITLE':
           cur.title = _unescape(v);
         case 'CATEGORIES':
@@ -274,6 +278,8 @@ class VCard {
         for (final e in p.emails) 'EMAIL;TYPE=INTERNET:${_esc(e)}',
         if (p.org.isNotEmpty) 'ORG:${_esc(p.org)}',
         if (p.note.isNotEmpty) 'NOTE:${_esc(p.note)}',
+        if (p.cleanAliases.isNotEmpty)
+          'NICKNAME:${p.cleanAliases.map(_esc).join(',')}',
         if (lossless) ...[
           if (p.name.isEmpty) 'X-CONTACTFLOW-NONAME:1',
           if (p.jobTitle.isNotEmpty) 'TITLE:${_esc(p.jobTitle)}',
@@ -309,7 +315,7 @@ class VCard {
 class _Card {
   String fn = '';
   List<String> n = [];
-  String nick = '';
+  final nicks = <String>[];
   String org = '';
   String note = '';
   String title = '';
@@ -333,8 +339,12 @@ class _Card {
         name = [given, middle, family].where((e) => e.isNotEmpty).join(' ');
       }
     }
-    if (name.isEmpty) name = nick;
+    var aliases = [...nicks];
+    if (name.isEmpty && !noName && aliases.isNotEmpty) {
+      name = aliases.removeAt(0);
+    }
     if (noName) name = '';
+    aliases = Aliases.clean(aliases, name: name);
     if (phones.isEmpty && emails.isEmpty && name.isEmpty && org.isEmpty) {
       return null;
     }
@@ -350,6 +360,7 @@ class _Card {
       account: account,
       starred: starred,
       groups: groups,
+      aliases: aliases,
     );
   }
 }

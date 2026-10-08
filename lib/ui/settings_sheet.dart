@@ -9,7 +9,7 @@ import 'reach_ui.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-const appVersion = '2.1.0';
+const appVersion = '2.2.0';
 
 Future<void> showSettings(BuildContext context) {
   return showModalBottomSheet(

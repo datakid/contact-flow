@@ -82,6 +82,7 @@ class Person {
   AccountRef? account;
   bool starred;
   List<String> groups;
+  List<String> aliases;
 
   Person({
     String? id,
@@ -97,10 +98,12 @@ class Person {
     this.account,
     this.starred = false,
     List<String>? groups,
+    List<String>? aliases,
   }) : id = id ?? _newId(),
        phones = phones ?? [],
        emails = emails ?? [],
        groups = groups ?? [],
+       aliases = aliases ?? [],
        added = added ?? DateTime.now();
 
   static final _rand = Random();
@@ -142,7 +145,10 @@ class Person {
         account: account,
         starred: starred,
         groups: [...groups],
+        aliases: [...aliases],
       );
+
+  List<String> get cleanAliases => Aliases.clean(aliases, name: name);
 
   Map<String, dynamic> toJson() => {
     'v': schemaVersion,
@@ -159,6 +165,7 @@ class Person {
     if (account != null) 'account': account!.toJson(),
     if (starred) 'starred': true,
     if (groups.isNotEmpty) 'groups': groups,
+    if (aliases.isNotEmpty) 'aliases': aliases,
   };
 
   factory Person.fromJson(Map m) => Person(
@@ -180,6 +187,7 @@ class Person {
     account: AccountRef.fromJson(m['account']),
     starred: m['starred'] == true,
     groups: ((m['groups'] as List?) ?? []).map((e) => '$e').toList(),
+    aliases: ((m['aliases'] as List?) ?? []).map((e) => '$e').toList(),
   );
 
   void absorb(Person other) {
@@ -199,8 +207,42 @@ class Person {
     if (org.isEmpty) org = other.org;
     if (jobTitle.isEmpty) jobTitle = other.jobTitle;
     if (note.isEmpty) note = other.note;
+    aliases = Aliases.union([
+      aliases,
+      other.aliases,
+      if (other.name.trim().isNotEmpty) [other.name],
+    ], name: name);
     phoneId ??= other.phoneId;
   }
+}
+
+class Aliases {
+  static final _split = RegExp(r'\s*(?::::|[,;|،、，；\n])\s*');
+
+  static String _key(String s) =>
+      s.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  static List<String> parse(String raw) => raw
+      .split(_split)
+      .map((e) => e.replaceAll(RegExp(r'\s+'), ' ').trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
+  static List<String> clean(Iterable<String> list, {String name = ''}) {
+    final seen = <String>{if (name.trim().isNotEmpty) _key(name)};
+    final out = <String>[];
+    for (final a in list) {
+      final t = a.replaceAll(RegExp(r'\s+'), ' ').trim();
+      if (t.isEmpty || t.length > 80) continue;
+      if (seen.add(_key(t))) out.add(t);
+    }
+    return out;
+  }
+
+  static List<String> union(Iterable<List<String>> lists, {String name = ''}) =>
+      clean([for (final l in lists) ...l], name: name);
+
+  static String join(List<String> list) => list.join(', ');
 }
 
 class Phones {

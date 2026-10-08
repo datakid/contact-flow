@@ -745,6 +745,7 @@ class _ContactRow extends StatelessWidget {
       'fuzzy' => l.t('matchFuzzy'),
       'translit' => l.t('matchTranslit'),
       'details' => l.t('matchDetails'),
+      'alias' => l.t('matchAlias', {'alias': h?.alias ?? ''}),
       _ => null,
     };
     final number = h?.matchedPhone ?? person.primaryNumber;
@@ -842,7 +843,12 @@ class _ContactRow extends StatelessWidget {
                         ],
                         if (reason != null) ...[
                           const SizedBox(width: 8),
-                          Tag(reason, color: p.sage),
+                          Flexible(
+                            child: Tag(
+                              reason,
+                              color: h?.reason == 'alias' ? p.accent : p.sage,
+                            ),
+                          ),
                         ],
                       ],
                     ),

@@ -5,6 +5,7 @@ import '../domain/planner.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../state/phone_book.dart';
+import 'alias_editor.dart';
 import 'pipeline.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -47,6 +48,8 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
       ? [_PhoneRow('', 'mobile')]
       : _base.phones.map((e) => _PhoneRow(e.number, e.label)).toList();
   late final Set<String> _groups = {..._base.groups};
+  late List<String> _aliases = _base.cleanAliases;
+  final _aliasKey = GlobalKey<AliasEditorState>();
   late bool _starred = _base.starred;
   String? _accountKey;
   bool _saving = false;
@@ -87,12 +90,15 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
         .toList();
     out.starred = _starred;
     out.groups = _groups.toList()..sort();
+    out.aliases = Aliases.clean(_aliases, name: out.name);
     return out;
   }
 
   Future<void> _save() async {
     final l = L.of(context);
     final book = context.read<PhoneBook>();
+    final pending = _aliasKey.currentState?.commitPending();
+    if (pending != null) _aliases = pending;
     final d = _draft();
     if (!d.hasName && d.phones.isEmpty && d.emails.isEmpty) {
       toast(context, l.t('needSomething'));
@@ -228,6 +234,17 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
                     p,
                     () => setState(() => _emails.add(TextEditingController())),
                   ),
+                  _label(l.t('aliases'), p),
+                  AnimatedBuilder(
+                    animation: _name,
+                    builder: (_, _) => AliasEditor(
+                      key: _aliasKey,
+                      aliases: _aliases,
+                      name: _name.text,
+                      onChanged: (v) => setState(() => _aliases = v),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   _Field(controller: _note, label: l.t('note'), lines: 3),
                   _label(l.t('groups'), p),
                   Wrap(
@@ -318,8 +335,8 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
     });
   }
 
-  Widget _label(String text, Palette p) => Padding(
-    padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
+  Widget _label(String text, Palette p, {double top = 20}) => Padding(
+    padding: EdgeInsets.fromLTRB(4, top, 4, 10),
     child: Text(text.toUpperCase(), style: Type.label(p)),
   );
 

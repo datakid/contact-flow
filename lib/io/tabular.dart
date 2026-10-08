@@ -13,6 +13,7 @@ enum Col {
   note,
   label,
   contactId,
+  alias,
   ignore,
 }
 
@@ -30,6 +31,7 @@ class TableMapping {
       if (c == Col.name || c == Col.first || c == Col.last) found.add('name');
       if (c == Col.org) found.add('company');
       if (c == Col.note) found.add('note');
+      if (c == Col.alias) found.add('alias');
     }
     return found.join(' · ');
   }
@@ -48,7 +50,6 @@ class Tabular {
   static const _ignoreKeys = [
     'phonetic',
     'yomi',
-    'nick',
     'prefix',
     'suffix',
     'file as',
@@ -164,6 +165,27 @@ class Tabular {
     'фамилия',
   ];
   static const _middleKeys = ['middle', 'الاوسط'];
+  static const _aliasKeys = [
+    'alias',
+    'nick',
+    'aka',
+    'also known',
+    'known as',
+    'other name',
+    'كنيه',
+    'مستعار',
+    'بديل',
+    'اسم اخر',
+    'يعرف ب',
+    '昵称',
+    '别名',
+    '暱稱',
+    '別名',
+    'apodo',
+    'surnom',
+    'spitzname',
+    'псевдоним',
+  ];
   static const _nameKeys = [
     'name',
     'nombre',
@@ -201,6 +223,7 @@ class Tabular {
     if (h == '姓') return Col.last;
     if (h == '名') return Col.first;
     if (h == 'contact id' || h == 'contactid') return Col.contactId;
+    if (_has(h, _aliasKeys) && !_has(h, _phoneKeys)) return Col.alias;
     if (h == 'job title' || h == 'title' || h == 'المسمى الوظيفي') {
       return Col.title;
     }
@@ -348,6 +371,7 @@ class Tabular {
       String cell(int i) => i < r.length ? r[i].trim() : '';
       var name = '', first = '', middle = '', last = '', org = '', note = '';
       var title = '', contactId = '';
+      final aliases = <String>[];
       final phones = <PhoneEntry>[];
       final emails = <String>[];
       for (var i = 0; i < m.columns.length; i++) {
@@ -368,6 +392,8 @@ class Tabular {
             title = title.isEmpty ? v : title;
           case Col.contactId:
             contactId = v;
+          case Col.alias:
+            aliases.addAll(Aliases.parse(v));
           case Col.note:
             note = note.isEmpty ? v : '$note\n$v';
           case Col.email:
@@ -404,6 +430,7 @@ class Tabular {
           note: note,
           source: source,
           phoneId: contactId.isEmpty ? null : contactId,
+          aliases: Aliases.clean(aliases, name: name),
         ),
       );
     }

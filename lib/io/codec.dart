@@ -55,6 +55,7 @@ class ExportOptions {
   final bool txtWithNames;
   final bool rtl;
   final bool contactId;
+  final bool includeAliases;
 
   const ExportOptions({
     this.header = true,
@@ -66,6 +67,7 @@ class ExportOptions {
     this.txtWithNames = true,
     this.rtl = false,
     this.contactId = false,
+    this.includeAliases = true,
   });
 
   ExportOptions copyWith({
@@ -78,6 +80,7 @@ class ExportOptions {
     bool? txtWithNames,
     bool? rtl,
     bool? contactId,
+    bool? includeAliases,
   }) => ExportOptions(
     header: header ?? this.header,
     includeEmail: includeEmail ?? this.includeEmail,
@@ -88,6 +91,7 @@ class ExportOptions {
     txtWithNames: txtWithNames ?? this.txtWithNames,
     rtl: rtl ?? this.rtl,
     contactId: contactId ?? this.contactId,
+    includeAliases: includeAliases ?? this.includeAliases,
   );
 }
 
@@ -353,6 +357,7 @@ class Codec {
       var name = '', first = '', last = '', org = '', note = '';
       final phones = <PhoneEntry>[];
       final emails = <String>[];
+      final aliases = <String>[];
       void addPhoneValue(dynamic v, String label) {
         if (v is String || v is num) {
           for (final p in Tabular.splitMulti('$v')) {
@@ -403,6 +408,12 @@ class Codec {
             org = '$v';
           case Col.note:
             note = '$v';
+          case Col.alias:
+            if (v is List) {
+              aliases.addAll(v.map((e) => '$e'));
+            } else {
+              aliases.addAll(Aliases.parse('$v'));
+            }
           default:
             if (v is List && k.toLowerCase().contains('phone')) {
               addPhoneValue(v, 'mobile');
@@ -419,6 +430,7 @@ class Codec {
           org: org,
           note: note,
           source: src,
+          aliases: Aliases.clean(aliases, name: name),
         ),
       );
     }
@@ -450,6 +462,8 @@ class Codec {
               .clamp(1, 3)
         : 0;
     final withId = o.contactId && people.any((p) => p.phoneId != null);
+    final withAlias =
+        o.includeAliases && people.any((p) => p.cleanAliases.isNotEmpty);
     final h = <String>[
       headers?[0] ?? 'Name',
       for (var i = 0; i < maxPhones; i++)
@@ -462,6 +476,8 @@ class Codec {
             : '${headers?[2] ?? 'Email'} ${i + 1}',
       if (o.includeOrg) headers?[3] ?? 'Company',
       if (o.includeNote) headers?[4] ?? 'Note',
+      if (withAlias)
+        (headers != null && headers.length > 5 ? headers[5] : 'Alias'),
       if (withId) 'contact_id',
     ];
     final rows = <List<String>>[if (o.header) h];
@@ -478,6 +494,7 @@ class Codec {
           i < p.emails.length ? p.emails[i] : '',
         if (o.includeOrg) p.org,
         if (o.includeNote) p.note,
+        if (withAlias) Aliases.join(p.cleanAliases),
         if (withId) p.phoneId ?? '',
       ]);
     }
@@ -520,6 +537,7 @@ class Codec {
                 emails: o.includeEmail ? p.emails : [],
                 org: o.includeOrg ? p.org : '',
                 note: o.includeNote ? p.note : '',
+                aliases: o.includeAliases ? p.cleanAliases : [],
               ),
             )
             .toList();
@@ -564,6 +582,8 @@ class Codec {
                 if (o.includeEmail) 'emails': p.emails,
                 if (o.includeOrg && p.org.isNotEmpty) 'company': p.org,
                 if (o.includeNote && p.note.isNotEmpty) 'note': p.note,
+                if (o.includeAliases && p.cleanAliases.isNotEmpty)
+                  'aliases': p.cleanAliases,
               },
             )
             .toList();

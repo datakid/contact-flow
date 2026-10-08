@@ -1,4 +1,5 @@
 import 'package:contact_flow/data/contact_source.dart';
+import 'package:contact_flow/search/fuzzy.dart';
 import 'package:contact_flow/domain/planner.dart';
 import 'package:contact_flow/domain/reach.dart';
 import 'package:contact_flow/main.dart';
@@ -319,6 +320,56 @@ void main() {
     await settle(t);
     expect(rig.source.size, start + 1);
     expect(rig.book.people.any((p) => p.name == 'Zed Edited'), isTrue);
+    expect(t.takeException(), isNull);
+  });
+
+  testWidgets('aliases: add in the editor, show on detail, find by alias', (
+    t,
+  ) async {
+    small(t);
+    final rig = await rigFor(t, 'en');
+    await show(t, rig, PhoneHome(onTab: (_) {}));
+    await t.tap(find.byKey(const ValueKey('newContact')));
+    await settle(t);
+    await t.enterText(
+      find.descendant(
+        of: find.byKey(const ValueKey('editName')),
+        matching: find.byType(TextField),
+      ),
+      'Omar Haddad',
+    );
+    await t.enterText(
+      find.byKey(const ValueKey('editPhone0')),
+      '+44 7700 654321',
+    );
+    final input = find.byKey(const ValueKey('aliasInput'));
+    await t.scrollUntilVisible(
+      input,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await settle(t);
+    await t.enterText(input, 'Abu Sami');
+    await t.tap(find.byKey(const ValueKey('aliasAdd')));
+    await settle(t);
+    await t.enterText(input, 'Omari');
+    await t.runAsync(() async {
+      await t.tap(find.byKey(const ValueKey('editSave')));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await settle(t);
+    final made = rig.book.people.firstWhere((p) => p.name == 'Omar Haddad');
+    expect(made.aliases, ['Abu Sami', 'Omari']);
+    expect(
+      (FuzzyIndex()..build(rig.book.people)).search('abu sami').first.person.id,
+      made.id,
+    );
+
+    await t.pumpWidget(
+      rig.wrap(ContactFlowApp(home: PhoneDetailScreen(id: made.id))),
+    );
+    await settle(t);
+    expect(find.byKey(const ValueKey('akaLine')), findsOneWidget);
     expect(t.takeException(), isNull);
   });
 

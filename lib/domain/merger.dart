@@ -55,6 +55,10 @@ class Merger {
     final all = [keep, ...others];
     final out = keep.copy();
     out.name = _first(all.map((p) => p.name));
+    out.aliases = Aliases.union([
+      for (final p in all) p.aliases,
+      [for (final p in all) p.name],
+    ], name: out.name);
     out.org = _first(all.map((p) => p.org));
     out.jobTitle = _first(all.map((p) => p.jobTitle));
     out.phones = unionPhones(all.map((p) => p.phones));
@@ -101,6 +105,7 @@ class Merger {
       p.emails.length +
       (p.org.isNotEmpty ? 1 : 0) +
       (p.note.isNotEmpty ? 1 : 0) +
+      (p.aliases.isNotEmpty ? 1 : 0) +
       (p.starred ? 3 : 0);
 
   static Person suggestKeep(List<Person> people) {

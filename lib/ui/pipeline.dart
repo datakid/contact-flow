@@ -17,7 +17,9 @@ String fieldValue(L l, ContactField f, String raw) {
   return switch (f) {
     ContactField.phones =>
       raw.split('\n').map((line) => line.split('\t').last).join(', '),
-    ContactField.emails || ContactField.groups => raw.split('\n').join(', '),
+    ContactField.emails ||
+    ContactField.groups ||
+    ContactField.aliases => raw.split('\n').join(', '),
     ContactField.starred => l.t('starredYes'),
     _ => raw.replaceAll('\n', ' '),
   };

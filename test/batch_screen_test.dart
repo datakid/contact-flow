@@ -76,7 +76,6 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('Batch edit'), findsOneWidget);
 
-    // inline edit
     await t.tap(find.text('Bob'));
     await t.pumpAndSettle();
     await t.enterText(find.byType(TextField), 'Robert');
@@ -85,7 +84,6 @@ void main() {
     expect(find.text('Robert'), findsOneWidget);
     expect(find.text('1 changed'), findsOneWidget);
 
-    // operation: add country code with preview
     await t.tap(find.text('Operations'));
     await t.pumpAndSettle();
     await t.scrollUntilVisible(
@@ -103,7 +101,6 @@ void main() {
     expect(find.text('+971501112222'), findsOneWidget);
     expect(find.text('+971523334444'), findsOneWidget);
 
-    // undo reverts the op only
     await t.tap(find.byTooltip('Undo'));
     await t.pumpAndSettle();
     expect(find.text('050 111 2222'), findsOneWidget);
@@ -113,7 +110,6 @@ void main() {
     await t.pumpAndSettle();
     expect(find.text('Batch edit'), findsNothing);
     expect(s.people.map((p) => p.name).toSet(), {'ali hassan', 'Robert'});
-    // original object untouched, id preserved on the saved copy
     expect(bob.name, 'Bob');
     expect(s.byId(bob.id)?.name, 'Robert');
   });

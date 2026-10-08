@@ -95,10 +95,12 @@ class PhoneSource implements ContactSource {
         ? null
         : AccountRef(accounts.first.name, accounts.first.type);
     final orgName = org?.name ?? '';
-    final name = _fullName(c);
+    final full = _fullName(c);
+    final name = full == orgName && (c.name?.first ?? '').isEmpty ? '' : full;
     return Person(
       id: 'phone:$id',
-      name: name == orgName && (c.name?.first ?? '').isEmpty ? '' : name,
+      name: name,
+      aliases: aliasesOf(c, name),
       phones: [
         for (final p in c.phones) PhoneEntry(p.number, _label(p.label.label)),
       ],
@@ -168,6 +170,9 @@ class PhoneSource implements ContactSource {
   @override
   Future<List<String>> groups() async => _groupIds.keys.toList()..sort();
 
+  static List<String> aliasesOf(fc.Contact c, String name) =>
+      Aliases.clean(Aliases.parse(c.name?.nickname ?? ''), name: name);
+
   static fc.Name _name(Person p) {
     final full = p.name.trim();
     if (full.isEmpty) return const fc.Name();
@@ -185,22 +190,109 @@ class PhoneSource implements ContactSource {
     return fc.Name(first: parts.join(' '), last: last);
   }
 
-  static fc.Contact _apply(fc.Contact base, Person p) => base.copyWith(
-    name: _name(p),
-    phones: [
-      for (final x in p.phones)
-        fc.Phone(number: x.number, label: fc.Label(_toLabel(x.label))),
-    ],
-    emails: [for (final e in p.emails) fc.Email(address: e)],
-    organizations: p.org.isEmpty && p.jobTitle.isEmpty
-        ? const []
-        : [
-            fc.Organization(
-              name: p.org,
-              jobTitle: p.jobTitle.isEmpty ? null : p.jobTitle,
-            ),
-          ],
-    notes: p.note.isEmpty ? const [] : [fc.Note(note: p.note)],
+  static bool _sameList(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  static fc.Name? _nameFor(fc.Contact base, Person p) {
+    final baseName = _fullName(base);
+    final baseOrg = base.organizations.isEmpty
+        ? ''
+        : (base.organizations.first.name ?? '');
+    final shown = baseName == baseOrg && (base.name?.first ?? '').isEmpty
+        ? ''
+        : baseName;
+    final aliases = p.cleanAliases;
+    final sameName = shown.trim() == p.name.trim();
+    final sameAliases = _sameList(aliasesOf(base, shown), aliases);
+    if (sameName && sameAliases && base.id != null) return base.name;
+    final nick = aliases.isEmpty ? null : Aliases.join(aliases);
+    final n = sameName && base.name != null ? base.name! : _name(p);
+    return fc.Name(
+      first: n.first,
+      middle: n.middle,
+      last: n.last,
+      prefix: n.prefix,
+      suffix: n.suffix,
+      phoneticFirst: n.phoneticFirst,
+      phoneticMiddle: n.phoneticMiddle,
+      phoneticLast: n.phoneticLast,
+      previousFamilyName: n.previousFamilyName,
+      nickname: nick,
+    );
+  }
+
+  static List<fc.Phone> _phonesFor(fc.Contact base, Person p) {
+    final pool = [...base.phones];
+    final out = <fc.Phone>[];
+    for (final x in p.phones) {
+      final i = pool.indexWhere((b) => b.number.trim() == x.number.trim());
+      if (i < 0) {
+        out.add(fc.Phone(number: x.number, label: fc.Label(_toLabel(x.label))));
+        continue;
+      }
+      final b = pool.removeAt(i);
+      out.add(
+        _label(b.label.label) == x.label
+            ? b
+            : b.copyWith(label: fc.Label(_toLabel(x.label))),
+      );
+    }
+    return out;
+  }
+
+  static List<fc.Email> _emailsFor(fc.Contact base, Person p) {
+    final pool = [...base.emails];
+    final out = <fc.Email>[];
+    for (final e in p.emails) {
+      final i = pool.indexWhere(
+        (b) => b.address.trim().toLowerCase() == e.trim().toLowerCase(),
+      );
+      out.add(
+        i < 0 ? fc.Email(address: e) : pool.removeAt(i).copyWith(address: e),
+      );
+    }
+    return out;
+  }
+
+  static List<fc.Organization> _orgsFor(fc.Contact base, Person p) {
+    if (p.org.isEmpty && p.jobTitle.isEmpty) return const [];
+    final first = base.organizations.isEmpty ? null : base.organizations.first;
+    final org = fc.Organization(
+      name: p.org.isEmpty ? null : p.org,
+      jobTitle: p.jobTitle.isEmpty ? null : p.jobTitle,
+      departmentName: first?.departmentName,
+      phoneticName: first?.phoneticName,
+      jobDescription: first?.jobDescription,
+      symbol: first?.symbol,
+      officeLocation: first?.officeLocation,
+    );
+    return [org, ...base.organizations.skip(1)];
+  }
+
+  static List<fc.Note> _notesFor(fc.Contact base, Person p) {
+    if (p.note.isEmpty) return const [];
+    final joined = base.notes
+        .map((n) => n.note)
+        .where((n) => n.isNotEmpty)
+        .join('\n');
+    if (joined == p.note) return base.notes;
+    final first = base.notes.isEmpty ? null : base.notes.first;
+    return [
+      first == null ? fc.Note(note: p.note) : first.copyWith(note: p.note),
+    ];
+  }
+
+  static fc.Contact apply(fc.Contact base, Person p) => base.copyWith(
+    name: _nameFor(base, p),
+    phones: _phonesFor(base, p),
+    emails: _emailsFor(base, p),
+    organizations: _orgsFor(base, p),
+    notes: _notesFor(base, p),
     android: fc.AndroidData(
       isFavorite: p.starred,
       customRingtone: base.android?.customRingtone,
@@ -252,7 +344,7 @@ class PhoneSource implements ContactSource {
   Future<String> create(Person p, {AccountRef? account}) async {
     final acc = account ?? p.account;
     final id = await fc.FlutterContacts.create(
-      _apply(const fc.Contact(), p),
+      apply(const fc.Contact(), p),
       account: acc == null || acc.type.isEmpty
           ? null
           : fc.Account(id: '', name: acc.name, type: acc.type),
@@ -273,7 +365,7 @@ class PhoneSource implements ContactSource {
     if (id == null) throw ContactGone(p.id);
     final base = await _fresh(id);
     try {
-      await fc.FlutterContacts.update(_apply(base, p));
+      await fc.FlutterContacts.update(apply(base, p));
     } catch (e) {
       final s = e.toString().toLowerCase();
       if (s.contains('read') && s.contains('only')) {

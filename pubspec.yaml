@@ -2,7 +2,7 @@ name: contact_flow
 description: "Contact Flow — batch import and export contacts."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.1.0+4
+version: 2.2.0+5
 
 environment:
   sdk: ^3.9.2

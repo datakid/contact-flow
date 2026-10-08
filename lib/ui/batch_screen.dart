@@ -177,7 +177,6 @@ class _BatchScreenState extends State<BatchScreen> {
     setState(() => _rows[i] = next);
   }
 
-  /// Moves editing to the same column in the next row (keyboard "next").
   void _nextRow() {
     final e = _editing;
     if (e == null) return;
@@ -545,8 +544,6 @@ class _BatchScreenState extends State<BatchScreen> {
     );
   }
 
-  // ───────────────────────── operations ─────────────────────────
-
   void _openOps(BuildContext context) {
     _commitCell();
     _cellFocus.unfocus();
@@ -579,6 +576,10 @@ const _ops = [
   _OpDef('opCase', Icons.text_format_rounded, 'grpNames'),
   _OpDef('opSwap', Icons.swap_horiz_rounded, 'grpNames'),
   _OpDef('opClean', Icons.cleaning_services_outlined, 'grpNames'),
+  _OpDef('opAddAlias', Icons.badge_outlined, 'grpAliases'),
+  _OpDef('opKeepAlias', Icons.bookmark_add_outlined, 'grpAliases'),
+  _OpDef('opPromoteAlias', Icons.swap_vert_rounded, 'grpAliases'),
+  _OpDef('opClearAliases', Icons.layers_clear_outlined, 'grpAliases'),
   _OpDef('opAddCc', Icons.public_rounded, 'grpNumbers'),
   _OpDef('opRemoveCc', Icons.public_off_rounded, 'grpNumbers'),
   _OpDef('opPrefix', Icons.dialpad_rounded, 'grpNumbers'),
@@ -667,7 +668,6 @@ class _OpsSheet extends StatelessWidget {
   }
 }
 
-/// Form for one operation with a live "before → after" preview.
 class _OpDialog extends StatefulWidget {
   final String kind;
   final List<Person> rows;
@@ -719,6 +719,10 @@ class _OpDialogState extends State<_OpDialog> {
       'opCase' => CaseName(_case),
       'opSwap' => const SwapName(),
       'opClean' => const CleanName(),
+      'opAddAlias' => a.trim().isEmpty ? null : AddAlias(a),
+      'opKeepAlias' => const KeepNameAsAlias(),
+      'opPromoteAlias' => const PromoteAlias(),
+      'opClearAliases' => const ClearAliases(),
       'opAddCc' => a.trim().isEmpty ? null : AddCountryCode(a),
       'opRemoveCc' => a.trim().isEmpty ? null : RemoveCountryCode(a),
       'opPrefix' => a.trim().isEmpty ? null : ReplaceInNumbers(a, b),
@@ -743,6 +747,18 @@ class _OpDialogState extends State<_OpDialog> {
   String _show(Person p) {
     if (widget.kind == 'opCompany') return p.org.isEmpty ? '—' : p.org;
     if (widget.kind == 'opNote') return p.note.isEmpty ? '—' : p.note;
+    if (widget.kind == 'opPromoteAlias') {
+      final a = p.cleanAliases;
+      return a.isEmpty ? p.name : '${p.name} · ${a.join(', ')}';
+    }
+    if (const {
+      'opAddAlias',
+      'opKeepAlias',
+      'opClearAliases',
+    }.contains(widget.kind)) {
+      final a = p.cleanAliases;
+      return a.isEmpty ? '—' : a.join(', ');
+    }
     if (widget.kind == 'opLabel') {
       return p.phones.map((e) => e.label).join(', ');
     }
@@ -926,6 +942,14 @@ class _OpDialogState extends State<_OpDialog> {
         ];
       case 'opNote':
         return [_field(_a, l.t('note')), _check(l.t('appendNote'))];
+      case 'opAddAlias':
+        return [
+          _field(_a, l.t('alias'), hint: l.t('aliasHint')),
+          Text(
+            l.t('opAddAliasHelp'),
+            style: TextStyle(fontSize: 12.5, color: p.inkSoft, height: 1.4),
+          ),
+        ];
       default:
         return [
           Text(

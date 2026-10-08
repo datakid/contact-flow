@@ -1,10 +1,10 @@
 import '../models/person.dart';
 
-/// A copy that shares nothing mutable with the original.
 Person clonePerson(Person p) => p.copy();
 
 bool samePerson(Person a, Person b) {
   if (a.name != b.name || a.org != b.org || a.note != b.note) return false;
+  if (a.aliases.join('\u0000') != b.aliases.join('\u0000')) return false;
   if (a.phones.length != b.phones.length) return false;
   for (var i = 0; i < a.phones.length; i++) {
     if (a.phones[i].number != b.phones[i].number ||
@@ -23,14 +23,10 @@ enum CaseMode { title, upper, lower }
 
 enum NumFormat { e164, digits, spaced }
 
-/// Every batch operation is a pure transform: it receives a clone and its
-/// 0-based position in the batch, and mutates the clone.
 sealed class BatchOp {
   const BatchOp();
   void apply(Person p, int index);
 
-  /// Runs the op over [people] and returns only the contacts that changed,
-  /// as fresh clones (originals untouched).
   static List<(Person before, Person after)> run(
     BatchOp op,
     List<Person> people,
@@ -45,8 +41,6 @@ sealed class BatchOp {
     return out;
   }
 }
-
-// ───────────────────────── names ─────────────────────────
 
 class ReplaceInName extends BatchOp {
   final String find;
@@ -92,7 +86,6 @@ class CleanName extends BatchOp {
   const CleanName();
   @override
   void apply(Person p, int index) {
-    // Strip emoji/symbols at the edges, collapse spaces.
     var n = p.name.replaceAll(
       RegExp(r'[\u200B-\u200F\u202A-\u202E\uFEFF]'),
       '',
@@ -102,6 +95,57 @@ class CleanName extends BatchOp {
       '',
     );
     p.name = TextOps.squash(n);
+  }
+}
+
+class AddAlias extends BatchOp {
+  final String alias;
+  const AddAlias(this.alias);
+  @override
+  void apply(Person p, int index) {
+    final a = TextOps.squash(alias);
+    if (a.isEmpty) return;
+    p.aliases = Aliases.union([
+      p.aliases,
+      [a],
+    ], name: p.name);
+  }
+}
+
+class KeepNameAsAlias extends BatchOp {
+  const KeepNameAsAlias();
+  @override
+  void apply(Person p, int index) {
+    final n = TextOps.squash(p.name);
+    if (n.isEmpty) return;
+    final next = Aliases.union([
+      p.aliases,
+      [n],
+    ]);
+    if (next.length != p.aliases.length) p.aliases = next;
+  }
+}
+
+class PromoteAlias extends BatchOp {
+  const PromoteAlias();
+  @override
+  void apply(Person p, int index) {
+    final list = p.cleanAliases;
+    if (list.isEmpty) return;
+    final old = p.name.trim();
+    p.name = list.first;
+    p.aliases = Aliases.clean([
+      ...list.skip(1),
+      if (old.isNotEmpty) old,
+    ], name: p.name);
+  }
+}
+
+class ClearAliases extends BatchOp {
+  const ClearAliases();
+  @override
+  void apply(Person p, int index) {
+    if (p.aliases.isNotEmpty) p.aliases = [];
   }
 }
 
@@ -116,8 +160,6 @@ class SwapName extends BatchOp {
   }
 }
 
-/// Template rename: `{name}`, `{first}`, `{last}`, `{company}`, `{n}`.
-/// `{n}` is the 1-based position + [start] - 1, zero-padded to [pad] digits.
 class TemplateName extends BatchOp {
   final String template;
   final int start;
@@ -141,6 +183,10 @@ class TemplateName extends BatchOp {
           .replaceAll('{first}', first)
           .replaceAll('{last}', last)
           .replaceAll('{company}', p.org.trim())
+          .replaceAll(
+            '{alias}',
+            p.cleanAliases.isEmpty ? '' : p.cleanAliases.first,
+          )
           .replaceAll('{n}', n),
     );
   }
@@ -153,14 +199,10 @@ class TemplateName extends BatchOp {
   }
 }
 
-// ───────────────────────── numbers ─────────────────────────
-
 class ReplaceInNumbers extends BatchOp {
   final String find;
   final String replace;
 
-  /// When true, only replaces [find] at the start of the number
-  /// (ignoring spaces/dashes) — the common "change prefix 050 → 055" case.
   final bool prefixOnly;
   const ReplaceInNumbers(this.find, this.replace, {this.prefixOnly = true});
 
@@ -179,10 +221,8 @@ class ReplaceInNumbers extends BatchOp {
   }
 }
 
-/// Adds an international prefix to numbers that don't have one.
-/// A single national trunk `0` is dropped: 050 123 4567 → +971 50 123 4567.
 class AddCountryCode extends BatchOp {
-  final String code; // digits only, e.g. "971"
+  final String code;
   const AddCountryCode(this.code);
 
   static String normalizeCode(String raw) =>
@@ -209,7 +249,6 @@ class AddCountryCode extends BatchOp {
   }
 }
 
-/// Removes a country code, turning +971 50… back into 050… .
 class RemoveCountryCode extends BatchOp {
   final String code;
   final bool addTrunkZero;
@@ -252,7 +291,6 @@ class FormatNumbers extends BatchOp {
         final d = Phones.digits(c);
         final groups = <String>[];
         var i = d.length;
-        // group from the right in 4-3-3… so the tail stays readable
         final sizes = [4, 3, 3, 3, 3, 3];
         var k = 0;
         while (i > 0) {
@@ -291,8 +329,6 @@ class LabelNumbers extends BatchOp {
   }
 }
 
-// ───────────────────────── other fields ─────────────────────────
-
 class SetCompany extends BatchOp {
   final String value;
   final bool onlyEmpty;
@@ -319,8 +355,6 @@ class SetNote extends BatchOp {
     }
   }
 }
-
-// ───────────────────────── helpers ─────────────────────────
 
 class TextOps {
   static String squash(String s) => s.replaceAll(RegExp(r'\s+'), ' ').trim();

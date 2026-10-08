@@ -80,6 +80,7 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 
   bool get _hasIds => widget.people.any((p) => p.phoneId != null);
+  bool get _hasAliases => widget.people.any((p) => p.cleanAliases.isNotEmpty);
 
   String get _fileName {
     final base = _name.text.trim().isEmpty
@@ -94,6 +95,7 @@ class _ExportScreenState extends State<ExportScreen> {
     l.t('email'),
     l.t('company'),
     l.t('note'),
+    l.t('alias'),
   ];
 
   String _preview(L l) {
@@ -383,7 +385,7 @@ class _ExportScreenState extends State<ExportScreen> {
                       duration: const Duration(milliseconds: 260),
                       child: Container(
                         key: ValueKey(
-                          '${_f.name}${_o.hashCode}${_o.header}${_o.includeEmail}${_o.includeOrg}${_o.includeNote}${_o.allNumbers}${_o.phoneStyle}${_o.txtWithNames}',
+                          '${_f.name}${_o.hashCode}${_o.header}${_o.includeEmail}${_o.includeOrg}${_o.includeNote}${_o.includeAliases}${_o.allNumbers}${_o.phoneStyle}${_o.txtWithNames}',
                         ),
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -559,6 +561,12 @@ class _ExportScreenState extends State<ExportScreen> {
             l.t('includeNote'),
             _o.includeNote,
             (v) => _o = _o.copyWith(includeNote: v),
+          ),
+        if (rich && _hasAliases)
+          sw(
+            l.t('includeAliases'),
+            _o.includeAliases,
+            (v) => _o = _o.copyWith(includeAliases: v),
           ),
         if (_hasIds && tabular)
           sw(l.t('includeContactId'), _o.contactId, (v) {

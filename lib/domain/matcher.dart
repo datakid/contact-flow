@@ -37,6 +37,7 @@ class ContactMatcher {
   final Map<String, Person> _byPhoneId = {};
   final Map<String, List<Person>> _byKey = {};
   final Map<String, List<Person>> _byName = {};
+  final Map<String, List<Person>> _byAlias = {};
 
   ContactMatcher(this.phone) {
     for (final p in phone) {
@@ -47,6 +48,10 @@ class ContactMatcher {
       }
       final n = NameParts.normalized(p.name);
       if (n.isNotEmpty) (_byName[n] ??= []).add(p);
+      for (final a in p.cleanAliases) {
+        final k = NameParts.normalized(a);
+        if (k.isNotEmpty && k != n) (_byAlias[k] ??= []).add(p);
+      }
     }
   }
 
@@ -158,8 +163,11 @@ class ContactMatcher {
       return Conflict(row, shared.values.toList(), ConflictReason.sharedNumber);
     }
     if (name.isEmpty) return null;
-    final named = _byName[name];
-    if (named == null || named.isEmpty) return null;
+    var named = _byName[name];
+    if (named == null || named.isEmpty) {
+      named = _byAlias[name];
+      if (named == null || named.isEmpty) return null;
+    }
     if (named.length == 1) return _Proposal(row, named.first, MatchReason.name);
     return Conflict(row, [...named], ConflictReason.sameName);
   }

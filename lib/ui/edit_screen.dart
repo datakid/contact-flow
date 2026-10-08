@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../state/app_state.dart';
+import 'alias_editor.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -38,6 +39,8 @@ class _EditorState extends State<_Editor> {
     text: widget.person.emails.join(', '),
   );
   late final _note = TextEditingController(text: widget.person.note);
+  late List<String> _aliases = widget.person.cleanAliases;
+  final _aliasKey = GlobalKey<AliasEditorState>();
   late final List<_Row> _phones = widget.person.phones.isEmpty
       ? [_Row('', 'mobile')]
       : widget.person.phones.map((e) => _Row(e.number, e.label)).toList();
@@ -60,6 +63,8 @@ class _EditorState extends State<_Editor> {
 
   Future<void> _save() async {
     final l = L.of(context);
+    final pending = _aliasKey.currentState?.commitPending();
+    if (pending != null) _aliases = pending;
     final phones = _phones
         .map((r) => PhoneEntry(r.number.text.trim(), r.label))
         .where((e) => Phones.digits(e.number).length >= 3)
@@ -78,7 +83,8 @@ class _EditorState extends State<_Editor> {
       ..org = _org.text.trim()
       ..note = _note.text.trim()
       ..phones = phones
-      ..emails = emails;
+      ..emails = emails
+      ..aliases = Aliases.clean(_aliases, name: _name.text.trim());
     await context.read<AppState>().update(p);
     if (mounted) Navigator.pop(context);
   }
@@ -230,6 +236,23 @@ class _EditorState extends State<_Editor> {
                     keyboard: TextInputType.emailAddress,
                     ltr: true,
                   ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                    child: Text(
+                      l.t('aliases').toUpperCase(),
+                      style: Type.label(p),
+                    ),
+                  ),
+                  AnimatedBuilder(
+                    animation: _name,
+                    builder: (_, _) => AliasEditor(
+                      key: _aliasKey,
+                      aliases: _aliases,
+                      name: _name.text,
+                      onChanged: (v) => setState(() => _aliases = v),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   _Field(controller: _note, label: l.t('note'), lines: 3),
                 ],
               ),

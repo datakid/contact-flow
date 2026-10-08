@@ -12,6 +12,15 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 ---
 
+## What's new in 2.2.0
+
+- **Aliases** — any number of aliases per contact (nicknames, kunyas, other spellings). Search finds people by any alias and shows "aka" on the match; the detail screen shows them under the name
+- Stored in the Android Nickname field, so other contacts apps and Google sync see them; read back from contacts made elsewhere
+- **Files** — vCard `NICKNAME`, an `Alias` column in CSV / Excel / Numbers (headers like Nickname, AKA, اسم بديل, 别名, Apodo, Surnom are recognised) and `aliases` in JSON; can be switched off per export
+- **Merge** keeps the other contacts' names as aliases; sync policies fill, overwrite or add aliases; matching falls back to aliases
+- **Batch** — add alias, keep current name as alias, swap first alias with name, clear aliases; `{alias}` in rename patterns and messages
+- **Polish** — editing a phone contact keeps prefixes, phonetic names, departments and per-number details intact; long labels no longer overflow at large text sizes
+
 ## What's new in 2.1.0
 
 - **Phone workspace** — search, sort, filters (account, starred, group, no number, no name), A–Z scroller, detail, create/edit, bulk star/group/delete, share vCard

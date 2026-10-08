@@ -6,6 +6,7 @@ import '../domain/planner.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../state/phone_book.dart';
+import 'alias_editor.dart';
 import 'phone_edit.dart';
 import 'pipeline.dart';
 import 'reach_ui.dart';
@@ -113,6 +114,7 @@ class PhoneDetailScreen extends StatelessWidget {
                 style: Type.display(p, size: 34),
               ),
             ),
+            AliasLine(aliases: person.cleanAliases),
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Row(

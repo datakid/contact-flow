@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../state/app_state.dart';
+import 'alias_editor.dart';
 import 'edit_screen.dart';
 import 'export_screen.dart';
 import 'theme.dart';
@@ -67,6 +68,7 @@ class _Detail extends StatelessWidget {
               style: Type.display(p, size: 34),
             ),
           ),
+          AliasLine(aliases: person.cleanAliases),
           if (person.org.isNotEmpty && person.name.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 6),

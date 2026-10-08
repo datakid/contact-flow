@@ -5,12 +5,14 @@ class MessageTemplate {
   final String text;
   const MessageTemplate(this.text);
 
-  static const tokens = ['{first}', '{last}', '{name}', '{company}'];
+  static const tokens = ['{first}', '{alias}', '{last}', '{name}', '{company}'];
 
   String render(Person p) {
     final parts = NameParts.of(p.name);
     final first = parts.first.isEmpty ? p.name.trim() : parts.first;
+    final aliases = p.cleanAliases;
     return text
+        .replaceAll('{alias}', aliases.isEmpty ? first : aliases.first)
         .replaceAll('{first}', first)
         .replaceAll('{last}', parts.last)
         .replaceAll('{name}', p.name.trim())

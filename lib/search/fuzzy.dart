@@ -11,6 +11,7 @@ class Hit {
   final List<(int, int)> nameRanges;
   final String? matchedPhone;
   final String? reason;
+  final String? alias;
 
   const Hit(
     this.person,
@@ -18,6 +19,7 @@ class Hit {
     this.nameRanges = const [],
     this.matchedPhone,
     this.reason,
+    this.alias,
   });
 }
 
@@ -43,6 +45,7 @@ class _Entry {
   final bool arabic;
   final List<String> phoneDigits;
   final String extras;
+  final String? alias;
 
   _Entry({
     required this.p,
@@ -58,10 +61,11 @@ class _Entry {
     required this.arabic,
     required this.phoneDigits,
     required this.extras,
+    this.alias,
   });
 
-  factory _Entry.of(Person p) {
-    final name = p.displayName;
+  factory _Entry.of(Person p, [String? alias]) {
+    final name = alias ?? p.displayName;
     final f = Fold.withMap(name);
     final words = <String>[];
     final starts = <int>[];
@@ -121,8 +125,13 @@ class _Entry {
       syllables: syl,
       skeleton: skel,
       arabic: ar,
-      phoneDigits: p.phones.map((x) => x.digits).toList(),
-      extras: Fold.basic([...p.emails, p.org, p.note].join(' ')),
+      phoneDigits: alias != null
+          ? const []
+          : p.phones.map((x) => x.digits).toList(),
+      extras: alias != null
+          ? ''
+          : Fold.basic([...p.emails, p.org, p.note].join(' ')),
+      alias: alias,
     );
   }
 
@@ -149,10 +158,15 @@ class _TokenMatch {
 class FuzzyIndex {
   List<_Entry> _entries = const [];
 
-  int get size => _entries.length;
+  int get size => _entries.where((e) => e.alias == null).length;
 
   void build(List<Person> people) {
-    _entries = people.map(_Entry.of).toList(growable: false);
+    _entries = [
+      for (final p in people) ...[
+        _Entry.of(p),
+        for (final a in p.cleanAliases) _Entry.of(p, a),
+      ],
+    ];
   }
 
   List<Hit> search(String query, {int limit = 100000}) {
@@ -166,11 +180,23 @@ class FuzzyIndex {
         qDigits.length >= 3 && RegExp(r'^[\s\d+\-\.\(\)٠-٩۰-۹]+$').hasMatch(q);
     final joined = tokens.join();
     final out = <Hit>[];
+    final best = <Person, int>{};
+    void push(Hit h) {
+      final i = best[h.person];
+      if (i == null) {
+        best[h.person] = out.length;
+        out.add(h);
+      } else if (h.score > out[i].score) {
+        out[i] = h;
+      }
+    }
+
     for (final e in _entries) {
       if (digitQuery) {
+        if (e.alias != null) continue;
         final m = _phone(e, qDigits);
         if (m != null) {
-          out.add(Hit(e.p, m.score, matchedPhone: m.phone, reason: 'phone'));
+          push(Hit(e.p, m.score, matchedPhone: m.phone, reason: 'phone'));
         }
         continue;
       }
@@ -205,7 +231,20 @@ class FuzzyIndex {
       if (e.folded.startsWith(fq)) score += 12;
       if (e.folded == fq) score += 20;
       score -= min(8, e.name.length / 12);
-      out.add(
+      if (e.alias != null) {
+        if (reason == 'details') continue;
+        push(
+          Hit(
+            e.p,
+            score - 3,
+            matchedPhone: phone,
+            reason: 'alias',
+            alias: e.alias,
+          ),
+        );
+        continue;
+      }
+      push(
         Hit(
           e.p,
           score,

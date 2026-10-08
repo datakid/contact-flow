@@ -2,6 +2,7 @@ import '../models/person.dart';
 
 enum ContactField {
   name,
+  aliases,
   phones,
   emails,
   company,
@@ -20,6 +21,7 @@ class FieldChange {
 
 String fieldText(Person p, ContactField f) => switch (f) {
   ContactField.name => p.name.trim(),
+  ContactField.aliases => p.cleanAliases.join('\n'),
   ContactField.phones =>
     p.phones.map((e) => '${e.label}\t${e.number.trim()}').join('\n'),
   ContactField.emails => p.emails.map((e) => e.trim()).join('\n'),

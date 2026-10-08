@@ -185,6 +185,7 @@ class AppState extends ContactList {
             org: p.org,
             note: p.note,
             source: p.source,
+            aliases: p.aliases,
             added: now.subtract(Duration(microseconds: i++)),
           ),
         )
@@ -220,9 +221,6 @@ class AppState extends ContactList {
     notifyListeners();
   }
 
-  /// Replaces contacts (matched by id) with edited copies in one write.
-  /// Returns the previous versions (same ids) so the caller can offer undo
-  /// by passing them straight back into [replaceMany].
   Future<List<Person>> replaceMany(List<Person> edited) async {
     if (edited.isEmpty) return const [];
     final byId = {for (final p in edited) p.id: p};

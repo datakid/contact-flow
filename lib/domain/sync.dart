@@ -74,14 +74,21 @@ class SyncPlanner {
         out.note = pick(out.note, row.note);
         if (row.phones.isNotEmpty) out.phones = _copyPhones(row.phones);
         if (row.emails.isNotEmpty) out.emails = [...row.emails];
+        if (row.aliases.isNotEmpty) {
+          out.aliases = Aliases.clean(row.aliases, name: out.name);
+        }
       case FieldPolicy.fillEmpty:
         out.note = pick(out.note, row.note);
         if (out.phones.isEmpty) out.phones = _copyPhones(row.phones);
         if (out.emails.isEmpty) out.emails = [...row.emails];
+        if (out.aliases.isEmpty) {
+          out.aliases = Aliases.clean(row.aliases, name: out.name);
+        }
       case FieldPolicy.addNumbers:
         out.phones = Merger.unionPhones([out.phones, row.phones]);
         out.emails = Merger.unionEmails([out.emails, row.emails]);
         out.note = Merger.unionNotes([out.note, row.note]);
+        out.aliases = Aliases.union([out.aliases, row.aliases], name: out.name);
     }
     return out;
   }

@@ -34,7 +34,6 @@ void main() {
       await t.pumpWidget(rig.wrap(const ContactFlowApp()));
       await t.pumpAndSettle();
 
-      // Tap the far edge of the search pill (not the text line) — should focus.
       final field = find.byType(TextField).first;
       final rect = t.getRect(field);
       await t.tapAt(Offset(rect.center.dx, rect.top + 2));
@@ -48,7 +47,6 @@ void main() {
       expect(s.searching, isTrue);
       expect(s.visible, isNotEmpty);
 
-      // Batch editor on the search results.
       await t.tap(find.byIcon(Icons.table_rows_outlined).first);
       await t.pumpAndSettle();
       expect(find.byIcon(Icons.undo_rounded), findsOneWidget);
@@ -76,7 +74,7 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.text('Contact Flow 2.1.0 · MIT'), findsOneWidget);
+    expect(find.text('Contact Flow 2.2.0 · MIT'), findsOneWidget);
     final entries = await t.runAsync(() => LicenseRegistry.licenses.toList());
     final pkgs = entries!.expand((e) => e.packages).toSet();
     expect(pkgs, containsAll(['Manrope', 'Instrument Serif']));

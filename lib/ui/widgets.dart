@@ -217,6 +217,8 @@ class Tag extends StatelessWidget {
       ),
       child: Text(
         text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
@@ -367,12 +369,16 @@ class Pill extends StatelessWidget {
               Icon(icon, size: 15, color: active ? p.paper : p.inkSoft),
               const SizedBox(width: 6),
             ],
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: active ? p.paper : p.inkSoft,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: active ? p.paper : p.inkSoft,
+                ),
               ),
             ),
           ],
@@ -544,7 +550,6 @@ class SheetHandle extends StatelessWidget {
   );
 }
 
-/// One short, human line for an exception — never a stack dump.
 String friendlyError(Object e) {
   var s = e.toString().split('\n').first.trim();
   s = s.replaceFirst(
