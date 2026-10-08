@@ -1,7 +1,8 @@
 Contact Flow manages the contacts on your phone and moves them in and out of every common file format — fully offline.
 
 <b>Phone workspace</b>
-• Search names, numbers, pinyin and Arabic transliteration
+• Search names, aliases, numbers, pinyin and Arabic transliteration
+• Give a contact several aliases — nicknames, kunyas, other spellings — stored in the phone's Nickname field
 • Filter by account, starred, group, no number or no name; A–Z scroller
 • Create, edit, star, group, share as vCard and delete — single or in bulk
 • Batch table for hundreds of contacts at once
@@ -18,11 +19,11 @@ Contact Flow manages the contacts on your phone and moves them in and out of eve
 • Fill empty, Overwrite or Add numbers; conflicts are left for you to decide
 
 <b>Duplicates</b>
-• Finds contacts with the same number or name and merges them into the one you keep
+• Finds contacts with the same number or name and merges them into the one you keep; the other names become aliases
 
 <b>Reach people</b>
 • Call, SMS, WhatsApp and Signal from any contact; copy numbers in international format
-• Personalised messages with {first}, {last}, {name}, {company} sent one by one through your own apps; the queue resumes if the app is closed
+• Personalised messages with {first}, {alias}, {last}, {name}, {company} sent one by one through your own apps; the queue resumes if the app is closed
 • Contact Flow never sends anything by itself
 
 <b>Files</b>

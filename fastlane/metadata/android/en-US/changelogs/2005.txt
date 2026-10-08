@@ -1,0 +1,8 @@
+2.2.0 — aliases
+• Give contacts several aliases (nicknames, kunyas, spellings) and find them by any
+• Saved in the phone's Nickname field, so other apps see them
+• Aliases in vCard, CSV, Excel and JSON import/export
+• Merge keeps other names as aliases; new {alias} token
+• Batch: add, keep name as alias, swap, clear
+• Edits keep name prefixes and number details on the phone
+• Layout fixes for large text
