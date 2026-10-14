@@ -6,16 +6,37 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../data/sample.dart';
+import '../domain/sheet_template.dart';
 import '../io/codec.dart';
 import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../services/device_contacts.dart';
+import '../services/file_out.dart';
 import '../state/app_state.dart';
 import '../state/phone_book.dart';
+import 'import_issues.dart';
 import 'sync_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
+
+Future<void> saveTemplate(BuildContext context, Format f) async {
+  final l = L.of(context);
+  try {
+    final bytes = SheetTemplate.build(f, l);
+    final name = SheetTemplate.fileName(f);
+    final saved = await saveBytes(bytes, name, f.mime);
+    if (saved == null || !context.mounted) return;
+    toast(
+      context,
+      l.t('saved', {'name': name}),
+      action: l.t('share'),
+      onAction: () => shareBytes(bytes, name, f.mime),
+    );
+  } catch (e) {
+    if (context.mounted) toast(context, friendlyError(e));
+  }
+}
 
 Future<void> showImport(BuildContext context) {
   return showModalBottomSheet(
@@ -36,6 +57,8 @@ class _ImportSheet extends StatefulWidget {
 class _ImportSheetState extends State<_ImportSheet> {
   bool _busy = false;
   bool _pasting = false;
+  bool _templating = false;
+  bool _templateHint = false;
   String? _note;
   final _paste = TextEditingController();
 
@@ -51,16 +74,28 @@ class _ImportSheetState extends State<_ImportSheet> {
     final nav = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final total = results.fold<int>(0, (a, r) => a + r.people.length);
+    final problems = ImportIssues.describe(l, results);
     if (total == 0) {
       setState(() {
         _busy = false;
-        _note = l.t('nothingFound');
+        _note = problems.isEmpty ? l.t('nothingFound') : problems;
+        _templateHint = ImportIssues.suggestsTemplate(results);
       });
       return;
     }
     final plan = s.plan(results);
     final root = Navigator.of(context, rootNavigator: true);
     nav.pop();
+    if (problems.isNotEmpty) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(problems),
+          duration: const Duration(seconds: 6),
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
+        ),
+      );
+    }
     final added = await root.push<int>(
       MaterialPageRoute(builder: (_) => ReviewScreen(plan: plan)),
     );
@@ -78,12 +113,16 @@ class _ImportSheetState extends State<_ImportSheet> {
   Future<void> _fromDevice() async {
     final l = L.of(context);
     if (!DeviceContacts.supported) {
-      setState(() => _note = l.t('webDevice'));
+      setState(() {
+        _note = l.t('webDevice');
+        _templateHint = false;
+      });
       return;
     }
     setState(() {
       _busy = true;
       _note = null;
+      _templateHint = false;
     });
     final access = await DeviceContacts.request();
     if (!mounted) return;
@@ -111,10 +150,10 @@ class _ImportSheetState extends State<_ImportSheet> {
   }
 
   Future<void> _fromFiles() async {
-    final l = L.of(context);
     setState(() {
       _busy = true;
       _note = null;
+      _templateHint = false;
     });
     FilePickerResult? res;
     try {
@@ -132,24 +171,19 @@ class _ImportSheetState extends State<_ImportSheet> {
       return;
     }
     final results = <ImportResult>[];
-    final failed = <String>[];
     for (final f in res.files) {
       final bytes = f.bytes;
       if (bytes == null) {
-        failed.add(f.name);
+        results.add(ImportResult.failed(f.name));
         continue;
       }
       try {
-        final name = f.name;
-        results.add(await decodeInBackground(DecodeJob(name, bytes)));
+        results.add(await decodeInBackground(DecodeJob(f.name, bytes)));
       } catch (_) {
-        failed.add(f.name);
+        results.add(ImportResult.failed(f.name));
       }
     }
     if (!mounted) return;
-    if (failed.isNotEmpty) {
-      toast(context, l.t('importFailed', {'name': failed.join(', ')}));
-    }
     await _review(results);
   }
 
@@ -175,21 +209,27 @@ class _ImportSheetState extends State<_ImportSheet> {
                   1
               ? 'pasted.csv'
               : 'pasted.txt');
-    ImportResult r;
-    try {
-      r = Codec.decode(name, bytes);
-      if (r.people.isEmpty && name != 'pasted.txt') {
-        r = Codec.decode('pasted.txt', bytes);
-      }
-    } catch (_) {
+    var r = Codec.decode(name, bytes);
+    if (r.people.isEmpty && name != 'pasted.txt') {
       r = Codec.decode('pasted.txt', bytes);
     }
+    if (r.people.isEmpty) r = ImportResult(const [], r.format, '');
     await _review([r]);
   }
 
   Future<void> _sample() async {
     await _review([ImportResult(Sample.people(), Format.vcf, 'sample')]);
   }
+
+  List<Widget> _templateButtons() => [
+    for (final f in SheetTemplate.formats)
+      Pill(
+        label: '${f.title} (.${f.exportExt})',
+        active: true,
+        icon: Icons.download_rounded,
+        onTap: () => saveTemplate(context, f),
+      ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -318,6 +358,30 @@ class _ImportSheetState extends State<_ImportSheet> {
                       )
                     : const SizedBox(width: double.infinity),
               ),
+              _Option(
+                icon: Icons.download_rounded,
+                title: l.t('getTemplate'),
+                sub: l.t('getTemplateSub'),
+                onTap: _busy
+                    ? null
+                    : () => setState(() => _templating = !_templating),
+                index: 3,
+                open: _templating,
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                child: _templating
+                    ? Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _templateButtons(),
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
+              ),
               AnimatedSize(
                 duration: const Duration(milliseconds: 260),
                 child: _note == null
@@ -360,6 +424,7 @@ class _ImportSheetState extends State<_ImportSheet> {
                                       onTap: DeviceContacts.openSettings,
                                       icon: Icons.settings_rounded,
                                     ),
+                                  if (_templateHint) ..._templateButtons(),
                                 ],
                               ),
                             ],

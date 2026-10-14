@@ -95,24 +95,85 @@ class ExportOptions {
   );
 }
 
+enum ImportIssue {
+  none,
+  unreadable,
+  legacyExcel,
+  empty,
+  headerOnly,
+  noColumns,
+  noContacts,
+}
+
 class ImportResult {
   final List<Person> people;
   final Format format;
   final String detail;
-  const ImportResult(this.people, this.format, this.detail);
+  final ImportIssue issue;
+  final String fileName;
+  const ImportResult(
+    this.people,
+    this.format,
+    this.detail, {
+    this.issue = ImportIssue.none,
+    this.fileName = '',
+  });
+
+  const ImportResult.failed(this.fileName)
+    : people = const [],
+      format = Format.txt,
+      detail = '',
+      issue = ImportIssue.unreadable;
 }
 
 class Codec {
+  static bool _isZip(Uint8List b) =>
+      b.length >= 4 &&
+      b[0] == 0x50 &&
+      b[1] == 0x4B &&
+      ((b[2] == 0x03 && b[3] == 0x04) || (b[2] == 0x05 && b[3] == 0x06));
+
+  static bool _startsWith(Uint8List b, List<int> magic) {
+    if (b.length < magic.length) return false;
+    for (var i = 0; i < magic.length; i++) {
+      if (b[i] != magic[i]) return false;
+    }
+    return true;
+  }
+
+  static const _ole2 = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+
+  static bool _isLegacyExcel(String fileName, Uint8List b) =>
+      fileName.toLowerCase().endsWith('.xls') && _startsWith(b, _ole2);
+
+  static bool _isBinaryDoc(Uint8List b) =>
+      _startsWith(b, _ole2) ||
+      _startsWith(b, const [0x25, 0x50, 0x44, 0x46]) ||
+      _startsWith(b, const [0x89, 0x50, 0x4E, 0x47]) ||
+      _startsWith(b, const [0xFF, 0xD8, 0xFF]) ||
+      _startsWith(b, const [0x47, 0x49, 0x46, 0x38]);
+
   static Format? formatFor(String fileName, Uint8List bytes) {
     final n = fileName.toLowerCase();
+    Format? named;
     for (final f in Format.values) {
-      if (n.endsWith('.${f.ext}')) return f;
+      if (n.endsWith('.${f.ext}')) {
+        named = f;
+        break;
+      }
     }
-    if (n.endsWith('.vcard')) return Format.vcf;
-    if (n.endsWith('.tsv') || n.endsWith('.tab')) return Format.csv;
-    if (bytes.length > 4 && bytes[0] == 0x50 && bytes[1] == 0x4B) {
-      return Format.xlsx;
+    if (named == null) {
+      if (n.endsWith('.vcard')) {
+        named = Format.vcf;
+      } else if (n.endsWith('.tsv') || n.endsWith('.tab')) {
+        named = Format.csv;
+      }
     }
+    if (_isZip(bytes)) {
+      return named == Format.numbers ? Format.numbers : Format.xlsx;
+    }
+    final spreadsheetName = named == Format.xlsx || named == Format.numbers;
+    if (named != null && !spreadsheetName) return named;
     final head = TextDecode.bytes(
       Uint8List.sublistView(
         bytes,
@@ -129,6 +190,67 @@ class Codec {
   }
 
   static ImportResult decode(String fileName, Uint8List bytes) {
+    ImportResult r;
+    try {
+      r = _decode(fileName, bytes);
+    } catch (_) {
+      r = ImportResult.failed(fileName);
+    }
+    return ImportResult(
+      r.people,
+      r.format,
+      r.detail,
+      issue: r.people.isEmpty && r.issue == ImportIssue.none
+          ? ImportIssue.noContacts
+          : r.issue,
+      fileName: fileName,
+    );
+  }
+
+  static ImportIssue _emptyIssue(List<List<String>> rows, TableMapping m) {
+    if (rows.isEmpty) return ImportIssue.empty;
+    final usable = m.columns.any((c) => c == Col.phone || c == Col.email);
+    if (!usable) return ImportIssue.noColumns;
+    if (m.hasHeader && rows.length == 1) return ImportIssue.headerOnly;
+    return ImportIssue.noContacts;
+  }
+
+  static ImportResult _fromRows(
+    List<List<String>> rows,
+    Format f,
+    String src,
+  ) {
+    final m = Tabular.detect(rows);
+    final people = Tabular.toPeople(rows, m, src);
+    if (people.isNotEmpty) return ImportResult(people, f, m.describe());
+    return ImportResult(
+      const [],
+      f,
+      m.describe(),
+      issue: _emptyIssue(rows, m),
+    );
+  }
+
+  static ImportResult _decode(String fileName, Uint8List bytes) {
+    if (bytes.isEmpty) {
+      return const ImportResult([], Format.txt, '', issue: ImportIssue.empty);
+    }
+    if (_isLegacyExcel(fileName, bytes)) {
+      return const ImportResult(
+        [],
+        Format.xlsx,
+        '',
+        issue: ImportIssue.legacyExcel,
+      );
+    }
+    if (_isBinaryDoc(bytes)) {
+      return const ImportResult(
+        [],
+        Format.txt,
+        '',
+        issue: ImportIssue.unreadable,
+      );
+    }
     var f = formatFor(fileName, bytes) ?? Format.txt;
     final src = fileName;
     switch (f) {
@@ -137,15 +259,23 @@ class Codec {
         return ImportResult(people, f, '');
       case Format.xlsx:
         try {
-          final rows = Xlsx.read(bytes);
-          final m = Tabular.detect(rows);
-          return ImportResult(Tabular.toPeople(rows, m, src), f, m.describe());
+          return _fromRows(Xlsx.read(bytes), f, src);
         } catch (_) {
-          final people = NumbersFile.read(bytes, src);
+          var people = <Person>[];
+          try {
+            people = NumbersFile.read(bytes, src);
+          } catch (_) {
+            people = <Person>[];
+          }
           if (people.isNotEmpty) {
             return ImportResult(people, Format.numbers, '');
           }
-          rethrow;
+          return ImportResult(
+            const [],
+            f,
+            '',
+            issue: ImportIssue.unreadable,
+          );
         }
       case Format.numbers:
         try {
@@ -167,9 +297,7 @@ class Codec {
         }
       case Format.csv:
         final text = TextDecode.bytes(bytes);
-        final rows = parseDelimited(text);
-        final m = Tabular.detect(rows);
-        return ImportResult(Tabular.toPeople(rows, m, src), f, m.describe());
+        return _fromRows(parseDelimited(text), f, src);
       case Format.txt:
         final text = TextDecode.bytes(bytes);
         if (text.trimLeft().toUpperCase().startsWith('BEGIN:VCARD')) {
@@ -514,6 +642,59 @@ class Codec {
       return '"${s.replaceAll('"', '""')}"';
     }
     return s;
+  }
+
+  static List<String> templateColumns({List<String>? headers}) {
+    String pick(int i, String fallback) {
+      if (headers == null || i >= headers.length) return fallback;
+      final v = headers[i].trim();
+      return v.isEmpty ? fallback : v;
+    }
+
+    final phone = pick(1, 'Phone');
+    return [
+      pick(0, 'Name'),
+      '$phone 1',
+      '$phone 2',
+      pick(2, 'Email'),
+      pick(3, 'Company'),
+      pick(4, 'Note'),
+      pick(5, 'Alias'),
+    ];
+  }
+
+  static Uint8List template(
+    Format f, {
+    List<String>? headers,
+    XlsxSheet? guide,
+    String sheetName = 'Contacts',
+    bool rtl = false,
+  }) {
+    final columns = templateColumns(headers: headers);
+    if (f == Format.csv) {
+      final line = columns.map(_csvCell).join(',');
+      return Uint8List.fromList([
+        0xEF,
+        0xBB,
+        0xBF,
+        ...utf8.encode('$line\r\n'),
+      ]);
+    }
+    if (f == Format.xlsx) {
+      return Xlsx.write(
+        [columns],
+        sheetName: sheetName,
+        rtl: rtl,
+        textColumns: true,
+        columnWidths: const [24, 20, 20, 28, 22, 28, 24],
+        guide: guide,
+      );
+    }
+    throw ArgumentError.value(
+      f.name,
+      'format',
+      'Templates are available as CSV or Excel',
+    );
   }
 
   static Uint8List encode(

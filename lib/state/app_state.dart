@@ -124,8 +124,10 @@ class AppState extends ContactList {
     final formats = <Format, int>{};
     for (final r in results) {
       incoming.addAll(r.people);
-      formats[r.format] = (formats[r.format] ?? 0) + r.people.length;
-      if (r.people.isNotEmpty) sources.add(r.people.first.source);
+      if (r.people.isNotEmpty) {
+        formats[r.format] = (formats[r.format] ?? 0) + r.people.length;
+        sources.add(r.people.first.source);
+      }
     }
     final byKey = <String, Person>{};
     for (final p in _people) {
@@ -183,8 +185,11 @@ class AppState extends ContactList {
             phones: p.phones,
             emails: p.emails,
             org: p.org,
+            jobTitle: p.jobTitle,
             note: p.note,
             source: p.source,
+            starred: p.starred,
+            groups: [...p.groups],
             aliases: p.aliases,
             added: now.subtract(Duration(microseconds: i++)),
           ),

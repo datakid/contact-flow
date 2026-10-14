@@ -518,13 +518,14 @@ void toast(
   String msg, {
   String? action,
   VoidCallback? onAction,
+  Duration duration = const Duration(milliseconds: 2600),
 }) {
   final m = ScaffoldMessenger.of(context);
   m.hideCurrentSnackBar();
   m.showSnackBar(
     SnackBar(
       content: Text(msg),
-      duration: const Duration(milliseconds: 2600),
+      duration: duration,
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
       action: action == null
           ? null

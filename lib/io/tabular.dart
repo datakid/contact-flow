@@ -206,8 +206,14 @@ class Tabular {
     'person',
   ];
 
+  static final Map<String, String> _foldedKeys = {};
+
+  static String _fold(String key) =>
+      _foldedKeys.putIfAbsent(key, () => Fold.basic(key));
+
   static bool _has(String h, List<String> keys) {
-    for (final k in keys) {
+    for (final raw in keys) {
+      final k = _fold(raw);
       if (k.length <= 3 && RegExp(r'^[a-z]+$').hasMatch(k)) {
         if (RegExp('(^|[^a-z])$k([^a-z]|\$)').hasMatch(h)) return true;
       } else if (h.contains(k)) {
@@ -368,7 +374,15 @@ class Tabular {
     final out = <Person>[];
     final body = m.hasHeader ? rows.skip(1) : rows;
     for (final r in body) {
-      String cell(int i) => i < r.length ? r[i].trim() : '';
+      String cell(int i) {
+        if (i >= r.length) return '';
+        final v = r[i].trim();
+        if (v.length > 1 && v.startsWith("'") && '=+-@'.contains(v[1])) {
+          return v.substring(1);
+        }
+        return v;
+      }
+
       var name = '', first = '', middle = '', last = '', org = '', note = '';
       var title = '', contactId = '';
       final aliases = <String>[];

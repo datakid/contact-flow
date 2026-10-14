@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 
 import '../domain/matcher.dart';
 import '../domain/sync.dart';
+import '../io/codec.dart';
 import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../state/phone_book.dart';
+import 'import_issues.dart';
 import 'pipeline.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -35,12 +37,24 @@ Future<void> pickAndSync(BuildContext context) async {
     final r = await decodeInBackground(DecodeJob(f.name, bytes));
     if (!context.mounted) return;
     if (r.people.isEmpty) {
-      toast(context, l.t('nothingFound'));
+      toast(
+        context,
+        r.issue == ImportIssue.none
+            ? l.t('nothingFound')
+            : ImportIssues.line(l, r),
+        duration: const Duration(seconds: 6),
+      );
       return;
     }
     await openSync(context, r.people);
-  } catch (e) {
-    if (context.mounted) toast(context, friendlyError(e));
+  } catch (_) {
+    if (context.mounted) {
+      toast(
+        context,
+        ImportIssues.line(l, ImportResult.failed(f.name)),
+        duration: const Duration(seconds: 6),
+      );
+    }
   }
 }
 

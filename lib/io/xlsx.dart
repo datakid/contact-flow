@@ -3,7 +3,22 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
+class XlsxSheet {
+  final String name;
+  final List<List<String>> rows;
+  final List<int> widths;
+  final Set<int> headerRows;
+  const XlsxSheet(
+    this.name,
+    this.rows, {
+    this.widths = const [],
+    this.headerRows = const {},
+  });
+}
+
 class Xlsx {
+  static const _maxColumn = 16383;
+
   static List<List<String>> read(Uint8List bytes) {
     final z = ZipDecoder().decodeBytes(bytes);
     String? file(String name) {
@@ -15,8 +30,10 @@ class Xlsx {
     final shared = <String>[];
     final ss = file('xl/sharedStrings.xml');
     if (ss != null) {
-      for (final si in RegExp(r'<si\b[^>]*>([\s\S]*?)</si>').allMatches(ss)) {
-        shared.add(_texts(si.group(1)!));
+      for (final si in RegExp(
+        r'<si\b[^>]*?(?:/>|>([\s\S]*?)</si>)',
+      ).allMatches(ss)) {
+        shared.add(_texts(si.group(1) ?? ''));
       }
     }
     var sheetPath = 'xl/worksheets/sheet1.xml';
@@ -27,12 +44,13 @@ class Xlsx {
         r'<sheet\b[^>]*r:id="([^"]+)"',
       ).firstMatch(wb)?.group(1);
       if (rid != null) {
+        final safe = RegExp.escape(rid);
         final rel =
             RegExp(
-              '<Relationship\\b[^>]*Id="$rid"[^>]*/?>',
+              '<Relationship\\b[^>]*Id="$safe"[^>]*/?>',
             ).firstMatch(rels)?.group(0) ??
             RegExp(
-              '<Relationship\\b[^>]*Target="[^"]*"[^>]*Id="$rid"',
+              '<Relationship\\b[^>]*Target="[^"]*"[^>]*Id="$safe"',
             ).firstMatch(rels)?.group(0);
         final target = rel == null
             ? null
@@ -56,7 +74,10 @@ class Xlsx {
               (f) => utf8.decode(f.content as List<int>, allowMalformed: true),
             )
             .firstOrNull;
-    if (sheet == null) return const [];
+    if (sheet == null) {
+      if (wb == null) throw const FormatException('Not an Excel workbook');
+      return const [];
+    }
     final rows = <List<String>>[];
     for (final rm in RegExp(
       r'<row\b[^>]*>([\s\S]*?)</row>',
@@ -69,6 +90,7 @@ class Xlsx {
         final inner = cm.group(2) ?? '';
         final ref = RegExp(r'r="([A-Z]+)\d+"').firstMatch(attrs)?.group(1);
         final idx = ref == null ? row.length : _colIndex(ref);
+        if (idx < 0 || idx > _maxColumn) continue;
         while (row.length < idx) {
           row.add('');
         }
@@ -118,21 +140,30 @@ class Xlsx {
   }
 
   static String _texts(String xml) {
+    final clean = xml.replaceAll(RegExp(r'<rPh\b[^>]*>[\s\S]*?</rPh>'), '');
     final b = StringBuffer();
-    for (final m in RegExp(r'<t\b[^>]*>([\s\S]*?)</t>').allMatches(xml)) {
+    for (final m in RegExp(
+      r'<t(?:\s[^>]*)?>([\s\S]*?)</t>',
+    ).allMatches(clean)) {
       b.write(_unescape(m.group(1)!));
     }
     return b.toString();
   }
 
+  static String _char(int? code) {
+    if (code == null || code < 0 || code > 0x10FFFF) return '';
+    if (code >= 0xD800 && code <= 0xDFFF) return '';
+    return String.fromCharCode(code);
+  }
+
   static String _unescape(String s) => s
       .replaceAllMapped(
-        RegExp(r'&#x([0-9a-fA-F]+);'),
-        (m) => String.fromCharCode(int.parse(m.group(1)!, radix: 16)),
+        RegExp(r'&#x([0-9a-fA-F]{1,8});'),
+        (m) => _char(int.tryParse(m.group(1)!, radix: 16)),
       )
       .replaceAllMapped(
-        RegExp(r'&#(\d+);'),
-        (m) => String.fromCharCode(int.parse(m.group(1)!)),
+        RegExp(r'&#(\d{1,9});'),
+        (m) => _char(int.tryParse(m.group(1)!)),
       )
       .replaceAll('&lt;', '<')
       .replaceAll('&gt;', '>')
@@ -158,29 +189,64 @@ class Xlsx {
     return s;
   }
 
-  static Uint8List write(
-    List<List<String>> rows, {
-    String sheetName = 'Contacts',
-    bool rtl = false,
-  }) {
-    final width = rows.fold<int>(0, (m, r) => r.length > m ? r.length : m);
-    final widths = List<int>.filled(width, 10);
-    for (final r in rows) {
-      for (var i = 0; i < r.length; i++) {
-        final l = r[i].runes.length + 2;
-        if (l > widths[i]) widths[i] = l > 60 ? 60 : l;
+  static String _sheetName(String raw, String fallback) {
+    final s = raw.replaceAll(RegExp(r"[\\/?*\[\]:']"), '').trim();
+    final cut = s.runes.length > 31
+        ? String.fromCharCodes(s.runes.take(31))
+        : s;
+    return cut.isEmpty ? fallback : cut;
+  }
+
+  static String _otherName(String name, String taken) =>
+      name.toLowerCase() == taken.toLowerCase()
+      ? '${String.fromCharCodes(name.runes.take(28))} 2'
+      : name;
+
+  static List<int> _widths(List<List<String>> rows, List<int> fixed) {
+    final width = rows.fold<int>(
+      fixed.length,
+      (m, r) => r.length > m ? r.length : m,
+    );
+    final out = List<int>.generate(
+      width,
+      (i) => i < fixed.length ? fixed[i] : 10,
+    );
+    if (fixed.isEmpty) {
+      for (final r in rows) {
+        for (var i = 0; i < r.length; i++) {
+          final l = r[i].runes.length + 2;
+          if (l > out[i]) out[i] = l > 60 ? 60 : l;
+        }
       }
     }
+    return out;
+  }
+
+  static String _sheetXml(
+    List<List<String>> rows, {
+    required List<int> widths,
+    required Set<int> headerRows,
+    required int bodyStyle,
+    required bool rtl,
+    required bool freeze,
+    required bool filter,
+    required bool textColumns,
+  }) {
+    final width = widths.length;
     final sd = StringBuffer();
     for (var ri = 0; ri < rows.length; ri++) {
       sd.write('<row r="${ri + 1}">');
       final r = rows[ri];
+      final header = headerRows.contains(ri);
+      final style = header ? 1 : bodyStyle;
       for (var ci = 0; ci < r.length; ci++) {
         final v = r[ci];
-        if (v.isEmpty) continue;
-        final style = ri == 0 ? ' s="1"' : ' s="2"';
+        if (v.isEmpty) {
+          if (header) sd.write('<c r="${_colName(ci)}${ri + 1}" s="1"/>');
+          continue;
+        }
         sd.write(
-          '<c r="${_colName(ci)}${ri + 1}" t="inlineStr"$style><is><t xml:space="preserve">${_esc(v)}</t></is></c>',
+          '<c r="${_colName(ci)}${ri + 1}" t="inlineStr" s="$style"><is><t xml:space="preserve">${_esc(v)}</t></is></c>',
         );
       }
       sd.write('</row>');
@@ -188,17 +254,57 @@ class Xlsx {
     final cols = StringBuffer('<cols>');
     for (var i = 0; i < width; i++) {
       cols.write(
-        '<col min="${i + 1}" max="${i + 1}" width="${widths[i]}" customWidth="1"/>',
+        '<col min="${i + 1}" max="${i + 1}" width="${widths[i]}" customWidth="1"${textColumns ? ' style="2"' : ''}/>',
       );
     }
     cols.write('</cols>');
-    final sheet =
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    final view = freeze
+        ? '<sheetView workbookViewId="0"${rtl ? ' rightToLeft="1"' : ''}><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView>'
+        : '<sheetView workbookViewId="0"${rtl ? ' rightToLeft="1"' : ''}/>';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-        '<sheetViews><sheetView workbookViewId="0"${rtl ? ' rightToLeft="1"' : ''}><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+        '<sheetViews>$view</sheetViews>'
         '${width > 0 ? cols : ''}<sheetData>$sd</sheetData>'
-        '${rows.isNotEmpty && width > 0 ? '<autoFilter ref="A1:${_colName(width - 1)}${rows.length}"/>' : ''}'
+        '${filter && rows.isNotEmpty && width > 0 ? '<autoFilter ref="A1:${_colName(width - 1)}${rows.length}"/>' : ''}'
         '</worksheet>';
+  }
+
+  static Uint8List write(
+    List<List<String>> rows, {
+    String sheetName = 'Contacts',
+    bool rtl = false,
+    bool textColumns = false,
+    List<int> columnWidths = const [],
+    XlsxSheet? guide,
+  }) {
+    final first = _sheetName(sheetName, 'Contacts');
+    final second = guide == null
+        ? null
+        : _otherName(_sheetName(guide.name, 'Guide'), first);
+    final widths = _widths(rows, columnWidths);
+    final width = widths.length;
+    final sheet = _sheetXml(
+      rows,
+      widths: widths,
+      headerRows: const {0},
+      bodyStyle: 2,
+      rtl: rtl,
+      freeze: true,
+      filter: true,
+      textColumns: textColumns,
+    );
+    final guideSheet = guide == null
+        ? null
+        : _sheetXml(
+            guide.rows,
+            widths: _widths(guide.rows, guide.widths),
+            headerRows: guide.headerRows,
+            bodyStyle: 3,
+            rtl: rtl,
+            freeze: false,
+            filter: false,
+            textColumns: false,
+          );
     final styles =
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
@@ -207,9 +313,10 @@ class Xlsx {
         '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8664A"/><bgColor indexed="64"/></patternFill></fill></fills>'
         '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
         '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-        '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+        '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
         '<xf numFmtId="49" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyNumberFormat="1"/>'
-        '<xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs>'
+        '<xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+        '<xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>'
         '</styleSheet>';
     final files = <String, String>{
       '[Content_Types].xml':
@@ -219,6 +326,7 @@ class Xlsx {
           '<Default Extension="xml" ContentType="application/xml"/>'
           '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
           '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+          '${guideSheet == null ? '' : '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'}'
           '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
           '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'
           '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'
@@ -242,17 +350,19 @@ class Xlsx {
       'xl/workbook.xml':
           '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
           '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-          '<sheets><sheet name="${_esc(sheetName)}" sheetId="1" r:id="rId1"/></sheets>'
-          '${rows.isNotEmpty && width > 0 ? '<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'${_esc(sheetName)}\'!\$A\$1:\$${_colName(width - 1)}\$${rows.length}</definedName></definedNames>' : ''}'
+          '<sheets><sheet name="${_esc(first)}" sheetId="1" r:id="rId1"/>${second == null ? '' : '<sheet name="${_esc(second)}" sheetId="2" r:id="rId3"/>'}</sheets>'
+          '${rows.isNotEmpty && width > 0 ? '<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">\'${_esc(first)}\'!\$A\$1:\$${_colName(width - 1)}\$${rows.length}</definedName></definedNames>' : ''}'
           '</workbook>',
       'xl/_rels/workbook.xml.rels':
           '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
           '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
           '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
           '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+          '${guideSheet == null ? '' : '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'}'
           '</Relationships>',
       'xl/styles.xml': styles,
       'xl/worksheets/sheet1.xml': sheet,
+      if (guideSheet != null) 'xl/worksheets/sheet2.xml': guideSheet,
     };
     final a = Archive();
     files.forEach((k, v) {

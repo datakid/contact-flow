@@ -49,6 +49,8 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 - **Whole address book in one tap** on Android, or many files at once, or pasted text
 - **Open with Contact Flow**: share or open a `.vcf`, `.csv`, `.xlsx`, `.numbers` or `.json` file from WhatsApp, email or Files and it goes straight to review
+- **Blank import template**: Import → Blank template saves an Excel or CSV file with exactly the columns the app reads (Name, Phone 1, Phone 2, Email, Company, Note, Alias) in the current language. The Excel version has text-formatted columns so `+` and leading zeros survive, plus an Instructions sheet with examples. Share it, have people fill it in, then import it
+- **Wrong files are explained, not fatal**: a damaged file, an old `.xls`, a PDF or image, an empty file, a sheet with no phone or email column, or the untouched template each get a specific message (in all five languages) instead of a crash, with template buttons where they help
 - **Smart column detection**: finds name, phone, email, company and note columns from headers in English, Arabic, Chinese, French, Spanish and more, or from the cell contents when there is no header
 - **Review before import**: new contacts and duplicates shown separately, with duplicates merged by number
 - **Export all, a search result, or a hand-picked selection**: choose the number style (as saved, international, digits only) and the fields to include, with a live preview

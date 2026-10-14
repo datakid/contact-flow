@@ -14,6 +14,7 @@ import '../state/app_state.dart';
 import 'batch_screen.dart';
 import 'detail.dart';
 import 'export_screen.dart';
+import 'import_issues.dart';
 import 'import_sheet.dart';
 import 'settings_sheet.dart';
 import 'theme.dart';
@@ -58,15 +59,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final results = <ImportResult>[];
     for (final f in files) {
       try {
-        final name = f.name;
-        results.add(await decodeInBackground(DecodeJob(name, f.bytes)));
-      } catch (_) {}
+        results.add(await decodeInBackground(DecodeJob(f.name, f.bytes)));
+      } catch (_) {
+        results.add(ImportResult.failed(f.name));
+      }
     }
     final total = results.fold<int>(0, (a, r) => a + r.people.length);
     if (total == 0) {
+      final why = ImportIssues.describe(l, results);
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l.t('nothingFound')),
+          content: Text(why.isEmpty ? l.t('nothingFound') : why),
+          duration: const Duration(seconds: 6),
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
         ),
       );
