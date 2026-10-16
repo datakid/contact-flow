@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../models/person.dart';
 import '../search/fold.dart';
+import 'text_decode.dart';
 
 class VCard {
   static List<Person> parse(String text, String source) {
@@ -145,9 +146,9 @@ class VCard {
       } catch (_) {}
     }
     if (bytes == null) return value;
-    if (charset != null &&
-        (charset.contains('8859') || charset.contains('latin'))) {
-      return latin1.decode(bytes, allowInvalid: true);
+    if (charset != null) {
+      final text = TextDecode.charset(bytes, charset);
+      if (text != null) return text;
     }
     return utf8.decode(bytes, allowMalformed: true);
   }

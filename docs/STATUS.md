@@ -66,3 +66,10 @@ Failing test: none written; an instrumented test needs a device
 Change: none
 verify.sh: not run
 Risks / follow-ups: in flutter_contacts 2.1.0 the Android update re-reads the stored contact with only the properties that were fetched, and every property write is guarded by that list, so addresses, birthdays, websites and photos are left alone. Confirm on a device with a contact that has those fields. One edge remains: an organization row that has only a department and no name or title is dropped by any edit, because the app rebuilds the organization list from name and title.
+
+Task: 1.2  Status: UNVERIFIED
+Callers checked: TextDecode.bytes is used by Codec for sniffing and for vCard, CSV, JSON and text imports; VCard._decode now calls TextDecode.charset.
+Failing test: test/text_decode_test.dart with fixtures cp1256_ar.csv, cp1252_fr.csv, utf8_one_bad_byte.csv, vcard21_cp1256.vcf, vcard21_cp1256_raw.vcf (written, not run). The detection rule and both tables were checked in Python against its cp1252 and cp1256 codecs; the Dart was not run.
+Change: only non-ASCII bytes are counted; at least 99% valid UTF-8 means UTF-8 with bad bytes allowed; otherwise runs of two or more Arabic-letter bytes mean Windows-1256 and isolated Latin letters mean Windows-1252. Both tables are in the code. vCard CHARSET windows-1256 and windows-1252 are decoded.
+verify.sh: not run
+Risks / follow-ups: a tiny UTF-8 file with one bad byte can fall under 99% (fixture has 871 non-ASCII bytes). A vCard with an unsupported charset (GB2312, Big5) still falls back to UTF-8 instead of returning an ImportIssue, because a clear message needs a new string in all five languages.
