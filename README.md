@@ -130,6 +130,10 @@ fdroid/      draft F-Droid build recipe
 
 `READ_CONTACTS` and `WRITE_CONTACTS` (Android), requested only when you import from or save to the phone.
 
+### Backup
+
+The Files library, the undo journal and their saved contacts are excluded from Android's automatic Google Drive backup. Reinstalling the app or restoring a backup onto a new phone starts with an empty library. Use Export to keep a copy. Device-to-device transfer during phone setup is not restricted.
+
 ## Install
 
 Releases are signed APKs. Use `app-release.apk` if unsure, or

@@ -24,3 +24,10 @@ Task: 0.4  Status: UNVERIFIED
 Change: .github/workflows/ci.yml pinned to Flutter 3.35.4
 verify.sh: not run
 Risks / follow-ups: the aapt permission check belongs to task 5.1.
+
+Task: 1.16  Status: UNVERIFIED
+Callers checked: Hive is initialised once in lib/services/library_store.dart (library_v1, meta_v1, journal_v1, state_v1) and writes to the app_flutter folder.
+Failing test: n/a (manifest change)
+Change: allowBackup with fullBackupContent and dataExtractionRules that exclude app_flutter from cloud backup; device transfer left unrestricted; README Backup section.
+verify.sh: not run
+Risks / follow-ups: uses the plan's default answer, not confirmed by the owner. Check on a device with `adb shell bmgr` or a restore test.
