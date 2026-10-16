@@ -73,3 +73,10 @@ Failing test: test/text_decode_test.dart with fixtures cp1256_ar.csv, cp1252_fr.
 Change: only non-ASCII bytes are counted; at least 99% valid UTF-8 means UTF-8 with bad bytes allowed; otherwise runs of two or more Arabic-letter bytes mean Windows-1256 and isolated Latin letters mean Windows-1252. Both tables are in the code. vCard CHARSET windows-1256 and windows-1252 are decoded.
 verify.sh: not run
 Risks / follow-ups: a tiny UTF-8 file with one bad byte can fall under 99% (fixture has 871 non-ASCII bytes). A vCard with an unsupported charset (GB2312, Big5) still falls back to UTF-8 instead of returning an ImportIssue, because a clear message needs a new string in all five languages.
+
+Task: 1.17 (b) and (c)  Status: UNVERIFIED
+Callers checked: hitFor is called from home.dart and phone_home.dart for every drawn row; _hits is assigned only in setQuery and _runSearch.
+Failing test: test/hit_for_test.dart checks behaviour only (written, not run); no timing test.
+Change: hitFor reads an identity map built once per search; TextOps.title and squash reuse compiled RegExps.
+verify.sh: not run
+Risks / follow-ups: 1.17(a), the full index rebuild on the UI thread during refresh, is not done. It needs the index build moved off the UI thread or made incremental, and the 10k-contact perf test.

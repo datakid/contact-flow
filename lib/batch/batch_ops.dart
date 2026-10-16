@@ -357,13 +357,16 @@ class SetNote extends BatchOp {
 }
 
 class TextOps {
-  static String squash(String s) => s.replaceAll(RegExp(r'\s+'), ' ').trim();
+  static final _spaces = RegExp(r'\s+');
+  static final _letter = RegExp(r'\p{L}', unicode: true);
+
+  static String squash(String s) => s.replaceAll(_spaces, ' ').trim();
 
   static String title(String s) {
     final b = StringBuffer();
     var start = true;
     for (final ch in s.characters()) {
-      final isLetter = RegExp(r'\p{L}', unicode: true).hasMatch(ch);
+      final isLetter = _letter.hasMatch(ch);
       if (isLetter) {
         b.write(start ? ch.toUpperCase() : ch.toLowerCase());
         start = false;

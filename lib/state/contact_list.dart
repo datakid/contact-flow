@@ -51,6 +51,7 @@ abstract class ContactList extends ChangeNotifier {
   List<Person> _sorted = [];
   List<Person> _filtered = [];
   List<Hit> _hits = [];
+  Map<Person, Hit> _hitBy = Map<Person, Hit>.identity();
   final Set<String> selected = {};
   String _query = '';
   SortMode sort = SortMode.name;
@@ -85,10 +86,16 @@ abstract class ContactList extends ChangeNotifier {
 
   Hit? hitFor(Person p) {
     if (!searching) return null;
-    for (final h in _hits) {
-      if (identical(h.person, p)) return h;
+    return _hitBy[p];
+  }
+
+  void _setHits(List<Hit> hits) {
+    _hits = hits;
+    final by = Map<Person, Hit>.identity();
+    for (final h in hits) {
+      by.putIfAbsent(h.person, () => h);
     }
-    return null;
+    _hitBy = by;
   }
 
   @protected
@@ -173,7 +180,7 @@ abstract class ContactList extends ChangeNotifier {
     _query = q;
     _debounce?.cancel();
     if (q.trim().isEmpty) {
-      _hits = [];
+      _setHits([]);
       notifyListeners();
       return;
     }
@@ -189,7 +196,7 @@ abstract class ContactList extends ChangeNotifier {
       _index.build(_people);
       _dirtyIndex = false;
     }
-    _hits = _index.search(_query);
+    _setHits(_index.search(_query));
   }
 
   void warmIndex() {
