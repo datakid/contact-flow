@@ -1,20 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../io/codec.dart';
-import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../search/fuzzy.dart';
-import '../services/incoming.dart';
 import '../state/app_state.dart';
 import 'batch_screen.dart';
 import 'detail.dart';
 import 'export_screen.dart';
-import 'import_issues.dart';
 import 'import_sheet.dart';
 import 'settings_sheet.dart';
 import 'theme.dart';
@@ -43,56 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (s != _scrolled) setState(() => _scrolled = s);
     });
     _focus.addListener(() => setState(() {}));
-    _incoming = Incoming.stream.listen(_receive);
-    WidgetsBinding.instance.addPostFrameCallback((_) => Incoming.start());
-  }
-
-  StreamSubscription<List<IncomingFile>>? _incoming;
-
-  Future<void> _receive(List<IncomingFile> files) async {
-    if (!mounted) return;
-    final s = context.read<AppState>();
-    final l = L.of(context);
-    final nav = Navigator.of(context, rootNavigator: true);
-    final messenger = ScaffoldMessenger.of(context);
-    nav.popUntil((r) => r.isFirst);
-    final results = <ImportResult>[];
-    for (final f in files) {
-      try {
-        results.add(await decodeInBackground(DecodeJob(f.name, f.bytes)));
-      } catch (_) {
-        results.add(ImportResult.failed(f.name));
-      }
-    }
-    final total = results.fold<int>(0, (a, r) => a + r.people.length);
-    if (total == 0) {
-      final why = ImportIssues.describe(l, results);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(why.isEmpty ? l.t('nothingFound') : why),
-          duration: const Duration(seconds: 6),
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
-        ),
-      );
-      return;
-    }
-    final added = await nav.push<int>(
-      MaterialPageRoute(builder: (_) => ReviewScreen(plan: s.plan(results))),
-    );
-    if (added != null && added >= 0) {
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l.t('imported', {'n': added})),
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
-        ),
-      );
-    }
   }
 
   @override
   void dispose() {
-    _incoming?.cancel();
     _search.dispose();
     _focus.dispose();
     _scroll.dispose();

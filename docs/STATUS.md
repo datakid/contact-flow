@@ -31,3 +31,24 @@ Failing test: n/a (manifest change)
 Change: allowBackup with fullBackupContent and dataExtractionRules that exclude app_flutter from cloud backup; device transfer left unrestricted; README Backup section.
 verify.sh: not run
 Risks / follow-ups: uses the plan's default answer, not confirmed by the owner. Check on a device with `adb shell bmgr` or a restore test.
+
+Task: 1.12  Status: UNVERIFIED
+Callers checked: MainActivity.ingest is the only reader of the launch intent; onNewIntent also goes through it.
+Failing test: n/a (native, needs a device)
+Change: intents launched from history and intents already consumed are ignored.
+verify.sh: not run
+Risks / follow-ups: check on a device that sharing a file, backing out and reopening from Recents does not offer the file again.
+
+Task: 1.11  Status: UNVERIFIED
+Callers checked: Incoming.stream had one listener (HomeScreen); replaced by Incoming.attach/detach with a buffer; the receiver now lives in WorkspaceRoot.
+Failing test: test/incoming_test.dart (written, not run; it could not be shown failing first)
+Change: shared files are handled on the Phone tab too, and kept if they arrive before the screen exists. The review screen is pushed on top instead of popping open screens, so edits in progress are no longer discarded.
+verify.sh: not run
+Risks / follow-ups: the plan's unsaved-changes prompt was replaced by not popping routes at all.
+
+Task: 1.4  Status: UNVERIFIED
+Callers checked: IncomingFile has no other users; the channel now returns path or error per file, bytes only for shared text.
+Failing test: none (native copy loop cannot be unit tested here)
+Change: MainActivity streams each shared file to cache/incoming on a worker thread with a 64 MiB limit; Dart reads the file and deletes it. Files older than a day are swept.
+verify.sh: not run
+Risks / follow-ups: the Kotlin was never compiled. Too-large files currently show the existing "unreadable" message because a new string would need all five languages. Bytes are still read on the main isolate before decoding, not inside the decode isolate as the plan asked.
