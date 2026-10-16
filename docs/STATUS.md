@@ -80,3 +80,10 @@ Failing test: test/hit_for_test.dart checks behaviour only (written, not run); n
 Change: hitFor reads an identity map built once per search; TextOps.title and squash reuse compiled RegExps.
 verify.sh: not run
 Risks / follow-ups: 1.17(a), the full index rebuild on the UI thread during refresh, is not done. It needs the index build moved off the UI thread or made incremental, and the 10k-contact perf test.
+
+Task: 1.8  Status: UNVERIFIED
+Callers checked: Tabular.classifyHeader is used by the table importer and by the JSON importer in codec.dart (which has a default branch, so the new Col.tags is ignored there); the only exhaustive switch over Col is Tabular.toPeople.
+Failing test: test/headers_test.dart with Google and Outlook header rows (written, not run; the headers are typed from memory of the real exports, not from a corpus file)
+Change: new Col.tags for Labels, Group Membership, Categories, Tags and the Arabic, Chinese, French and Spanish equivalents, split on ::: and ;, system labels starting with * dropped, stored in Person.groups. Organization Title maps to job title and Organization Department is ignored. A plain Title column is ignored when the file also has a Job Title column.
+verify.sh: not run
+Risks / follow-ups: the corpus of real exports from the plan does not exist yet. TableMapping.describe does not mention labels because its words are not translated.
