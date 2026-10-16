@@ -239,6 +239,29 @@ class Codec {
     );
   }
 
+  static ImportResult _fromWorkbook(Uint8List bytes, Format f, String src) {
+    final sheets = Xlsx.readSheets(bytes);
+    if (sheets.isEmpty) return _fromRows(const [], f, src);
+    final first = _fromRows(sheets.first.rows, f, src);
+    if (first.people.isNotEmpty || sheets.length == 1) return first;
+    final usable = Tabular.detect(
+      sheets.first.rows,
+    ).columns.any((c) => c == Col.phone || c == Col.email);
+    if (usable) return first;
+    for (final sheet in sheets.skip(1)) {
+      final r = _fromRows(sheet.rows, f, src);
+      if (r.people.isNotEmpty) {
+        return ImportResult(
+          r.people,
+          f,
+          '${r.detail} · ${sheet.name}',
+          skipped: r.skipped,
+        );
+      }
+    }
+    return first;
+  }
+
   static ImportResult _decode(String fileName, Uint8List bytes) {
     if (bytes.isEmpty) {
       return const ImportResult([], Format.txt, '', issue: ImportIssue.empty);
@@ -267,7 +290,7 @@ class Codec {
         return ImportResult(people, f, '');
       case Format.xlsx:
         try {
-          return _fromRows(Xlsx.read(bytes), f, src);
+          return _fromWorkbook(bytes, f, src);
         } catch (_) {
           var people = <Person>[];
           try {

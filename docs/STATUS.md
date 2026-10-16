@@ -87,3 +87,10 @@ Failing test: test/headers_test.dart with Google and Outlook header rows (writte
 Change: new Col.tags for Labels, Group Membership, Categories, Tags and the Arabic, Chinese, French and Spanish equivalents, split on ::: and ;, system labels starting with * dropped, stored in Person.groups. Organization Title maps to job title and Organization Department is ignored. A plain Title column is ignored when the file also has a Job Title column.
 verify.sh: not run
 Risks / follow-ups: the corpus of real exports from the plan does not exist yet. TableMapping.describe does not mention labels because its words are not translated.
+
+Task: 1.3  Status: UNVERIFIED
+Callers checked: Xlsx.read is still used by the Numbers fallback in codec.dart and by existing tests; Codec's xlsx branch now calls the new Xlsx.readSheets through _fromWorkbook. The template's guide sheet is not picked up because the first sheet already has phone and email columns.
+Failing test: test/xlsx_read_test.dart (written, not run). The new regexes were run in Python on the same XML (prefixed workbook, self-closing row, sheet targets, padded number) and gave the expected rows.
+Change: every element pattern accepts an optional namespace prefix (row, c, v, si, t, rPh, sheet, Relationship, numFmt, cellXfs, xf); self-closing rows no longer swallow the next row; all sheets are read in workbook order; when the first sheet has no phone or email column and yields no contacts, the first sheet that does is used and its name is appended to ImportResult.detail; numbers in a cell style with a format of two or more zeros get their leading zeros back.
+verify.sh: not run
+Risks / follow-ups: the sheet name is stored in detail but no screen shows it yet, and the review-screen flag "N numbers may have lost a leading 0" is not built; both need new strings in five languages. A number cell with no zero-padded format still loses its zero.
