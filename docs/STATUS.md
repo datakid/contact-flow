@@ -52,3 +52,17 @@ Failing test: none (native copy loop cannot be unit tested here)
 Change: MainActivity streams each shared file to cache/incoming on a worker thread with a 64 MiB limit; Dart reads the file and deletes it. Files older than a day are swept.
 verify.sh: not run
 Risks / follow-ups: the Kotlin was never compiled. Too-large files currently show the existing "unreadable" message because a new string would need all five languages. Bytes are still read on the main isolate before decoding, not inside the decode isolate as the plan asked.
+
+Task: 1.1  Status: UNVERIFIED
+Callers checked: FuzzyIndex.search is the only reader of the digit-query rule; the token fallback in _token handles name plus digits.
+Failing test: test/search_digits_test.dart (written, not run)
+Change: two-digit queries match numbers (also in Arabic-Indic and full-width digits); two-digit queries also still search names; "name 36" narrows by number.
+verify.sh: not run
+Risks / follow-ups: a two-digit query matches many contacts by design; ranking is unchanged (ends with, starts with, contains).
+
+Task: 1.13  Status: NOT REPRODUCED (by reading source, not on a device)
+Callers checked: PhoneSource.update calls flutter_contacts update with a contact fetched with name, phone, email, organization and note only.
+Failing test: none written; an instrumented test needs a device
+Change: none
+verify.sh: not run
+Risks / follow-ups: in flutter_contacts 2.1.0 the Android update re-reads the stored contact with only the properties that were fetched, and every property write is guarded by that list, so addresses, birthdays, websites and photos are left alone. Confirm on a device with a contact that has those fields. One edge remains: an organization row that has only a department and no name or title is dropped by any edit, because the app rebuilds the organization list from name and title.
