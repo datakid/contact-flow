@@ -82,7 +82,7 @@ Future<void> _actionSheet(
                 a.label,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: a.danger ? p.accent : p.ink,
+                  color: a.danger ? p.accentText : p.ink,
                 ),
               ),
               subtitle: a.sub == null
@@ -298,7 +298,7 @@ Future<String?> pickGroup(
             ),
             child: Text(
               l.t('done'),
-              style: TextStyle(color: p.accent, fontWeight: FontWeight.w800),
+              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
             ),
           ),
       ],

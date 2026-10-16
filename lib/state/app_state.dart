@@ -16,13 +16,15 @@ class ImportPlan {
   final List<(Person, Person)> dupes;
   final List<String> sources;
   final Map<Format, int> formats;
+  final int skipped;
   const ImportPlan(
     this.incoming,
     this.fresh,
     this.dupes,
     this.sources,
-    this.formats,
-  );
+    this.formats, {
+    this.skipped = 0,
+  });
 }
 
 class AppState extends ContactList {
@@ -122,7 +124,9 @@ class AppState extends ContactList {
     final incoming = <Person>[];
     final sources = <String>[];
     final formats = <Format, int>{};
+    var skipped = 0;
     for (final r in results) {
+      skipped += r.skipped;
       incoming.addAll(r.people);
       if (r.people.isNotEmpty) {
         formats[r.format] = (formats[r.format] ?? 0) + r.people.length;
@@ -163,7 +167,14 @@ class AppState extends ContactList {
         freshByKey.putIfAbsent(k, () => p);
       }
     }
-    return ImportPlan(incoming, fresh, dupes, sources, formats);
+    return ImportPlan(
+      incoming,
+      fresh,
+      dupes,
+      sources,
+      formats,
+      skipped: skipped,
+    );
   }
 
   Future<int> commit(ImportPlan plan, {bool merge = true}) async {

@@ -182,7 +182,7 @@ class _EntryTile extends StatelessWidget {
                             undoOf: entry.id,
                           );
                         },
-                  style: TextButton.styleFrom(foregroundColor: p.accent),
+                  style: TextButton.styleFrom(foregroundColor: p.accentText),
                   icon: const Icon(Icons.undo_rounded, size: 18),
                   label: Text(
                     l.t('undo'),

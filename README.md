@@ -12,6 +12,14 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 ---
 
+## What's new in 2.5.0
+
+- **Number checks** — new filters in the phone workspace find numbers saved without a country code, numbers that are too short, too long or contain letters, and numbers shared by more than one contact. Each filter shows a live count and says what to do next. It is a format check only; the app cannot know whether a number works
+- **Honest imports** — the review screen says how many rows were skipped for having no phone number or email; a blank Excel or CSV template (Import → Blank template) matches exactly what the app reads; wrong files get a specific message instead of a generic one
+- **Every language, fully** — Chinese, Spanish and French now cover the whole app (they previously covered about 38% and fell back to English for the phone workspace, batch editor, history and permission screens)
+- **Accessibility** — buttons announce as buttons to screen readers, icon-only buttons have labels, animations stop when the system asks for reduced motion, and secondary text, links and tags meet WCAG AA contrast in both themes
+- **Fixes** — Arabic exports lost the company column on re-import; imports dropped job title, starred and groups; damaged spreadsheets could hang the importer
+
 ## What's new in 2.2.0
 
 - **Aliases** — any number of aliases per contact (nicknames, kunyas, other spellings). Search finds people by any alias and shows "aka" on the match; the detail screen shows them under the name
@@ -23,7 +31,7 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 ## What's new in 2.1.0
 
-- **Phone workspace** — search, sort, filters (account, starred, group, no number, no name), A–Z scroller, detail, create/edit, bulk star/group/delete, share vCard
+- **Phone workspace** — search, sort, filters (account, starred, group, no number, no name, no country code, odd numbers, shared numbers), A–Z scroller, detail, create/edit, bulk star/group/delete, share vCard
 - **Safe changes** — every phone write is a reviewed ChangeSet; affected contacts are backed up as vCard first; undo from the snackbar or Settings → History (30 entries / 30 days)
 - **Sync from a spreadsheet** — export with `contact_id`, edit, import → "Update contacts on this phone"; matching by contact_id → number → exact name; Fill empty / Overwrite / Add numbers; conflicts never guessed
 - **Duplicates & merge** — by shared number or same name, choose who to keep

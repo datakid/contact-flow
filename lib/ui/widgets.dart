@@ -15,6 +15,7 @@ class Pressable extends StatefulWidget {
   final VoidCallback? onLongPress;
   final double scale;
   final bool haptic;
+  final String? semanticLabel;
   const Pressable({
     super.key,
     required this.child,
@@ -22,6 +23,7 @@ class Pressable extends StatefulWidget {
     this.onLongPress,
     this.scale = 0.97,
     this.haptic = false,
+    this.semanticLabel,
   });
 
   @override
@@ -38,32 +40,37 @@ class _PressableState extends State<Pressable> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onTap != null || widget.onLongPress != null;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: enabled ? (_) => _set(true) : null,
-      onTapUp: enabled ? (_) => _set(false) : null,
-      onTapCancel: enabled ? () => _set(false) : null,
-      onTap: widget.onTap == null
-          ? null
-          : () {
-              if (widget.haptic) HapticFeedback.selectionClick();
-              widget.onTap!();
-            },
-      onLongPress: widget.onLongPress == null
-          ? null
-          : () {
-              HapticFeedback.mediumImpact();
-              _set(false);
-              widget.onLongPress!();
-            },
-      child: AnimatedScale(
-        scale: _down ? widget.scale : 1,
-        duration: const Duration(milliseconds: 140),
-        curve: Curves.easeOut,
-        child: AnimatedOpacity(
-          opacity: enabled ? 1 : 0.4,
-          duration: const Duration(milliseconds: 200),
-          child: widget.child,
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: widget.semanticLabel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: enabled ? (_) => _set(true) : null,
+        onTapUp: enabled ? (_) => _set(false) : null,
+        onTapCancel: enabled ? () => _set(false) : null,
+        onTap: widget.onTap == null
+            ? null
+            : () {
+                if (widget.haptic) HapticFeedback.selectionClick();
+                widget.onTap!();
+              },
+        onLongPress: widget.onLongPress == null
+            ? null
+            : () {
+                HapticFeedback.mediumImpact();
+                _set(false);
+                widget.onLongPress!();
+              },
+        child: AnimatedScale(
+          scale: _down ? widget.scale : 1,
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
+          child: AnimatedOpacity(
+            opacity: enabled ? 1 : 0.4,
+            duration: const Duration(milliseconds: 200),
+            child: widget.child,
+          ),
         ),
       ),
     );
@@ -182,7 +189,7 @@ class HighlightText extends StatelessWidget {
         TextSpan(
           text: text.substring(a, b),
           style: TextStyle(
-            color: p.accent,
+            color: p.accentText,
             decoration: TextDecoration.underline,
             decorationColor: p.accent.withValues(alpha: 0.35),
             decorationThickness: 2,
@@ -481,6 +488,10 @@ class _FadeSlideInState extends State<FadeSlideIn>
     vsync: this,
     duration: const Duration(milliseconds: 520),
   );
+  late final CurvedAnimation _a = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeOutCubic,
+  );
 
   @override
   void initState() {
@@ -491,20 +502,26 @@ class _FadeSlideInState extends State<FadeSlideIn>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) _c.value = 1;
+  }
+
+  @override
   void dispose() {
+    _a.dispose();
     _c.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final a = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
     return FadeTransition(
-      opacity: a,
+      opacity: _a,
       child: AnimatedBuilder(
-        animation: a,
+        animation: _a,
         builder: (context, child) => Transform.translate(
-          offset: Offset(0, 14 * (1 - a.value)),
+          offset: Offset(0, 14 * (1 - _a.value)),
           child: child,
         ),
         child: widget.child,

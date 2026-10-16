@@ -1,0 +1,6 @@
+2.5.0 — number checks
+• Phone: find numbers with no country code, odd length or letters, or shared by several contacts, with counts
+• Import: see how many rows were skipped; get a blank Excel/CSV template; clear messages for wrong files
+• Chinese, Spanish and French now cover the whole app
+• Screen-reader labels, reduced-motion support, higher text contrast
+• Fixes: Arabic company column, job title and groups on import

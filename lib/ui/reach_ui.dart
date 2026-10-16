@@ -131,7 +131,7 @@ Future<String?> askCountry(BuildContext context, {bool force = false}) async {
           },
           child: Text(
             l.t('save'),
-            style: TextStyle(color: p.accent, fontWeight: FontWeight.w800),
+            style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
           ),
         ),
       ],

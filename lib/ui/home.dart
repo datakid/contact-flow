@@ -446,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 s.selectAll(list);
               }
             },
-            style: TextButton.styleFrom(foregroundColor: p.accent),
+            style: TextButton.styleFrom(foregroundColor: p.accentText),
             icon: Icon(
               all ? Icons.remove_done_rounded : Icons.done_all_rounded,
               size: 18,
@@ -586,23 +586,31 @@ class _HomeScreenState extends State<HomeScreen> {
               ? Row(
                   key: const ValueKey('sel'),
                   children: [
-                    _roundIcon(p, Icons.close_rounded, s.clearSelection),
+                    RoundIcon(
+                      icon: Icons.close_rounded,
+                      tooltip: l.t('clearSel'),
+                      onTap: s.clearSelection,
+                    ),
                     const SizedBox(width: 10),
-                    _roundIcon(p, Icons.delete_outline_rounded, () async {
-                      final gone = await s.remove(s.selected.toList());
-                      if (!mounted) return;
-                      toast(
-                        context,
-                        l.t('removed', {'n': gone.length}),
-                        action: l.t('undo'),
-                        onAction: () => s.restore(gone),
-                      );
-                    }),
+                    RoundIcon(
+                      icon: Icons.delete_outline_rounded,
+                      tooltip: l.t('delete'),
+                      onTap: () async {
+                        final gone = await s.remove(s.selected.toList());
+                        if (!mounted) return;
+                        toast(
+                          context,
+                          l.t('removed', {'n': gone.length}),
+                          action: l.t('undo'),
+                          onAction: () => s.restore(gone),
+                        );
+                      },
+                    ),
                     const SizedBox(width: 10),
-                    _roundIcon(
-                      p,
-                      Icons.table_rows_outlined,
-                      () => openBatchEditor(context, s.selectedPeople),
+                    RoundIcon(
+                      icon: Icons.table_rows_outlined,
+                      tooltip: l.t('batchEdit'),
+                      onTap: () => openBatchEditor(context, s.selectedPeople),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -666,20 +674,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _roundIcon(Palette p, IconData icon, VoidCallback onTap) => Pressable(
-    onTap: onTap,
-    haptic: true,
-    child: Container(
-      width: 58,
-      height: 58,
-      decoration: BoxDecoration(
-        color: p.sheet,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: p.hairline, width: 1.2),
-      ),
-      child: Icon(icon, color: p.ink, size: 22),
-    ),
-  );
 }
 
 class _SearchHeader extends SliverPersistentHeaderDelegate {
@@ -815,7 +809,7 @@ class _ContactRow extends StatelessWidget {
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
                                 color: h?.reason == 'phone'
-                                    ? p.accent
+                                    ? p.accentText
                                     : p.inkSoft,
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
@@ -850,7 +844,7 @@ class _ContactRow extends StatelessWidget {
                           Flexible(
                             child: Tag(
                               reason,
-                              color: h?.reason == 'alias' ? p.accent : p.sage,
+                              color: h?.reason == 'alias' ? p.accentText : p.sageText,
                             ),
                           ),
                         ],

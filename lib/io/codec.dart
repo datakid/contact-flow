@@ -111,19 +111,22 @@ class ImportResult {
   final String detail;
   final ImportIssue issue;
   final String fileName;
+  final int skipped;
   const ImportResult(
     this.people,
     this.format,
     this.detail, {
     this.issue = ImportIssue.none,
     this.fileName = '',
+    this.skipped = 0,
   });
 
   const ImportResult.failed(this.fileName)
     : people = const [],
       format = Format.txt,
       detail = '',
-      issue = ImportIssue.unreadable;
+      issue = ImportIssue.unreadable,
+      skipped = 0;
 }
 
 class Codec {
@@ -204,6 +207,7 @@ class Codec {
           ? ImportIssue.noContacts
           : r.issue,
       fileName: fileName,
+      skipped: r.skipped,
     );
   }
 
@@ -222,7 +226,11 @@ class Codec {
   ) {
     final m = Tabular.detect(rows);
     final people = Tabular.toPeople(rows, m, src);
-    if (people.isNotEmpty) return ImportResult(people, f, m.describe());
+    if (people.isNotEmpty) {
+      final dataRows = rows.length - (m.hasHeader ? 1 : 0);
+      final skipped = dataRows > people.length ? dataRows - people.length : 0;
+      return ImportResult(people, f, m.describe(), skipped: skipped);
+    }
     return ImportResult(
       const [],
       f,

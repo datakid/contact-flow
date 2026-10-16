@@ -224,7 +224,7 @@ class _GroupCard extends StatelessWidget {
               padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 0, 6),
               child: Row(
                 children: [
-                  Tag(reason, color: p.sage),
+                  Tag(reason, color: p.sageText),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Directionality(
@@ -312,7 +312,7 @@ class _GroupCard extends StatelessWidget {
             alignment: AlignmentDirectional.centerEnd,
             child: TextButton.icon(
               onPressed: onMerge,
-              style: TextButton.styleFrom(foregroundColor: p.accent),
+              style: TextButton.styleFrom(foregroundColor: p.accentText),
               icon: const Icon(Icons.merge_rounded, size: 18),
               label: Text(
                 l.t('merge'),

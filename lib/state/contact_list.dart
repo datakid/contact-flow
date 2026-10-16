@@ -2,13 +2,22 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../domain/number_check.dart';
 import '../models/person.dart';
 import '../search/fold.dart';
 import '../search/fuzzy.dart';
 
 enum SortMode { name, recent }
 
-enum ListFilter { all, starred, noNumber, noName }
+enum ListFilter {
+  all,
+  starred,
+  noNumber,
+  noName,
+  noCountryCode,
+  oddNumber,
+  sharedNumber,
+}
 
 String sortKeyOf(Person p) {
   final n = p.displayName;
@@ -50,11 +59,13 @@ abstract class ContactList extends ChangeNotifier {
   String? accountFilter;
   String? groupFilter;
   bool _dirtyIndex = true;
+  NumberStats? _numberStats;
   Timer? _debounce;
   final Map<String, String> _keyCache = {};
   final Map<String, String> _letterCache = {};
 
   List<Person> get people => _people;
+  NumberStats get numberStats => _numberStats ??= NumberStats.of(_people);
   String get query => _query;
   bool get searching => _query.trim().isNotEmpty;
   bool get selecting => selected.isNotEmpty;
@@ -86,6 +97,7 @@ abstract class ContactList extends ChangeNotifier {
     final ids = {for (final p in next) p.id};
     selected.retainAll(ids);
     _dirtyIndex = true;
+    _numberStats = null;
     resort();
   }
 
@@ -98,6 +110,9 @@ abstract class ContactList extends ChangeNotifier {
       ListFilter.starred => p.starred,
       ListFilter.noNumber => !p.hasNumber,
       ListFilter.noName => p.name.trim().isEmpty,
+      ListFilter.noCountryCode => numberStats.has(p, NumberStats.local),
+      ListFilter.oddNumber => numberStats.has(p, NumberStats.odd),
+      ListFilter.sharedNumber => numberStats.has(p, NumberStats.shared),
     };
     if (!ok) return false;
     if (accountFilter != null &&

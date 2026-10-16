@@ -219,7 +219,7 @@ class _PhoneHomeState extends State<PhoneHome> {
                 ),
                 if (book.isDemo) ...[
                   const SizedBox(width: 10),
-                  Tag(l.t('demoTag'), color: p.accent),
+                  Tag(l.t('demoTag'), color: p.accentText),
                 ],
               ],
             )
@@ -254,11 +254,25 @@ class _PhoneHomeState extends State<PhoneHome> {
           ],
         );
       }
-      return const Padding(
-        padding: EdgeInsets.only(top: 80),
+      return Padding(
+        padding: const EdgeInsets.only(top: 80),
         child: Align(
           alignment: Alignment.topCenter,
-          child: CircularProgressIndicator(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 18),
+              Text(
+                l.t('loadingContacts'),
+                style: TextStyle(
+                  color: p.inkSoft,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -459,7 +473,7 @@ class _PhoneHomeState extends State<PhoneHome> {
               ),
               Text(
                 l.t('resume'),
-                style: TextStyle(color: p.accent, fontWeight: FontWeight.w800),
+                style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -515,6 +529,7 @@ class _PhoneHomeState extends State<PhoneHome> {
             active: book.filter == ListFilter.noName,
             onTap: () => _toggleFilter(book, ListFilter.noName),
           ),
+          ..._numberPills(book, l),
           if (accounts.length > 1)
             for (final a in accounts) ...[
               gap(),
@@ -548,6 +563,34 @@ class _PhoneHomeState extends State<PhoneHome> {
     );
   }
 
+  List<Widget> _numberPills(PhoneBook book, L l) {
+    final st = book.numberStats;
+    final items = [
+      (ListFilter.noCountryCode, 'fNoCode', st.localCount),
+      (ListFilter.oddNumber, 'fOdd', st.oddCount),
+      (ListFilter.sharedNumber, 'fShared', st.sharedCount),
+    ];
+    return [
+      for (final (f, key, n) in items)
+        if (n > 0 || book.filter == f) ...[
+          const SizedBox(width: 8),
+          Pill(
+            key: ValueKey('f-${f.name}'),
+            label: '${l.t(key)} · $n',
+            active: book.filter == f,
+            onTap: () => _toggleFilter(book, f),
+          ),
+        ],
+    ];
+  }
+
+  String? _numberHint(PhoneBook book, L l) => switch (book.filter) {
+    ListFilter.noCountryCode => l.t('hintNoCode'),
+    ListFilter.oddNumber => l.t('hintOdd'),
+    ListFilter.sharedNumber => l.t('hintShared'),
+    _ => null,
+  };
+
   void _setSort(PhoneBook book, SortMode m) {
     book.sort = m;
     book.sortLang = context.read<AppState>().lang;
@@ -568,41 +611,55 @@ class _PhoneHomeState extends State<PhoneHome> {
     final list = book.visible;
     final all =
         list.isNotEmpty && list.every((x) => book.selected.contains(x.id));
+    final hint = book.searching ? null : _numberHint(book, l);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 4, 12, 4),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              l.n(list.length, 'contacts_one', 'contacts_many'),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Type.label(p),
-            ),
-          ),
-          if (book.filtering && !book.searching)
-            TextButton(
-              onPressed: book.clearFilters,
-              style: TextButton.styleFrom(foregroundColor: p.inkSoft),
-              child: Text(
-                l.t('clearFilters'),
-                style: const TextStyle(fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l.n(list.length, 'contacts_one', 'contacts_many'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Type.label(p),
+                ),
               ),
-            ),
-          if (list.isNotEmpty)
-            TextButton(
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                if (all) {
-                  book.deselect(list);
-                } else {
-                  book.selectAll(list);
-                }
-              },
-              style: TextButton.styleFrom(foregroundColor: p.accent),
+              if (book.filtering && !book.searching)
+                TextButton(
+                  onPressed: book.clearFilters,
+                  style: TextButton.styleFrom(foregroundColor: p.inkSoft),
+                  child: Text(
+                    l.t('clearFilters'),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              if (list.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    if (all) {
+                      book.deselect(list);
+                    } else {
+                      book.selectAll(list);
+                    }
+                  },
+                  style: TextButton.styleFrom(foregroundColor: p.accentText),
+                  child: Text(
+                    all ? l.t('clearSel') : l.t('selectResults'),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+            ],
+          ),
+          if (hint != null)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 12, bottom: 6),
               child: Text(
-                all ? l.t('clearSel') : l.t('selectResults'),
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                hint,
+                style: TextStyle(color: p.inkSoft, fontSize: 13, height: 1.45),
               ),
             ),
         ],

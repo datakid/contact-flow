@@ -80,7 +80,7 @@ Future<bool> confirmDelete(BuildContext context, ChangeSet set) async {
           onPressed: () => Navigator.pop(c, true),
           child: Text(
             l.t('delete'),
-            style: TextStyle(color: p.accent, fontWeight: FontWeight.w800),
+            style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
           ),
         ),
       ],
@@ -235,7 +235,7 @@ class ProgressDialog extends StatelessWidget {
                 : () => context.read<PhoneBook>().cancelRun(),
             child: Text(
               cancelling ? l.t('stopping') : l.t('cancel'),
-              style: TextStyle(color: p.accent, fontWeight: FontWeight.w800),
+              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
             ),
           ),
         ],
@@ -401,7 +401,7 @@ class _ChangeReviewScreenState extends State<ChangeReviewScreen> {
                 if (widget.set.count(k) > 0)
                   Tag(
                     '${kindLabel(l, k)} · ${chosen.count(k)}/${widget.set.count(k)}',
-                    color: k == ChangeKind.delete ? p.accent : p.sage,
+                    color: k == ChangeKind.delete ? p.accentText : p.sageText,
                   ),
             ],
           ),
@@ -433,7 +433,7 @@ class _ChangeReviewScreenState extends State<ChangeReviewScreen> {
           }
         }),
         style: TextButton.styleFrom(
-          foregroundColor: p.accent,
+          foregroundColor: p.accentText,
           visualDensity: VisualDensity.compact,
         ),
         child: Text(
@@ -548,7 +548,7 @@ class _ChangeReviewScreenState extends State<ChangeReviewScreen> {
                     '${l.t('removes')}: ${c.removed.map((e) => e.displayName).join(', ')}',
                     style: TextStyle(
                       fontSize: 12.5,
-                      color: p.accent,
+                      color: p.accentText,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

@@ -9,7 +9,7 @@ import 'reach_ui.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-const appVersion = '2.2.0';
+const appVersion = '2.5.0';
 
 Future<void> showSettings(BuildContext context) {
   return showModalBottomSheet(
@@ -160,7 +160,7 @@ class _Settings extends StatelessWidget {
                             child: Text(
                               l.t('remove'),
                               style: TextStyle(
-                                color: p.accent,
+                                color: p.accentText,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -194,7 +194,7 @@ class _Settings extends StatelessWidget {
                       child: Text(
                         l.t('privacy'),
                         style: TextStyle(
-                          color: p.sage,
+                          color: p.sageText,
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                         ),
@@ -218,7 +218,7 @@ class _Settings extends StatelessWidget {
                           applicationName: 'Contact Flow',
                           applicationVersion: appVersion,
                         ),
-                        style: TextButton.styleFrom(foregroundColor: p.accent),
+                        style: TextButton.styleFrom(foregroundColor: p.accentText),
                         child: Text(
                           l.t('licenses'),
                           maxLines: 2,
@@ -363,7 +363,7 @@ class _Action extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.pal;
-    final c = danger ? p.accent : p.ink;
+    final c = danger ? p.accentText : p.ink;
     return Opacity(
       opacity: onTap == null ? 0.4 : 1,
       child: ListTile(

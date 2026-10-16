@@ -344,7 +344,7 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
     alignment: AlignmentDirectional.centerStart,
     child: TextButton.icon(
       onPressed: onTap,
-      style: TextButton.styleFrom(foregroundColor: p.accent),
+      style: TextButton.styleFrom(foregroundColor: p.accentText),
       icon: const Icon(Icons.add_rounded, size: 19),
       label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
     ),
@@ -400,7 +400,7 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: p.accent,
+                      color: p.accentText,
                       fontSize: 13,
                     ),
                   ),

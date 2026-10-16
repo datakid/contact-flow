@@ -74,7 +74,7 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.text('Contact Flow 2.2.0 · MIT'), findsOneWidget);
+    expect(find.text('Contact Flow 2.5.0 · MIT'), findsOneWidget);
     final entries = await t.runAsync(() => LicenseRegistry.licenses.toList());
     final pkgs = entries!.expand((e) => e.packages).toSet();
     expect(pkgs, containsAll(['Manrope', 'Instrument Serif']));

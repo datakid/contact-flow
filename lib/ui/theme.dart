@@ -13,6 +13,8 @@ class Palette extends ThemeExtension<Palette> {
   final Color accentSoft;
   final Color onAccent;
   final Color sage;
+  final Color accentText;
+  final Color sageText;
   final Color highlight;
   final List<Color> avatars;
 
@@ -27,6 +29,8 @@ class Palette extends ThemeExtension<Palette> {
     required this.accentSoft,
     required this.onAccent,
     required this.sage,
+    required this.accentText,
+    required this.sageText,
     required this.highlight,
     required this.avatars,
   });
@@ -35,13 +39,15 @@ class Palette extends ThemeExtension<Palette> {
     paper: Color(0xFFF6F1E8),
     sheet: Color(0xFFFFFCF7),
     ink: Color(0xFF1C1A17),
-    inkSoft: Color(0xFF6B655C),
-    inkFaint: Color(0xFFA9A195),
+    inkSoft: Color(0xFF524D46),
+    inkFaint: Color(0xFF6C6458),
     hairline: Color(0xFFE6DED1),
     accent: Color(0xFFE2603F),
     accentSoft: Color(0xFFF8E1D7),
     onAccent: Color(0xFFFFFAF5),
     sage: Color(0xFF7F927A),
+    accentText: Color(0xFFB33A1B),
+    sageText: Color(0xFF5A6956),
     highlight: Color(0x33E2603F),
     avatars: [
       Color(0xFFEBD9C8),
@@ -58,12 +64,14 @@ class Palette extends ThemeExtension<Palette> {
     sheet: Color(0xFF1D1A17),
     ink: Color(0xFFF2ECE3),
     inkSoft: Color(0xFFA59D91),
-    inkFaint: Color(0xFF6A645B),
+    inkFaint: Color(0xFF938C81),
     hairline: Color(0xFF2C2824),
     accent: Color(0xFFF07A5A),
     accentSoft: Color(0xFF3A231B),
     onAccent: Color(0xFF1A0F0A),
     sage: Color(0xFF9DB097),
+    accentText: Color(0xFFF07A5A),
+    sageText: Color(0xFF9DB097),
     highlight: Color(0x40F07A5A),
     avatars: [
       Color(0xFF3A2E25),
@@ -93,6 +101,8 @@ class Palette extends ThemeExtension<Palette> {
       accentSoft: l(accentSoft, other.accentSoft),
       onAccent: l(onAccent, other.onAccent),
       sage: l(sage, other.sage),
+      accentText: l(accentText, other.accentText),
+      sageText: l(sageText, other.sageText),
       highlight: l(highlight, other.highlight),
       avatars: [
         for (var i = 0; i < avatars.length; i++)

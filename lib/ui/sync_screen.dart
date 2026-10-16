@@ -309,7 +309,9 @@ class _SyncScreenState extends State<SyncScreen> {
           _delete.isEmpty
               ? l.t('phoneOnlyKeep')
               : l.n(_delete.length, 'willDeleteOne', 'willDeleteN'),
-          style: TextStyle(color: _delete.isEmpty ? p.inkFaint : p.accent),
+          style: TextStyle(
+            color: _delete.isEmpty ? p.inkFaint : p.accentText,
+          ),
         ),
         trailing: Icon(
           _showPhoneOnly
@@ -383,7 +385,7 @@ class _SyncScreenState extends State<SyncScreen> {
           ),
           Text(
             l.t('conflict_${c.reason.name}'),
-            style: TextStyle(color: p.accent, fontSize: 12.5),
+            style: TextStyle(color: p.accentText, fontSize: 12.5),
           ),
           const SizedBox(height: 8),
           Wrap(

@@ -141,7 +141,7 @@ class QueueScreen extends StatelessWidget {
                         Text(
                           l.t('didYouSend'),
                           style: TextStyle(
-                            color: p.accent,
+                            color: p.accentText,
                             fontWeight: FontWeight.w700,
                           ),
                         ),

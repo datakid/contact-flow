@@ -348,7 +348,7 @@ class _BatchScreenState extends State<BatchScreen> {
                             : Tag(
                                 l.t('changedN', {'n': changed}),
                                 key: ValueKey(changed),
-                                color: p.accent,
+                                color: p.accentText,
                               ),
                       ),
                     ),
@@ -977,7 +977,7 @@ class _OpDialogState extends State<_OpDialog> {
                 : l.t('willChange', {'n': res.length}),
             style: Type.label(
               p,
-            ).copyWith(color: res.isEmpty ? p.inkFaint : p.accent),
+            ).copyWith(color: res.isEmpty ? p.inkFaint : p.accentText),
           ),
           for (final (b, a) in res.take(4)) ...[
             const SizedBox(height: 10),

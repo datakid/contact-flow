@@ -642,6 +642,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                     Tag('${e.key.title} · ${e.value}'),
                               ],
                             ),
+                          if (plan.skipped > 0) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              l.t('skippedRows', {'n': plan.skipped}),
+                              style: TextStyle(
+                                color: p.inkSoft,
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

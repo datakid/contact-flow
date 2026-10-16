@@ -197,7 +197,7 @@ class _Chip extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
-                    color: primary ? p.accent : p.ink,
+                    color: primary ? p.accentText : p.ink,
                   ),
                 ),
               ),

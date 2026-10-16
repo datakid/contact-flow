@@ -166,7 +166,7 @@ class PersonRow extends StatelessWidget {
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
                                 color: h?.reason == 'phone'
-                                    ? p.accent
+                                    ? p.accentText
                                     : (number.isEmpty ? p.inkFaint : p.inkSoft),
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
@@ -203,7 +203,7 @@ class PersonRow extends StatelessWidget {
                           Flexible(
                             child: Tag(
                               reason,
-                              color: h?.reason == 'alias' ? p.accent : p.sage,
+                              color: h?.reason == 'alias' ? p.accentText : p.sageText,
                             ),
                           ),
                         ],
@@ -278,7 +278,7 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
-                            color: letter == _active ? p.accent : p.inkSoft,
+                            color: letter == _active ? p.accentText : p.inkSoft,
                           ),
                         ),
                       ),
