@@ -1,0 +1,4 @@
+tags:
+  perf:
+    timeout: 3x
+  golden:
