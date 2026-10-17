@@ -101,3 +101,10 @@ Failing test: test/dedupe_test.dart (written, not run)
 Change: re-imported email-only rows now match existing contacts; Settings dedupe shows a confirm dialog with the count and up to five names, then a snackbar with Undo (planDedupe, applyDedupe, undoDedupe). New strings dedupePreview and dedupeMerge in five languages.
 verify.sh: not run
 Risks / follow-ups: matching by email can merge two different people who share a family address; this is what the plan asked for. Undo restores the kept contact from a copy taken before the merge, and re-adds the removed ones with their original ids.
+
+Task: 1.19  Status: UNVERIFIED
+Callers checked: ReviewScreen is pushed from WorkspaceRoot._receive and from the import sheet; ImportPlan is built only in AppState.plan and ReviewScreen._commit.
+Failing test: test/review_screen_test.dart (written, not run)
+Change: the add count is computed from the rows actually kept, so skipped duplicates no longer distort it when merge is toggled; a failed commit resets the spinner and shows the new importFailed message; the 400-row cap is gone so every row can be skipped; double taps on the button are ignored while saving.
+verify.sh: not run
+Risks / follow-ups: Phase 2.4 rebuilds this screen. A commit that fails after saving some rows leaves those rows saved; the store has no transaction.

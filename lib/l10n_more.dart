@@ -82,6 +82,7 @@ const moreStrings = <String, Map<String, String>>{
     'dedupePreview':
         'Merge {n} duplicates into the contacts they match? You can undo this right after.',
     'dedupeMerge': 'Merge',
+    'importFailed': 'Couldn\'t save the contacts. Please try again.',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -165,6 +166,7 @@ const moreStrings = <String, Map<String, String>>{
     'dedupePreview':
         'دمج {n} مكرر في جهات الاتصال المطابقة؟ يمكنك التراجع بعد ذلك مباشرة.',
     'dedupeMerge': 'دمج',
+    'importFailed': 'تعذّر حفظ جهات الاتصال. حاول مرة أخرى.',
   },
   'zh': {
     'aliases': '别名',
@@ -536,6 +538,7 @@ const moreStrings = <String, Map<String, String>>{
     'skippedRows': '已跳过 {n} 行：没有电话号码或邮箱',
     'dedupePreview': '将 {n} 个重复项合并到匹配的联系人中？合并后可立即撤销。',
     'dedupeMerge': '合并',
+    'importFailed': '无法保存联系人，请重试。',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -946,6 +949,7 @@ const moreStrings = <String, Map<String, String>>{
     'dedupePreview':
         '¿Unir {n} duplicados con los contactos que coinciden? Puedes deshacerlo justo después.',
     'dedupeMerge': 'Unir',
+    'importFailed': 'No se pudieron guardar los contactos. Inténtalo de nuevo.',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1363,5 +1367,6 @@ const moreStrings = <String, Map<String, String>>{
     'dedupePreview':
         'Fusionner {n} doublons avec les contacts correspondants ? Vous pourrez annuler juste après.',
     'dedupeMerge': 'Fusionner',
+    'importFailed': 'Impossible d’enregistrer les contacts. Réessayez.',
   },
 };

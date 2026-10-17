@@ -559,13 +559,42 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
   List<Person> get _fresh => widget.plan.fresh;
 
+  int get _count {
+    final fresh = _fresh.where((x) => !_skip.contains(x.id)).length;
+    if (_merge) return fresh;
+    return fresh +
+        widget.plan.dupes.where((d) => !_skip.contains(d.$1.id)).length;
+  }
+
+  Future<void> _commit() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final plan = widget.plan;
+    final s = context.read<AppState>();
+    final l = L.of(context);
+    final keep = _fresh.where((x) => !_skip.contains(x.id)).toList();
+    final dupes = _merge
+        ? plan.dupes
+        : plan.dupes.where((d) => !_skip.contains(d.$1.id)).toList();
+    try {
+      final n = await s.commit(
+        ImportPlan(plan.incoming, keep, dupes, plan.sources, plan.formats),
+        merge: _merge,
+      );
+      if (mounted) Navigator.pop(context, n);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      toast(context, l.t('importFailed'));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = context.pal;
     final plan = widget.plan;
-    final count =
-        _fresh.length - _skip.length + (_merge ? 0 : plan.dupes.length);
+    final count = _count;
     final previewList = [
       ..._fresh,
       if (!_merge) ...plan.dupes.map((d) => d.$1),
@@ -711,9 +740,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ),
                     ),
                   SliverList.builder(
-                    itemCount: previewList.length > 400
-                        ? 400
-                        : previewList.length,
+                    itemCount: previewList.length,
                     itemBuilder: (c, i) {
                       final person = previewList[i];
                       final skip = _skip.contains(person.id);
@@ -784,19 +811,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       );
                     },
                   ),
-                  if (previewList.length > 400)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          '+ ${previewList.length - 400}',
-                          style: Type.display(
-                            p,
-                            size: 26,
-                          ).copyWith(color: p.inkSoft),
-                        ),
-                      ),
-                    ),
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               ),
@@ -830,29 +844,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           : l.t('done')),
                 icon: Icons.check_rounded,
                 busy: _busy,
-                onTap: () async {
-                  setState(() => _busy = true);
-                  final s = context.read<AppState>();
-                  final keep = _fresh
-                      .where((x) => !_skip.contains(x.id))
-                      .toList();
-                  final dupes = _merge
-                      ? plan.dupes
-                      : plan.dupes
-                            .where((d) => !_skip.contains(d.$1.id))
-                            .toList();
-                  final n = await s.commit(
-                    ImportPlan(
-                      plan.incoming,
-                      keep,
-                      dupes,
-                      plan.sources,
-                      plan.formats,
-                    ),
-                    merge: _merge,
-                  );
-                  if (context.mounted) Navigator.pop(context, n);
-                },
+                onTap: _commit,
               ),
             ),
           ],
