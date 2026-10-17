@@ -27,6 +27,25 @@ class ImportPlan {
   });
 }
 
+class DedupeGroup {
+  final Person keep;
+  final List<Person> drop;
+  const DedupeGroup(this.keep, this.drop);
+}
+
+class DedupePlan {
+  final List<DedupeGroup> groups;
+  const DedupePlan(this.groups);
+  bool get isEmpty => groups.isEmpty;
+  int get removed => groups.fold(0, (a, g) => a + g.drop.length);
+}
+
+class DedupeUndo {
+  final List<Person> originals;
+  final List<Person> removed;
+  const DedupeUndo(this.originals, this.removed);
+}
+
 class AppState extends ContactList {
   final LibraryStore _store;
   ThemeMode themeMode = ThemeMode.system;
@@ -135,7 +154,7 @@ class AppState extends ContactList {
     }
     final byKey = <String, Person>{};
     for (final p in _people) {
-      for (final k in p.phoneKeys) {
+      for (final k in p.matchKeys) {
         byKey.putIfAbsent(k, () => p);
       }
     }
@@ -144,7 +163,7 @@ class AppState extends ContactList {
     final freshByKey = <String, Person>{};
     for (final p in incoming) {
       Person? existing;
-      for (final k in p.phoneKeys) {
+      for (final k in p.matchKeys) {
         existing = byKey[k];
         if (existing != null) break;
       }
@@ -153,7 +172,7 @@ class AppState extends ContactList {
         continue;
       }
       Person? twin;
-      for (final k in p.phoneKeys) {
+      for (final k in p.matchKeys) {
         twin = freshByKey[k];
         if (twin != null) break;
       }
@@ -163,7 +182,7 @@ class AppState extends ContactList {
         continue;
       }
       fresh.add(p);
-      for (final k in p.phoneKeys) {
+      for (final k in p.matchKeys) {
         freshByKey.putIfAbsent(k, () => p);
       }
     }
@@ -264,39 +283,69 @@ class AppState extends ContactList {
     notifyListeners();
   }
 
-  Future<int> dedupe() async {
+  DedupePlan planDedupe() {
     final byKey = <String, Person>{};
-    final removed = <String>[];
-    final changed = <Person>{};
+    final drops = <String, List<Person>>{};
+    final keeps = <String, Person>{};
     for (final p in [..._people]..sort((a, b) => a.added.compareTo(b.added))) {
       Person? keep;
-      for (final k in p.phoneKeys) {
+      for (final k in p.matchKeys) {
         keep = byKey[k];
         if (keep != null) break;
       }
       if (keep != null && keep.id != p.id) {
-        keep.absorb(p);
-        changed.add(keep);
-        removed.add(p.id);
-        for (final k in p.phoneKeys) {
+        keeps[keep.id] = keep;
+        (drops[keep.id] ??= []).add(p);
+        for (final k in p.matchKeys) {
           byKey.putIfAbsent(k, () => keep!);
         }
       } else {
-        for (final k in p.phoneKeys) {
+        for (final k in p.matchKeys) {
           byKey.putIfAbsent(k, () => p);
         }
       }
     }
-    if (removed.isEmpty) return 0;
-    final set = removed.toSet();
-    selected.removeAll(set);
-    await _store.deleteAll(set);
-    await _store.putAll(changed);
+    return DedupePlan([
+      for (final e in drops.entries) DedupeGroup(keeps[e.key]!, e.value),
+    ]);
+  }
+
+  Future<DedupeUndo> applyDedupe(DedupePlan plan) async {
+    final originals = <Person>[];
+    final removed = <Person>[];
+    for (final g in plan.groups) {
+      originals.add(g.keep.copy());
+      for (final d in g.drop) {
+        g.keep.absorb(d);
+        removed.add(d);
+      }
+    }
+    final ids = {for (final p in removed) p.id};
+    selected.removeAll(ids);
+    await _store.deleteAll(ids);
+    await _store.putAll([for (final g in plan.groups) g.keep]);
     replacePeople(
-      _people.where((p) => !set.contains(p.id)).toList(),
-      changedIds: changed.map((p) => p.id),
+      _people.where((p) => !ids.contains(p.id)).toList(),
+      changedIds: [for (final g in plan.groups) g.keep.id],
     );
     notifyListeners();
-    return removed.length;
+    return DedupeUndo(originals, removed);
+  }
+
+  Future<void> undoDedupe(DedupeUndo undo) async {
+    final byId = {for (final p in undo.originals) p.id: p};
+    await _store.putAll([...undo.originals, ...undo.removed]);
+    replacePeople([
+      for (final p in _people) byId[p.id] ?? p,
+      ...undo.removed,
+    ], changedIds: byId.keys);
+    notifyListeners();
+  }
+
+  Future<int> dedupe() async {
+    final plan = planDedupe();
+    if (plan.isEmpty) return 0;
+    await applyDedupe(plan);
+    return plan.removed;
   }
 }

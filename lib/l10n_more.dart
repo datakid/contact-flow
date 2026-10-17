@@ -79,6 +79,9 @@ const moreStrings = <String, Map<String, String>>{
         'The same number is saved on more than one contact. Open Tools to review and merge duplicates.',
     'loadingContacts': 'Reading your contacts…',
     'skippedRows': 'Skipped {n} without a phone number or email',
+    'dedupePreview':
+        'Merge {n} duplicates into the contacts they match? You can undo this right after.',
+    'dedupeMerge': 'Merge',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -159,6 +162,9 @@ const moreStrings = <String, Map<String, String>>{
         'الرقم نفسه محفوظ عند أكثر من جهة اتصال. افتح أدوات لمراجعة المكرّرات ودمجها.',
     'loadingContacts': 'جارٍ قراءة جهات اتصالك…',
     'skippedRows': 'تم تخطي {n} بلا رقم هاتف أو بريد إلكتروني',
+    'dedupePreview':
+        'دمج {n} مكرر في جهات الاتصال المطابقة؟ يمكنك التراجع بعد ذلك مباشرة.',
+    'dedupeMerge': 'دمج',
   },
   'zh': {
     'aliases': '别名',
@@ -528,6 +534,8 @@ const moreStrings = <String, Map<String, String>>{
     'hintShared': '同一个号码保存在多个联系人中。打开工具来查看并合并重复项。',
     'loadingContacts': '正在读取联系人…',
     'skippedRows': '已跳过 {n} 行：没有电话号码或邮箱',
+    'dedupePreview': '将 {n} 个重复项合并到匹配的联系人中？合并后可立即撤销。',
+    'dedupeMerge': '合并',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -935,6 +943,9 @@ const moreStrings = <String, Map<String, String>>{
         'El mismo número está guardado en más de un contacto. Abre Herramientas para revisar y fusionar duplicados.',
     'loadingContacts': 'Leyendo tus contactos…',
     'skippedRows': 'Omitidos {n} sin teléfono ni correo',
+    'dedupePreview':
+        '¿Unir {n} duplicados con los contactos que coinciden? Puedes deshacerlo justo después.',
+    'dedupeMerge': 'Unir',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1349,5 +1360,8 @@ const moreStrings = <String, Map<String, String>>{
         'Le même numéro est enregistré sur plusieurs contacts. Ouvrez Outils pour les vérifier et fusionner les doublons.',
     'loadingContacts': 'Lecture de vos contacts…',
     'skippedRows': '{n} ignorés sans numéro ni e-mail',
+    'dedupePreview':
+        'Fusionner {n} doublons avec les contacts correspondants ? Vous pourrez annuler juste après.',
+    'dedupeMerge': 'Fusionner',
   },
 };

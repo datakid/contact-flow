@@ -115,13 +115,44 @@ class _Settings extends StatelessWidget {
             onTap: s.people.isEmpty
                 ? null
                 : () async {
-                    final n = await s.dedupe();
+                    final plan = s.planDedupe();
+                    if (plan.isEmpty) {
+                      toast(context, l.t('dedupeNone'));
+                      return;
+                    }
+                    final ok = await showDialog<bool>(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: Text(l.t('dedupe')),
+                        content: Text(
+                          [
+                            l.t('dedupePreview', {'n': plan.removed}),
+                            ...plan.groups
+                                .take(5)
+                                .map((g) => g.keep.displayName),
+                          ].join('\n'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, false),
+                            child: Text(l.t('cancel')),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            child: Text(l.t('dedupeMerge')),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (ok != true) return;
+                    final undo = await s.applyDedupe(plan);
                     if (context.mounted) {
                       toast(
                         context,
-                        n == 0
-                            ? l.t('dedupeNone')
-                            : l.t('dedupeDone', {'n': n}),
+                        l.t('dedupeDone', {'n': plan.removed}),
+                        action: l.t('undo'),
+                        onAction: () => s.undoDedupe(undo),
+                        duration: const Duration(seconds: 8),
                       );
                     }
                   },

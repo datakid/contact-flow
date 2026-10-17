@@ -94,3 +94,10 @@ Failing test: test/xlsx_read_test.dart (written, not run). The new regexes were 
 Change: every element pattern accepts an optional namespace prefix (row, c, v, si, t, rPh, sheet, Relationship, numFmt, cellXfs, xf); self-closing rows no longer swallow the next row; all sheets are read in workbook order; when the first sheet has no phone or email column and yields no contacts, the first sheet that does is used and its name is appended to ImportResult.detail; numbers in a cell style with a format of two or more zeros get their leading zeros back.
 verify.sh: not run
 Risks / follow-ups: the sheet name is stored in detail but no screen shows it yet, and the review-screen flag "N numbers may have lost a leading 0" is not built; both need new strings in five languages. A number cell with no zero-padded format still loses its zero.
+
+Task: 1.18  Status: UNVERIFIED
+Callers checked: AppState.plan and the old dedupe both used Person.phoneKeys; both now use the new Person.matchKeys (phone keys plus lowercased email). Settings was the only caller of dedupe().
+Failing test: test/dedupe_test.dart (written, not run)
+Change: re-imported email-only rows now match existing contacts; Settings dedupe shows a confirm dialog with the count and up to five names, then a snackbar with Undo (planDedupe, applyDedupe, undoDedupe). New strings dedupePreview and dedupeMerge in five languages.
+verify.sh: not run
+Risks / follow-ups: matching by email can merge two different people who share a family address; this is what the plan asked for. Undo restores the kept contact from a copy taken before the merge, and re-adds the removed ones with their original ids.

@@ -130,6 +130,12 @@ class Person {
       .where((k) => k.isNotEmpty)
       .toSet();
 
+  Set<String> get matchKeys => {
+    ...phoneKeys,
+    for (final e in emails)
+      if (e.trim().isNotEmpty) '@${e.trim().toLowerCase()}',
+  };
+
   Person copy({String? id, String? phoneId, bool clearPhoneId = false}) =>
       Person(
         id: id ?? this.id,
