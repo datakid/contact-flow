@@ -83,6 +83,8 @@ const moreStrings = <String, Map<String, String>>{
         'Merge {n} duplicates into the contacts they match? You can undo this right after.',
     'dedupeMerge': 'Merge',
     'importFailed': 'Couldn\'t save the contacts. Please try again.',
+    'includeTitle': 'Include job title',
+    'includeGroups': 'Include groups',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -167,6 +169,8 @@ const moreStrings = <String, Map<String, String>>{
         'دمج {n} مكرر في جهات الاتصال المطابقة؟ يمكنك التراجع بعد ذلك مباشرة.',
     'dedupeMerge': 'دمج',
     'importFailed': 'تعذّر حفظ جهات الاتصال. حاول مرة أخرى.',
+    'includeTitle': 'تضمين المسمى الوظيفي',
+    'includeGroups': 'تضمين المجموعات',
   },
   'zh': {
     'aliases': '别名',
@@ -539,6 +543,8 @@ const moreStrings = <String, Map<String, String>>{
     'dedupePreview': '将 {n} 个重复项合并到匹配的联系人中？合并后可立即撤销。',
     'dedupeMerge': '合并',
     'importFailed': '无法保存联系人，请重试。',
+    'includeTitle': '包含职位',
+    'includeGroups': '包含群组',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -950,6 +956,8 @@ const moreStrings = <String, Map<String, String>>{
         '¿Unir {n} duplicados con los contactos que coinciden? Puedes deshacerlo justo después.',
     'dedupeMerge': 'Unir',
     'importFailed': 'No se pudieron guardar los contactos. Inténtalo de nuevo.',
+    'includeTitle': 'Incluir cargo',
+    'includeGroups': 'Incluir grupos',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1368,5 +1376,7 @@ const moreStrings = <String, Map<String, String>>{
         'Fusionner {n} doublons avec les contacts correspondants ? Vous pourrez annuler juste après.',
     'dedupeMerge': 'Fusionner',
     'importFailed': 'Impossible d’enregistrer les contacts. Réessayez.',
+    'includeTitle': 'Inclure le poste',
+    'includeGroups': 'Inclure les groupes',
   },
 };

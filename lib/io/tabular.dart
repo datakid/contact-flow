@@ -174,6 +174,10 @@ class Tabular {
     '标签',
     'etiquettes',
     'etiquetas',
+    'المجموعات',
+    '群组',
+    'grupos',
+    'groupes',
   ];
   static const _departmentKeys = ['department', 'dept'];
   static const _aliasKeys = [
@@ -241,10 +245,11 @@ class Tabular {
     if (h == '名') return Col.first;
     if (h == 'contact id' || h == 'contactid') return Col.contactId;
     if (_has(h, _aliasKeys) && !_has(h, _phoneKeys)) return Col.alias;
-    if (h == 'job title' || h == 'title' || h == 'المسمى الوظيفي') {
+    if (const ['job title', 'title', 'المسمى الوظيفي', '职位', 'cargo', 'poste']
+        .contains(h)) {
       return Col.title;
     }
-    if (h == 'labels' || _has(h, _tagKeys)) return Col.tags;
+    if (h == 'labels' || h == 'groups' || _has(h, _tagKeys)) return Col.tags;
     if (_has(h, _orgKeys) && h.contains('title')) return Col.title;
     if (_has(h, _orgKeys) && _has(h, _departmentKeys)) return Col.ignore;
     if (_has(h, _labelKeys)) return Col.label;

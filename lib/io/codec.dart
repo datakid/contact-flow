@@ -56,6 +56,8 @@ class ExportOptions {
   final bool rtl;
   final bool contactId;
   final bool includeAliases;
+  final bool? includeTitle;
+  final bool? includeGroups;
 
   const ExportOptions({
     this.header = true,
@@ -68,7 +70,13 @@ class ExportOptions {
     this.rtl = false,
     this.contactId = false,
     this.includeAliases = true,
+    this.includeTitle,
+    this.includeGroups,
   });
+
+  bool titleFor(Format f) => includeTitle ?? f != Format.csv;
+
+  bool groupsFor(Format f) => includeGroups ?? f != Format.csv;
 
   ExportOptions copyWith({
     bool? header,
@@ -81,6 +89,8 @@ class ExportOptions {
     bool? rtl,
     bool? contactId,
     bool? includeAliases,
+    bool? includeTitle,
+    bool? includeGroups,
   }) => ExportOptions(
     header: header ?? this.header,
     includeEmail: includeEmail ?? this.includeEmail,
@@ -92,6 +102,8 @@ class ExportOptions {
     rtl: rtl ?? this.rtl,
     contactId: contactId ?? this.contactId,
     includeAliases: includeAliases ?? this.includeAliases,
+    includeTitle: includeTitle ?? this.includeTitle,
+    includeGroups: includeGroups ?? this.includeGroups,
   );
 }
 
@@ -514,6 +526,8 @@ class Codec {
 
       flatten(m, '');
       var name = '', first = '', last = '', org = '', note = '';
+      var jobTitle = '';
+      final groups = <String>[];
       final phones = <PhoneEntry>[];
       final emails = <String>[];
       final aliases = <String>[];
@@ -565,6 +579,14 @@ class Codec {
             last = '$v';
           case Col.org:
             org = '$v';
+          case Col.title:
+            if (jobTitle.isEmpty) jobTitle = '$v';
+          case Col.tags:
+            if (v is List) {
+              groups.addAll(v.map((e) => '$e'.trim()).where((e) => e.isNotEmpty));
+            } else {
+              groups.addAll(Tabular.splitTags('$v'));
+            }
           case Col.note:
             note = '$v';
           case Col.alias:
@@ -587,6 +609,8 @@ class Codec {
           phones: phones,
           emails: emails,
           org: org,
+          jobTitle: jobTitle,
+          groups: groups,
           note: note,
           source: src,
           aliases: Aliases.clean(aliases, name: name),
@@ -608,6 +632,7 @@ class Codec {
     List<Person> people,
     ExportOptions o, {
     List<String>? headers,
+    Format format = Format.xlsx,
   }) {
     final maxPhones = o.allNumbers
         ? people.fold<int>(
@@ -623,6 +648,9 @@ class Codec {
     final withId = o.contactId && people.any((p) => p.phoneId != null);
     final withAlias =
         o.includeAliases && people.any((p) => p.cleanAliases.isNotEmpty);
+    final withTitle = o.titleFor(format) && people.any((p) => p.jobTitle.isNotEmpty);
+    final withGroups =
+        o.groupsFor(format) && people.any((p) => p.groups.isNotEmpty);
     final h = <String>[
       headers?[0] ?? 'Name',
       for (var i = 0; i < maxPhones; i++)
@@ -634,9 +662,13 @@ class Codec {
             ? (headers?[2] ?? 'Email')
             : '${headers?[2] ?? 'Email'} ${i + 1}',
       if (o.includeOrg) headers?[3] ?? 'Company',
+      if (withTitle)
+        (headers != null && headers.length > 6 ? headers[6] : 'Job Title'),
       if (o.includeNote) headers?[4] ?? 'Note',
       if (withAlias)
         (headers != null && headers.length > 5 ? headers[5] : 'Alias'),
+      if (withGroups)
+        (headers != null && headers.length > 7 ? headers[7] : 'Groups'),
       if (withId) 'contact_id',
     ];
     final rows = <List<String>>[if (o.header) h];
@@ -652,8 +684,10 @@ class Codec {
         for (var i = 0; i < maxEmails; i++)
           i < p.emails.length ? p.emails[i] : '',
         if (o.includeOrg) p.org,
+        if (withTitle) p.jobTitle,
         if (o.includeNote) p.note,
         if (withAlias) Aliases.join(p.cleanAliases),
+        if (withGroups) p.groups.join(' ::: '),
         if (withId) p.phoneId ?? '',
       ]);
     }
@@ -736,7 +770,7 @@ class Codec {
   }) {
     switch (f) {
       case Format.csv:
-        final rows = table(people, o, headers: headers);
+        final rows = table(people, o, headers: headers, format: f);
         final s = rows.map((r) => r.map(_csvCell).join(',')).join('\r\n');
         return Uint8List.fromList([0xEF, 0xBB, 0xBF, ...utf8.encode('$s\r\n')]);
       case Format.vcf:
@@ -748,6 +782,8 @@ class Codec {
                 phones: o.allNumbers ? p.phones : p.phones.take(1).toList(),
                 emails: o.includeEmail ? p.emails : [],
                 org: o.includeOrg ? p.org : '',
+                jobTitle: p.jobTitle,
+                groups: o.groupsFor(Format.vcf) ? p.groups : [],
                 note: o.includeNote ? p.note : '',
                 aliases: o.includeAliases ? p.cleanAliases : [],
               ),
@@ -760,7 +796,10 @@ class Codec {
         );
       case Format.xlsx:
       case Format.numbers:
-        return Xlsx.write(table(people, o, headers: headers), rtl: o.rtl);
+        return Xlsx.write(
+          table(people, o, headers: headers, format: f),
+          rtl: o.rtl,
+        );
       case Format.txt:
         final b = StringBuffer();
         for (final p in people) {
@@ -793,6 +832,10 @@ class Codec {
                     .toList(),
                 if (o.includeEmail) 'emails': p.emails,
                 if (o.includeOrg && p.org.isNotEmpty) 'company': p.org,
+                if (o.titleFor(Format.json) && p.jobTitle.isNotEmpty)
+                  'job_title': p.jobTitle,
+                if (o.groupsFor(Format.json) && p.groups.isNotEmpty)
+                  'groups': p.groups,
                 if (o.includeNote && p.note.isNotEmpty) 'note': p.note,
                 if (o.includeAliases && p.cleanAliases.isNotEmpty)
                   'aliases': p.cleanAliases,

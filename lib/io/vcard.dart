@@ -281,16 +281,15 @@ class VCard {
         if (p.note.isNotEmpty) 'NOTE:${_esc(p.note)}',
         if (p.cleanAliases.isNotEmpty)
           'NICKNAME:${p.cleanAliases.map(_esc).join(',')}',
+        if (p.jobTitle.isNotEmpty) 'TITLE:${_esc(p.jobTitle)}',
+        if (p.groups.isNotEmpty) 'CATEGORIES:${p.groups.map(_esc).join(',')}',
         if (lossless) ...[
           if (p.name.isEmpty) 'X-CONTACTFLOW-NONAME:1',
-          if (p.jobTitle.isNotEmpty) 'TITLE:${_esc(p.jobTitle)}',
-          if (p.groups.isNotEmpty) 'CATEGORIES:${p.groups.map(_esc).join(',')}',
           if (p.phoneId != null) 'X-CONTACTFLOW-ID:${_esc(p.phoneId!)}',
           if (p.starred) 'X-CONTACTFLOW-STARRED:1',
           if (p.account != null)
             'X-CONTACTFLOW-ACCOUNT:${_esc(p.account!.name)};${_esc(p.account!.type)}',
-        ] else if (p.jobTitle.isNotEmpty)
-          'TITLE:${_esc(p.jobTitle)}',
+        ],
         'END:VCARD',
       ];
       for (final l in lines) {

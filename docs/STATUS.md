@@ -108,3 +108,10 @@ Failing test: test/review_screen_test.dart (written, not run)
 Change: the add count is computed from the rows actually kept, so skipped duplicates no longer distort it when merge is toggled; a failed commit resets the spinner and shows the new importFailed message; the 400-row cap is gone so every row can be skipped; double taps on the button are ignored while saving.
 verify.sh: not run
 Risks / follow-ups: Phase 2.4 rebuilds this screen. A commit that fails after saving some rows leaves those rows saved; the store has no transaction.
+
+Task: 1.20  Status: UNVERIFIED
+Callers checked: Codec.table is called by Codec.encode and the export screen preview (now passes the format); VCard.write is called by Codec.encode, the journal snapshot (lossless) and reach_ui sharing; ExportOptions is built in app_state and the export screen.
+Failing test: test/export_fields_test.dart (written, not run)
+Change: ExportOptions.includeTitle and includeGroups (null means the format default: off for CSV, on for the others); Job Title and Groups columns appear only when someone has the data and sit before contact_id; vCard always writes TITLE and now writes CATEGORIES outside lossless mode when groups are included; JSON gets job_title and groups; import recognises Groups, Job Title and their Arabic, Chinese, Spanish and French headers; export screen has two new toggles and localized headers.
+verify.sh: not run
+Risks / follow-ups: the JSON importer now reads job_title and groups as well (Col.title and Col.tags in the flattened-key switch). Existing tests that compare exact CSV headers should be rechecked for people that have a job title or groups.

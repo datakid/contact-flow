@@ -81,6 +81,8 @@ class _ExportScreenState extends State<ExportScreen> {
 
   bool get _hasIds => widget.people.any((p) => p.phoneId != null);
   bool get _hasAliases => widget.people.any((p) => p.cleanAliases.isNotEmpty);
+  bool get _hasTitles => widget.people.any((p) => p.jobTitle.isNotEmpty);
+  bool get _hasGroups => widget.people.any((p) => p.groups.isNotEmpty);
 
   String get _fileName {
     final base = _name.text.trim().isEmpty
@@ -96,6 +98,8 @@ class _ExportScreenState extends State<ExportScreen> {
     l.t('company'),
     l.t('note'),
     l.t('alias'),
+    l.t('jobTitle'),
+    l.t('groups'),
   ];
 
   String _preview(L l) {
@@ -103,7 +107,12 @@ class _ExportScreenState extends State<ExportScreen> {
     switch (_f) {
       case Format.xlsx:
       case Format.numbers:
-        final rows = Codec.table(sample, _o, headers: _headers(l));
+        final rows = Codec.table(
+          sample,
+          _o,
+          headers: _headers(l),
+          format: _f,
+        );
         return rows
             .map((r) => r.where((c) => c.isNotEmpty).join('   │   '))
             .join('\n');
@@ -385,7 +394,7 @@ class _ExportScreenState extends State<ExportScreen> {
                       duration: const Duration(milliseconds: 260),
                       child: Container(
                         key: ValueKey(
-                          '${_f.name}${_o.hashCode}${_o.header}${_o.includeEmail}${_o.includeOrg}${_o.includeNote}${_o.includeAliases}${_o.allNumbers}${_o.phoneStyle}${_o.txtWithNames}',
+                          '${_f.name}${_o.hashCode}${_o.header}${_o.includeEmail}${_o.includeOrg}${_o.includeNote}${_o.includeAliases}${_o.includeTitle}${_o.includeGroups}${_o.allNumbers}${_o.phoneStyle}${_o.txtWithNames}',
                         ),
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -567,6 +576,18 @@ class _ExportScreenState extends State<ExportScreen> {
             l.t('includeAliases'),
             _o.includeAliases,
             (v) => _o = _o.copyWith(includeAliases: v),
+          ),
+        if (rich && _hasTitles)
+          sw(
+            l.t('includeTitle'),
+            _o.titleFor(_f),
+            (v) => _o = _o.copyWith(includeTitle: v),
+          ),
+        if (rich && _hasGroups)
+          sw(
+            l.t('includeGroups'),
+            _o.groupsFor(_f),
+            (v) => _o = _o.copyWith(includeGroups: v),
           ),
         if (_hasIds && tabular)
           sw(l.t('includeContactId'), _o.contactId, (v) {
