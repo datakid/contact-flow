@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../models/person.dart';
 import '../search/fold.dart';
+import '../domain/names.dart';
 import 'text_decode.dart';
 
 class VCard {
@@ -246,19 +247,8 @@ class VCard {
   }
 
   static (String, String) splitName(String full) {
-    final t = full.trim();
-    if (t.isEmpty) return ('', '');
-    if (Fold.hasCjk(t) && !t.contains(' ')) {
-      final runes = t.runes.toList();
-      if (runes.length <= 1) return ('', t);
-      return (
-        String.fromCharCode(runes.first),
-        String.fromCharCodes(runes.skip(1)),
-      );
-    }
-    final parts = t.split(RegExp(r'\s+'));
-    if (parts.length == 1) return ('', t);
-    return (parts.last, parts.sublist(0, parts.length - 1).join(' '));
+    final n = NameSplit.of(full);
+    return (n.last, n.first);
   }
 
   static String write(

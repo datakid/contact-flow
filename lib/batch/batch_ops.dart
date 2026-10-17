@@ -1,3 +1,4 @@
+import '../domain/names.dart';
 import '../models/person.dart';
 
 Person clonePerson(Person p) => p.copy();
@@ -151,12 +152,19 @@ class ClearAliases extends BatchOp {
 
 class SwapName extends BatchOp {
   const SwapName();
+
+  bool skips(Person p) {
+    final t = TextOps.squash(p.name);
+    return t.contains(' ') && !NameSplit.of(t).clear;
+  }
+
   @override
   void apply(Person p, int index) {
-    final parts = TextOps.squash(p.name).split(' ');
-    if (parts.length < 2) return;
-    final last = parts.removeLast();
-    p.name = '$last ${parts.join(' ')}';
+    final t = TextOps.squash(p.name);
+    if (!t.contains(' ')) return;
+    final n = NameSplit.of(t);
+    if (!n.clear || n.first.isEmpty || n.last.isEmpty) return;
+    p.name = '${n.last} ${n.first}';
   }
 }
 
@@ -173,9 +181,11 @@ class TemplateName extends BatchOp {
   });
 
   String render(Person p, int index) {
-    final parts = TextOps.squash(p.name).split(' ');
-    final first = parts.isEmpty ? '' : parts.first;
-    final last = parts.length > 1 ? parts.last : '';
+    final name = TextOps.squash(p.name);
+    final clear = NameSplit.of(name).clear;
+    final parts = name.split(' ');
+    final first = !clear ? name : (parts.isEmpty ? '' : parts.first);
+    final last = !clear ? '' : (parts.length > 1 ? parts.last : '');
     final n = (start + index).toString().padLeft(pad, '0');
     return TextOps.squash(
       template

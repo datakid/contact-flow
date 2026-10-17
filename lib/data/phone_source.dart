@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_contacts/flutter_contacts.dart' as fc;
 
+import '../domain/names.dart';
 import '../models/person.dart';
 import '../search/fold.dart';
 import 'contact_source.dart';
@@ -173,21 +174,14 @@ class PhoneSource implements ContactSource {
   static List<String> aliasesOf(fc.Contact c, String name) =>
       Aliases.clean(Aliases.parse(c.name?.nickname ?? ''), name: name);
 
+  @visibleForTesting
+  static fc.Name nameFor(Person p) => _name(p);
+
   static fc.Name _name(Person p) {
-    final full = p.name.trim();
-    if (full.isEmpty) return const fc.Name();
-    if (Fold.hasCjk(full) && !full.contains(' ')) {
-      final r = full.runes.toList();
-      if (r.length == 1) return fc.Name(first: full);
-      return fc.Name(
-        last: String.fromCharCode(r.first),
-        first: String.fromCharCodes(r.skip(1)),
-      );
-    }
-    final parts = full.split(RegExp(r'\s+'));
-    if (parts.length == 1) return fc.Name(first: full);
-    final last = parts.removeLast();
-    return fc.Name(first: parts.join(' '), last: last);
+    final n = NameSplit.of(p.name);
+    if (n.first.isEmpty && n.last.isEmpty) return const fc.Name();
+    if (n.last.isEmpty) return fc.Name(first: n.first);
+    return fc.Name(first: n.first, last: n.last);
   }
 
   static bool _sameList(List<String> a, List<String> b) {

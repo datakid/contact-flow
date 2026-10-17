@@ -90,6 +90,7 @@ const moreStrings = <String, Map<String, String>>{
         'Contacts stored in this app can’t be read right now, so anything you add or change would not be saved. Close the app and open it again. If this keeps happening, free up some storage space.',
     'quarantineCount': '{n} items couldn’t be read',
     'quarantineExport': 'Tap to export them as a file',
+    'swapSkipped': '{n} names left as they are (no clear first and last name)',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -181,6 +182,8 @@ const moreStrings = <String, Map<String, String>>{
         'لا يمكن قراءة جهات الاتصال المخزّنة في التطبيق الآن، لذلك لن يتم حفظ أي شيء تضيفه أو تغيّره. أغلق التطبيق وافتحه من جديد. إذا تكرّر ذلك، فرّغ بعض مساحة التخزين.',
     'quarantineCount': 'تعذّرت قراءة {n} عناصر',
     'quarantineExport': 'اضغط لتصديرها كملف',
+    'swapSkipped':
+        'تُرك {n} من الأسماء كما هي (لا يوجد اسم أول واسم عائلة واضحان)',
   },
   'zh': {
     'aliases': '别名',
@@ -560,6 +563,7 @@ const moreStrings = <String, Map<String, String>>{
         '目前无法读取此应用中保存的联系人，因此你添加或修改的内容不会被保存。请关闭应用后重新打开。如果问题持续出现，请释放一些存储空间。',
     'quarantineCount': '{n} 个项目无法读取',
     'quarantineExport': '点按以导出为文件',
+    'swapSkipped': '{n} 个姓名保持原样（没有明确的名和姓）',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -978,6 +982,7 @@ const moreStrings = <String, Map<String, String>>{
         'Los contactos guardados en esta app no se pueden leer ahora, así que nada de lo que añadas o cambies se guardaría. Cierra la app y ábrela de nuevo. Si sigue ocurriendo, libera espacio de almacenamiento.',
     'quarantineCount': '{n} elementos no se pudieron leer',
     'quarantineExport': 'Toca para exportarlos como archivo',
+    'swapSkipped': '{n} nombres sin cambios (sin nombre y apellido claros)',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1403,5 +1408,6 @@ const moreStrings = <String, Map<String, String>>{
         'Les contacts enregistrés dans cette app sont illisibles pour le moment, donc rien de ce que vous ajoutez ou modifiez ne serait conservé. Fermez l’app et rouvrez-la. Si cela continue, libérez de l’espace de stockage.',
     'quarantineCount': '{n} éléments illisibles',
     'quarantineExport': 'Touchez pour les exporter dans un fichier',
+    'swapSkipped': '{n} noms laissés tels quels (prénom et nom peu clairs)',
   },
 };

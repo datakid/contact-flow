@@ -122,3 +122,10 @@ Failing test: test/migration_test.dart (corrupt row now lands in quarantine, new
 Change: unreadable library and journal rows move to the quarantine_v1 Hive box (key library:<key> or journal:<key>); Settings shows "N items couldn't be read" with a tap to share them as raw JSON; if the library fails to open, a blocking error screen with Try again replaces the app and every write throws instead of doing nothing.
 verify.sh: not run
 Risks / follow-ups: the quarantine box is also excluded from cloud backup because it lives in app_flutter. The error screen was not checked on a device; it shows through ContactFlowApp, so widget tests that pass an explicit home are unaffected.
+
+Task: 1.6  Status: UNVERIFIED
+Callers checked: the five places named in the plan (PhoneSource._name, VCard.splitName, NameParts.of, SwapName, TemplateName); MessageTemplate.render also goes through NameParts.of so it changed too.
+Failing test: test/name_split_test.dart with 9 clear and 12 unclear names, run through NameSplit, NameParts, VCard.splitName and PhoneSource.nameFor, plus vCard, SwapName and TemplateName cases (written, not run).
+Change: new NameSplit in lib/domain/names.dart. A name containing Arabic script, or an Arabic particle written in Latin letters (bin, ibn, bint, abu, abo, abd, abdul, abdel, abdal anywhere; al, el, ul or al-/el- forms after the first word), is not split: the phone write puts it all in the given name, vCard writes N:;full;;;, SwapName skips it and the batch preview says how many were left as they are (new string swapSkipped), and TemplateName puts the whole name in {first} with an empty {last}. Latin and Chinese names behave as before.
+verify.sh: not run
+Risks / follow-ups: "Al Pacino" still splits because al is only treated as a particle after the first word; "Al Harbi" therefore splits as first Al, last Harbi. A Latin name with a Spanish or Dutch particle in the middle, such as "Omar El Sayed" or "Ana el Amrani", is now kept whole.

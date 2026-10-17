@@ -1010,6 +1010,15 @@ class _OpDialogState extends State<_OpDialog> {
                 style: TextStyle(color: p.inkSoft, fontSize: 12.5),
               ),
             ),
+          if (_op case final SwapName swap)
+            if (widget.rows.where(swap.skips).length case final n when n > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  l.t('swapSkipped', {'n': n}),
+                  style: TextStyle(color: p.inkSoft, fontSize: 12.5),
+                ),
+              ),
         ],
       ),
     );
