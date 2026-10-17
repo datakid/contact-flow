@@ -78,18 +78,37 @@ class AppState extends ContactList {
     lastFormat = Format
         .values[(prefs.getInt('fmt') ?? 0).clamp(0, Format.values.length - 1)];
     var loaded = <Person>[];
-    if (openStore) {
-      try {
-        await _store.open();
-        loaded = _store.load();
-      } catch (_) {
-        loaded = [];
-      }
-    }
+    if (openStore) loaded = await _openStore();
     replacePeople(loaded);
     ready = true;
     notifyListeners();
   }
+
+  int quarantined = 0;
+
+  bool get storeFailed => _store.failed;
+
+  Future<List<Person>> _openStore() async {
+    try {
+      await _store.open();
+      final loaded = _store.load();
+      try {
+        await _store.quarantineBad();
+        quarantined = await _store.quarantineCount();
+      } catch (_) {}
+      return loaded;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> retryStore() async {
+    final loaded = await _openStore();
+    if (!_store.failed) replacePeople(loaded);
+    notifyListeners();
+  }
+
+  Future<String> quarantineJson() => _store.quarantineJson();
 
   Future<void> setTheme(ThemeMode m) async {
     themeMode = m;

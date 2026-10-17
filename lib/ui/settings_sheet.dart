@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n.dart';
+import '../services/file_out.dart';
 import '../state/app_state.dart';
 import '../state/phone_book.dart';
 import 'history_screen.dart';
@@ -109,6 +112,21 @@ class _Settings extends StatelessWidget {
             },
           ),
           SectionLabel(l.t('library')),
+          if (s.quarantined > 0)
+            _Action(
+              key: const ValueKey('set-quarantine'),
+              icon: Icons.report_problem_outlined,
+              label: l.t('quarantineCount', {'n': s.quarantined}),
+              sub: l.t('quarantineExport'),
+              onTap: () async {
+                final json = await s.quarantineJson();
+                await shareBytes(
+                  Uint8List.fromList(utf8.encode(json)),
+                  'unreadable-items.json',
+                  'application/json',
+                );
+              },
+            ),
           _Action(
             icon: Icons.merge_rounded,
             label: l.t('dedupe'),

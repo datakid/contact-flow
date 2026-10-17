@@ -115,3 +115,10 @@ Failing test: test/export_fields_test.dart (written, not run)
 Change: ExportOptions.includeTitle and includeGroups (null means the format default: off for CSV, on for the others); Job Title and Groups columns appear only when someone has the data and sit before contact_id; vCard always writes TITLE and now writes CATEGORIES outside lossless mode when groups are included; JSON gets job_title and groups; import recognises Groups, Job Title and their Arabic, Chinese, Spanish and French headers; export screen has two new toggles and localized headers.
 verify.sh: not run
 Risks / follow-ups: the JSON importer now reads job_title and groups as well (Col.title and Col.tags in the flattened-key switch). Existing tests that compare exact CSV headers should be rechecked for people that have a job title or groups.
+
+Task: 1.9  Status: UNVERIFIED
+Callers checked: LibraryStore.load and migrate were the only readers of library rows; Journal.load the only reader of journal rows; AppState.init was the only place that swallowed an open failure; main.dart builds MaterialApp.
+Failing test: test/migration_test.dart (corrupt row now lands in quarantine, new stored v2 sample, current-schema corrupt rows), test/store_failure_test.dart (written, not run). store_failure_test relies on Hive.initFlutter throwing in a plain test environment because path_provider has no plugin there; if it does not throw, that test needs a different way to force a failed open.
+Change: unreadable library and journal rows move to the quarantine_v1 Hive box (key library:<key> or journal:<key>); Settings shows "N items couldn't be read" with a tap to share them as raw JSON; if the library fails to open, a blocking error screen with Try again replaces the app and every write throws instead of doing nothing.
+verify.sh: not run
+Risks / follow-ups: the quarantine box is also excluded from cloud backup because it lives in app_flutter. The error screen was not checked on a device; it shows through ContactFlowApp, so widget tests that pass an explicit home are unaffected.

@@ -16,6 +16,7 @@ import 'state/app_state.dart';
 import 'state/phone_book.dart';
 import 'state/queue_state.dart';
 import 'ui/root.dart';
+import 'ui/store_error.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
@@ -80,6 +81,7 @@ class ContactFlowApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mode = context.select<AppState, ThemeMode>((s) => s.themeMode);
+    final storeFailed = context.select<AppState, bool>((s) => s.storeFailed);
     final lang = context.select<AppState, String>((s) => s.lang);
     final l = L(lang);
     Type.spaced = lang != 'ar';
@@ -118,7 +120,9 @@ class ContactFlowApp extends StatelessWidget {
             child: child!,
           );
         },
-        home: home ?? const WorkspaceRoot(),
+        home:
+            home ??
+            (storeFailed ? const StoreErrorScreen() : const WorkspaceRoot()),
       ),
     );
   }

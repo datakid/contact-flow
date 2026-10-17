@@ -85,6 +85,11 @@ const moreStrings = <String, Map<String, String>>{
     'importFailed': 'Couldn\'t save the contacts. Please try again.',
     'includeTitle': 'Include job title',
     'includeGroups': 'Include groups',
+    'storeErrorTitle': 'Your library couldn’t be opened',
+    'storeErrorBody':
+        'Contacts stored in this app can’t be read right now, so anything you add or change would not be saved. Close the app and open it again. If this keeps happening, free up some storage space.',
+    'quarantineCount': '{n} items couldn’t be read',
+    'quarantineExport': 'Tap to export them as a file',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -171,6 +176,11 @@ const moreStrings = <String, Map<String, String>>{
     'importFailed': 'تعذّر حفظ جهات الاتصال. حاول مرة أخرى.',
     'includeTitle': 'تضمين المسمى الوظيفي',
     'includeGroups': 'تضمين المجموعات',
+    'storeErrorTitle': 'تعذّر فتح مكتبتك',
+    'storeErrorBody':
+        'لا يمكن قراءة جهات الاتصال المخزّنة في التطبيق الآن، لذلك لن يتم حفظ أي شيء تضيفه أو تغيّره. أغلق التطبيق وافتحه من جديد. إذا تكرّر ذلك، فرّغ بعض مساحة التخزين.',
+    'quarantineCount': 'تعذّرت قراءة {n} عناصر',
+    'quarantineExport': 'اضغط لتصديرها كملف',
   },
   'zh': {
     'aliases': '别名',
@@ -545,6 +555,11 @@ const moreStrings = <String, Map<String, String>>{
     'importFailed': '无法保存联系人，请重试。',
     'includeTitle': '包含职位',
     'includeGroups': '包含群组',
+    'storeErrorTitle': '无法打开你的联系人库',
+    'storeErrorBody':
+        '目前无法读取此应用中保存的联系人，因此你添加或修改的内容不会被保存。请关闭应用后重新打开。如果问题持续出现，请释放一些存储空间。',
+    'quarantineCount': '{n} 个项目无法读取',
+    'quarantineExport': '点按以导出为文件',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -958,6 +973,11 @@ const moreStrings = <String, Map<String, String>>{
     'importFailed': 'No se pudieron guardar los contactos. Inténtalo de nuevo.',
     'includeTitle': 'Incluir cargo',
     'includeGroups': 'Incluir grupos',
+    'storeErrorTitle': 'No se pudo abrir tu biblioteca',
+    'storeErrorBody':
+        'Los contactos guardados en esta app no se pueden leer ahora, así que nada de lo que añadas o cambies se guardaría. Cierra la app y ábrela de nuevo. Si sigue ocurriendo, libera espacio de almacenamiento.',
+    'quarantineCount': '{n} elementos no se pudieron leer',
+    'quarantineExport': 'Toca para exportarlos como archivo',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1378,5 +1398,10 @@ const moreStrings = <String, Map<String, String>>{
     'importFailed': 'Impossible d’enregistrer les contacts. Réessayez.',
     'includeTitle': 'Inclure le poste',
     'includeGroups': 'Inclure les groupes',
+    'storeErrorTitle': 'Impossible d’ouvrir votre bibliothèque',
+    'storeErrorBody':
+        'Les contacts enregistrés dans cette app sont illisibles pour le moment, donc rien de ce que vous ajoutez ou modifiez ne serait conservé. Fermez l’app et rouvrez-la. Si cela continue, libérez de l’espace de stockage.',
+    'quarantineCount': '{n} éléments illisibles',
+    'quarantineExport': 'Touchez pour les exporter dans un fichier',
   },
 };
