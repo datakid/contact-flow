@@ -129,3 +129,10 @@ Failing test: test/name_split_test.dart with 9 clear and 12 unclear names, run t
 Change: new NameSplit in lib/domain/names.dart. A name containing Arabic script, or an Arabic particle written in Latin letters (bin, ibn, bint, abu, abo, abd, abdul, abdel, abdal anywhere; al, el, ul or al-/el- forms after the first word), is not split: the phone write puts it all in the given name, vCard writes N:;full;;;, SwapName skips it and the batch preview says how many were left as they are (new string swapSkipped), and TemplateName puts the whole name in {first} with an empty {last}. Latin and Chinese names behave as before.
 verify.sh: not run
 Risks / follow-ups: "Al Pacino" still splits because al is only treated as a particle after the first word; "Al Harbi" therefore splits as first Al, last Harbi. A Latin name with a Spanish or Dutch particle in the middle, such as "Omar El Sayed" or "Ana el Amrani", is now kept whole.
+
+Task: 1.14  Status: UNVERIFIED (partly done)
+Callers checked: _groupIds is read in _toPerson, groups(), _groupId and _syncGroups; PhoneBook.groupNames reads groups().
+Failing test: test/group_keys_test.dart covers the key and system-group helpers only (written, not run). The account-keyed behaviour needs an emulator with a Google account and a device-only group both called "Family".
+Change: groups are keyed by account then name, so a contact in a Google account only sees and joins that account's group; system groups ("My Contacts", "Starred in Android", ICE, and names starting "System Group") are skipped, which also skips the biggest membership query; groups with a contact count of 0 are not queried.
+verify.sh: not run
+Risks / follow-ups: not done: the plan's single membership query. flutter_contacts 2.1.0 has no group property on contacts and only ContactFilter.group, so membership still costs one getAll per non-empty group on every refresh. Doing it in one query needs a small native channel over ContactsContract.Data (GROUP_MEMBERSHIP). The system-group list is English only and cannot see localized names such as a translated "My Contacts". Phase 4c depends on this.

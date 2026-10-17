@@ -22,7 +22,7 @@ class PhoneSource implements ContactSource {
   };
 
   final Map<String, fc.Contact> _raw = {};
-  Map<String, String> _groupIds = {};
+  Map<String, Map<String, String>> _groupIds = {};
   final Map<String, Set<String>> _membership = {};
 
   @override
@@ -114,29 +114,68 @@ class PhoneSource implements ContactSource {
       phoneId: id,
       account: account,
       starred: c.android?.isFavorite ?? false,
-      groups: [
-        for (final e in _groupIds.entries)
-          if (_membership[e.value]?.contains(id) ?? false) e.key,
-      ]..sort(),
+      groups: _groupNamesFor(
+        id,
+        accounts.isEmpty ? '' : _accKey(accounts.first.type, accounts.first.name),
+      ),
     );
   }
 
+  @visibleForTesting
+  static String groupKey(AccountRef? a) => _accKeyOf(a);
+
+  @visibleForTesting
+  static bool isSystemGroup(String name) => _isSystemGroup(name);
+
+  static String _accKey(String type, String name) =>
+      type.isEmpty && name.isEmpty ? '' : '$type|$name';
+
+  static String _accKeyOf(AccountRef? a) =>
+      a == null || (a.isLocal && a.type.isEmpty) ? '' : _accKey(a.type, a.name);
+
+  static const _systemGroups = {
+    'my contacts',
+    'mycontacts',
+    'starred in android',
+    'starred',
+    'all contacts',
+    'ice',
+    'ice - emergency contacts',
+  };
+
+  static bool _isSystemGroup(String name) {
+    final n = name.toLowerCase();
+    return _systemGroups.contains(n) || n.startsWith('system group');
+  }
+
+  List<String> _groupNamesFor(String id, String accKey) => [
+    for (final e in (_groupIds[accKey] ?? const <String, String>{}).entries)
+      if (_membership[e.value]?.contains(id) ?? false) e.key,
+  ]..sort();
+
   Future<void> _loadGroups() async {
     _membership.clear();
-    final groups = await fc.FlutterContacts.groups.getAll();
-    final ids = <String, String>{};
+    final groups = await fc.FlutterContacts.groups.getAll(
+      withContactCount: true,
+    );
+    final byAccount = <String, Map<String, String>>{};
     for (final g in groups) {
       final gid = g.id;
-      if (gid == null || g.name.trim().isEmpty) continue;
-      ids.putIfAbsent(g.name.trim(), () => gid);
+      final name = g.name.trim();
+      if (gid == null || name.isEmpty || _isSystemGroup(name)) continue;
+      final acc = g.account == null
+          ? ''
+          : _accKey(g.account!.type, g.account!.name);
+      (byAccount[acc] ??= {}).putIfAbsent(name, () => gid);
+      if (g.contactCount == 0) continue;
       final members = await fc.FlutterContacts.getAll(
         filter: fc.ContactFilter.group(gid),
       );
-      (_membership[ids[g.name.trim()]!] ??= {}).addAll(
+      (_membership[gid] ??= {}).addAll(
         members.map((m) => m.id).whereType<String>(),
       );
     }
-    _groupIds = ids;
+    _groupIds = byAccount;
   }
 
   @override
@@ -169,7 +208,9 @@ class PhoneSource implements ContactSource {
   }
 
   @override
-  Future<List<String>> groups() async => _groupIds.keys.toList()..sort();
+  Future<List<String>> groups() async => {
+    for (final m in _groupIds.values) ...m.keys,
+  }.toList()..sort();
 
   static List<String> aliasesOf(fc.Contact c, String name) =>
       Aliases.clean(Aliases.parse(c.name?.nickname ?? ''), name: name);
@@ -295,7 +336,8 @@ class PhoneSource implements ContactSource {
   );
 
   Future<String> _groupId(String name, AccountRef? account) async {
-    final existing = _groupIds[name];
+    final key = _accKeyOf(account);
+    final existing = _groupIds[key]?[name];
     if (existing != null) return existing;
     final g = await fc.FlutterContacts.groups.create(
       name,
@@ -303,7 +345,7 @@ class PhoneSource implements ContactSource {
           ? null
           : fc.Account(id: '', name: account.name, type: account.type),
     );
-    _groupIds[name] = g.id!;
+    (_groupIds[key] ??= {})[name] = g.id!;
     return g.id!;
   }
 
@@ -312,10 +354,8 @@ class PhoneSource implements ContactSource {
     List<String> wanted,
     AccountRef? account,
   ) async {
-    final current = {
-      for (final e in _groupIds.entries)
-        if (_membership[e.value]?.contains(id) ?? false) e.key,
-    };
+    final key = _accKeyOf(account);
+    final current = _groupNamesFor(id, key).toSet();
     for (final g in wanted.toSet().difference(current)) {
       final gid = await _groupId(g, account);
       await fc.FlutterContacts.groups.addContacts(
@@ -325,7 +365,7 @@ class PhoneSource implements ContactSource {
       (_membership[gid] ??= {}).add(id);
     }
     for (final g in current.difference(wanted.toSet())) {
-      final gid = _groupIds[g]!;
+      final gid = _groupIds[key]![g]!;
       await fc.FlutterContacts.groups.removeContacts(
         groupId: gid,
         contactIds: [id],
