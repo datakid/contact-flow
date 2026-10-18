@@ -72,7 +72,7 @@ Callers checked: TextDecode.bytes is used by Codec for sniffing and for vCard, C
 Failing test: test/text_decode_test.dart with fixtures cp1256_ar.csv, cp1252_fr.csv, utf8_one_bad_byte.csv, vcard21_cp1256.vcf, vcard21_cp1256_raw.vcf (written, not run). The detection rule and both tables were checked in Python against its cp1252 and cp1256 codecs; the Dart was not run.
 Change: only non-ASCII bytes are counted; at least 99% valid UTF-8 means UTF-8 with bad bytes allowed; otherwise runs of two or more Arabic-letter bytes mean Windows-1256 and isolated Latin letters mean Windows-1252. Both tables are in the code. vCard CHARSET windows-1256 and windows-1252 are decoded.
 verify.sh: not run
-Risks / follow-ups: a tiny UTF-8 file with one bad byte can fall under 99% (fixture has 871 non-ASCII bytes). A vCard with an unsupported charset (GB2312, Big5) still falls back to UTF-8 instead of returning an ImportIssue, because a clear message needs a new string in all five languages.
+Risks / follow-ups: a tiny UTF-8 file with one bad byte can fall under 99% (fixture has 871 non-ASCII bytes). A vCard whose quoted-printable text (with bytes above 0x7F) declares an unsupported charset such as GB2312 or Big5 now returns ImportIssue.unsupportedCharset with a message in five languages (corpus file vcard_gb2312_qp.vcf); a declared but unsupported charset on plain ASCII text is accepted.
 
 Task: 1.17 (b) and (c)  Status: UNVERIFIED
 Callers checked: hitFor is called from home.dart and phone_home.dart for every drawn row; _hits is assigned only in setQuery and _runSearch.

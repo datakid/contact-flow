@@ -246,6 +246,18 @@ class VCard {
     return out.toString();
   }
 
+  static String? undecodableCharset(String text) {
+    final charset = RegExp(r'CHARSET=([^;:]+)', caseSensitive: false);
+    final highByte = RegExp(r'=[89A-Fa-f][0-9A-Fa-f]');
+    for (final line in text.split(RegExp(r'\r\n|\n|\r'))) {
+      final m = charset.firstMatch(line);
+      if (m == null || !highByte.hasMatch(line)) continue;
+      final name = m.group(1)!.trim();
+      if (TextDecode.charset(const [], name) == null) return name;
+    }
+    return null;
+  }
+
   static (String, String) splitName(String full) {
     final n = NameSplit.of(full);
     return (n.last, n.first);

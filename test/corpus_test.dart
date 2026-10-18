@@ -18,6 +18,7 @@ void main() {
     'zip_bomb.xlsx': ImportIssue.tooLarge,
     'empty.csv': ImportIssue.empty,
     'bom_only.csv': ImportIssue.empty,
+    'vcard_gb2312_qp.vcf': ImportIssue.unsupportedCharset,
   };
 
   issues.forEach((name, issue) {

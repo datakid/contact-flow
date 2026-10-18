@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:contact_flow/io/codec.dart';
 import 'package:contact_flow/io/text_decode.dart';
+import 'package:contact_flow/io/vcard.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Uint8List fixture(String name) =>
@@ -62,5 +63,21 @@ void main() {
     expect(TextDecode.charset([0xE9], 'ISO-8859-1'), 'é');
     expect(TextDecode.charset([0xD9, 0x85], 'UTF-8'), 'م');
     expect(TextDecode.charset([0x41], 'GB2312'), isNull);
+  });
+
+  test('a vCard with an unsupported quoted-printable charset is flagged', () {
+    expect(
+      VCard.undecodableCharset(
+        'FN;CHARSET=GB2312;ENCODING=QUOTED-PRINTABLE:=CD=F5=CE=B0',
+      ),
+      'GB2312',
+    );
+    expect(
+      VCard.undecodableCharset(
+        'FN;CHARSET=windows-1256;ENCODING=QUOTED-PRINTABLE:=CD=F5',
+      ),
+      isNull,
+    );
+    expect(VCard.undecodableCharset('FN;CHARSET=GB2312:Ann'), isNull);
   });
 }

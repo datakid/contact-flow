@@ -96,6 +96,8 @@ const moreStrings = <String, Map<String, String>>{
     'issue_timedOut':
         '{name} took too long to read, so it was stopped. Try a smaller file.',
     'issue_cancelled': 'Reading {name} was cancelled.',
+    'issue_unsupportedCharset':
+        '{name} uses a text encoding this app can’t read. Re-export it as UTF-8 and try again.',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -194,6 +196,8 @@ const moreStrings = <String, Map<String, String>>{
     'issue_timedOut':
         'استغرقت قراءة {name} وقتًا طويلًا فتم إيقافها. جرّب ملفًا أصغر.',
     'issue_cancelled': 'تم إلغاء قراءة {name}.',
+    'issue_unsupportedCharset':
+        'الملف {name} يستخدم ترميز نص لا يستطيع التطبيق قراءته. أعد تصديره بترميز UTF-8 وحاول مرة أخرى.',
   },
   'zh': {
     'aliases': '别名',
@@ -577,6 +581,7 @@ const moreStrings = <String, Map<String, String>>{
     'issue_tooLarge': '{name} 太大，无法读取。请尝试拆分成较小的文件。',
     'issue_timedOut': '读取 {name} 耗时过长，已停止。请尝试较小的文件。',
     'issue_cancelled': '已取消读取 {name}。',
+    'issue_unsupportedCharset': '{name} 使用了本应用无法读取的文本编码。请重新导出为 UTF-8 后再试。',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1001,6 +1006,8 @@ const moreStrings = <String, Map<String, String>>{
     'issue_timedOut':
         'Leer {name} tardó demasiado y se detuvo. Prueba con un archivo más pequeño.',
     'issue_cancelled': 'Se canceló la lectura de {name}.',
+    'issue_unsupportedCharset':
+        '{name} usa una codificación de texto que esta app no puede leer. Expórtalo de nuevo como UTF-8 e inténtalo otra vez.',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1432,5 +1439,7 @@ const moreStrings = <String, Map<String, String>>{
     'issue_timedOut':
         'La lecture de {name} a pris trop de temps et a été arrêtée. Essayez un fichier plus petit.',
     'issue_cancelled': 'La lecture de {name} a été annulée.',
+    'issue_unsupportedCharset':
+        '{name} utilise un encodage de texte que cette app ne peut pas lire. Réexportez-le en UTF-8 et réessayez.',
   },
 };

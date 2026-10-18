@@ -119,6 +119,7 @@ enum ImportIssue {
   tooLarge,
   timedOut,
   cancelled,
+  unsupportedCharset,
 }
 
 class ImportResult {
@@ -310,7 +311,11 @@ class Codec {
     final src = fileName;
     switch (f) {
       case Format.vcf:
-        final people = VCard.parse(TextDecode.bytes(bytes), src);
+        final vtext = TextDecode.bytes(bytes);
+        if (VCard.undecodableCharset(vtext) != null) {
+          return ImportResult.problem(src, ImportIssue.unsupportedCharset);
+        }
+        final people = VCard.parse(vtext, src);
         return ImportResult(people, f, '');
       case Format.xlsx:
         try {
@@ -360,6 +365,9 @@ class Codec {
       case Format.txt:
         final text = TextDecode.bytes(bytes);
         if (text.trimLeft().toUpperCase().startsWith('BEGIN:VCARD')) {
+          if (VCard.undecodableCharset(text) != null) {
+            return ImportResult.problem(src, ImportIssue.unsupportedCharset);
+          }
           return ImportResult(VCard.parse(text, src), Format.vcf, '');
         }
         return ImportResult(_fromTxt(text, src), f, '');
