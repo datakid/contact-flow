@@ -1,4 +1,5 @@
 import '../models/person.dart';
+import '../phone/phone_key.dart';
 
 class NumberInfo {
   final bool international;
@@ -75,12 +76,7 @@ class NumberCheck {
     final international =
         digits.isNotEmpty &&
         (plus || (digits.startsWith('00') && digits.length > 9));
-    final key = digits.length < 5
-        ? ''
-        : (digits.length > 9
-              ? digits.substring(digits.length - 9)
-              : digits);
-    return NumberInfo(international, headDigits, letters, key);
+    return NumberInfo(international, headDigits, letters, PhoneKey.key(t));
   }
 }
 

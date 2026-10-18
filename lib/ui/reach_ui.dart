@@ -9,6 +9,7 @@ import '../domain/reach.dart';
 import '../io/vcard.dart';
 import '../l10n.dart';
 import '../models/person.dart';
+import '../phone/phone_key.dart';
 import '../services/file_out.dart';
 import '../services/launcher.dart';
 import '../state/app_state.dart';
@@ -137,8 +138,39 @@ Future<String?> askCountry(BuildContext context, {bool force = false}) async {
       ],
     ),
   );
-  if (picked != null) await app.setCountry(picked);
+  if (picked != null) {
+    await app.setCountry(picked);
+    if (app.needsRegionPick && context.mounted) {
+      await askRegion(context, picked);
+    }
+  }
   return picked;
+}
+
+String regionFlag(String iso) => iso.length == 2
+    ? String.fromCharCodes(iso.toUpperCase().codeUnits.map((c) => 0x1F1E6 + c - 0x41))
+    : iso;
+
+Future<void> askRegion(BuildContext context, String code) async {
+  final l = L.of(context);
+  final app = context.read<AppState>();
+  final options = PhoneKey.regionsForCode(code);
+  if (options.isEmpty) return;
+  final picked = await showDialog<String>(
+    context: context,
+    builder: (ctx) => SimpleDialog(
+      title: Text(l.t('regionTitle', {'cc': InternationalNumber.countryDigits(code)})),
+      children: [
+        for (final r in options)
+          SimpleDialogOption(
+            key: ValueKey('region-${r.name}'),
+            onPressed: () => Navigator.pop(ctx, r.name),
+            child: Text('${regionFlag(r.name)}  ${r.name}'),
+          ),
+      ],
+    ),
+  );
+  if (picked != null) await app.setRegion(picked);
 }
 
 Future<bool> reachOut(

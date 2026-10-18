@@ -1,5 +1,6 @@
 import '../models/person.dart';
 import 'names.dart';
+import '../phone/phone_key.dart';
 
 enum MatchReason { contactId, number, name }
 
@@ -119,6 +120,19 @@ class ContactMatcher {
     return MatchResult(matched, unmatched, conflicts, onlyOnPhone);
   }
 
+  static bool _sameNumber(Person a, Person b, String k) {
+    for (final x in a.phones) {
+      if (Phones.key(x.number) != k) continue;
+      for (final y in b.phones) {
+        if (Phones.key(y.number) == k &&
+            PhoneKey.compatible(x.number, y.number)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   Object? _matchRow(Person row, Map<String, int> rowsPerKey) {
     final id = row.phoneId;
     if (id != null && id.isNotEmpty) {
@@ -129,8 +143,10 @@ class ContactMatcher {
     final byUniqueKey = <String, Person>{};
     final shared = <String, Person>{};
     for (final k in row.phoneKeys) {
-      final owners = _byKey[k];
-      if (owners == null) continue;
+      final owners = (_byKey[k] ?? const <Person>[])
+          .where((o) => _sameNumber(row, o, k))
+          .toList();
+      if (owners.isEmpty) continue;
       final uniqueOnPhone = owners.length == 1;
       final uniqueInFile = (rowsPerKey[k] ?? 0) == 1;
       for (final o in owners) {

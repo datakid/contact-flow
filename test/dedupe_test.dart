@@ -88,4 +88,20 @@ void main() {
     ]);
     expect(s.planDedupe().isEmpty, isTrue);
   });
+
+  test('the same national number in two countries is not a duplicate', () async {
+    final s = await appWith([
+      Person(name: 'Ann', phones: [const PhoneEntry('+966501234567')]),
+      Person(name: 'Ann', phones: [const PhoneEntry('+971501234567')]),
+    ]);
+    expect(s.planDedupe().isEmpty, isTrue);
+  });
+
+  test('a local number and an international one are duplicates', () async {
+    final s = await appWith([
+      Person(name: 'Ann', phones: [const PhoneEntry('0501234567')]),
+      Person(name: 'Ann', phones: [const PhoneEntry('+966501234567')]),
+    ]);
+    expect(s.planDedupe().removed, 1);
+  });
 }

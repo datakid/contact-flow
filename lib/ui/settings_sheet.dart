@@ -97,7 +97,11 @@ class _Settings extends StatelessWidget {
             key: const ValueKey('set-country'),
             icon: Icons.public_rounded,
             label: l.t('defaultCountry'),
-            sub: s.country.isEmpty ? l.t('notSet') : s.country,
+            sub: s.country.isEmpty
+                ? l.t('notSet')
+                : (s.needsRegionPick
+                      ? l.t('regionPick')
+                      : '${s.country} · ${regionFlag(s.region)} ${s.region}'),
             onTap: () => askCountry(context, force: true),
           ),
           Builder(

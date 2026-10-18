@@ -7,6 +7,8 @@ import '../io/codec.dart';
 import '../models/person.dart';
 import '../services/library_store.dart';
 import 'contact_list.dart';
+import '../phone/phone_key.dart';
+import '../services/region_detect.dart';
 
 export 'contact_list.dart' show SortMode, ListFilter;
 
@@ -51,6 +53,8 @@ class AppState extends ContactList {
   ThemeMode themeMode = ThemeMode.system;
   String lang = 'en';
   String country = '';
+  String region = '';
+  bool get needsRegionPick => country.isNotEmpty && region.isEmpty;
   bool ready = false;
   ExportOptions exportOptions = const ExportOptions();
   Format lastFormat = Format.csv;
@@ -63,7 +67,10 @@ class AppState extends ContactList {
 
   List<Person> get _people => people;
 
-  Future<void> init({bool openStore = true}) async {
+  Future<void> init({
+    bool openStore = true,
+    bool detectRegion = false,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     themeMode = ThemeMode.values[(prefs.getInt('theme') ?? 0).clamp(0, 2)];
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
@@ -72,6 +79,22 @@ class AppState extends ContactList {
         (const ['en', 'ar', 'zh', 'es', 'fr'].contains(sys) ? sys : 'en');
     sortLang = lang;
     country = prefs.getString('country') ?? '';
+    region = prefs.getString('region') ?? '';
+    if (region.isEmpty && country.isNotEmpty) {
+      final r = PhoneKey.uniqueRegionForCode(country);
+      if (r != null) {
+        region = r.name;
+        await prefs.setString('region', region);
+      }
+    }
+    if (region.isEmpty && country.isEmpty && detectRegion) {
+      final detected = await RegionDetect.detect();
+      if (detected.isNotEmpty) {
+        region = detected;
+        country = PhoneKey.callingCode(PhoneKey.parseRegion(detected)!);
+      }
+    }
+    PhoneKey.useRegion(region);
     includeContactId = prefs.getBool('contactId') ?? true;
     tab = (prefs.getInt('tab') ?? -1).clamp(-1, 1);
     sort = SortMode.values[(prefs.getInt('sort') ?? 0).clamp(0, 1)];
@@ -126,8 +149,27 @@ class AppState extends ContactList {
 
   Future<void> setCountry(String c) async {
     country = c.trim();
+    final r = PhoneKey.uniqueRegionForCode(country);
+    if (r != null) {
+      region = r.name;
+      PhoneKey.useRegion(region);
+    }
     notifyListeners();
-    (await SharedPreferences.getInstance()).setString('country', country);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('country', country);
+    if (r != null) await prefs.setString('region', region);
+  }
+
+  Future<void> setRegion(String iso) async {
+    final r = PhoneKey.parseRegion(iso);
+    if (r == null) return;
+    region = r.name;
+    country = PhoneKey.callingCode(r);
+    PhoneKey.useRegion(region);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('region', region);
+    await prefs.setString('country', country);
   }
 
   Future<void> setTab(int t) async {
@@ -171,30 +213,31 @@ class AppState extends ContactList {
         sources.add(r.people.first.source);
       }
     }
-    final byKey = <String, Person>{};
+    final byKey = <String, List<Person>>{};
     for (final p in _people) {
       for (final k in p.matchKeys) {
-        byKey.putIfAbsent(k, () => p);
+        (byKey[k] ??= []).add(p);
       }
     }
+    Person? find(Map<String, List<Person>> index, Person p) {
+      for (final k in p.matchKeys) {
+        for (final o in index[k] ?? const <Person>[]) {
+          if (o.sharesIdentity(p)) return o;
+        }
+      }
+      return null;
+    }
+
     final fresh = <Person>[];
     final dupes = <(Person, Person)>[];
-    final freshByKey = <String, Person>{};
+    final freshByKey = <String, List<Person>>{};
     for (final p in incoming) {
-      Person? existing;
-      for (final k in p.matchKeys) {
-        existing = byKey[k];
-        if (existing != null) break;
-      }
+      final existing = find(byKey, p);
       if (existing != null) {
         dupes.add((p, existing));
         continue;
       }
-      Person? twin;
-      for (final k in p.matchKeys) {
-        twin = freshByKey[k];
-        if (twin != null) break;
-      }
+      final twin = find(freshByKey, p);
       if (twin != null &&
           (twin.displayName == p.displayName || !p.hasName || !twin.hasName)) {
         twin.absorb(p);
@@ -202,7 +245,7 @@ class AppState extends ContactList {
       }
       fresh.add(p);
       for (final k in p.matchKeys) {
-        freshByKey.putIfAbsent(k, () => p);
+        (freshByKey[k] ??= []).add(p);
       }
     }
     return ImportPlan(
@@ -303,24 +346,29 @@ class AppState extends ContactList {
   }
 
   DedupePlan planDedupe() {
-    final byKey = <String, Person>{};
+    final byKey = <String, List<Person>>{};
     final drops = <String, List<Person>>{};
     final keeps = <String, Person>{};
     for (final p in [..._people]..sort((a, b) => a.added.compareTo(b.added))) {
       Person? keep;
       for (final k in p.matchKeys) {
-        keep = byKey[k];
+        for (final o in byKey[k] ?? const <Person>[]) {
+          if (o.sharesIdentity(p)) {
+            keep = o;
+            break;
+          }
+        }
         if (keep != null) break;
       }
       if (keep != null && keep.id != p.id) {
         keeps[keep.id] = keep;
         (drops[keep.id] ??= []).add(p);
         for (final k in p.matchKeys) {
-          byKey.putIfAbsent(k, () => keep!);
+          (byKey[k] ??= []).add(keep);
         }
       } else {
         for (final k in p.matchKeys) {
-          byKey.putIfAbsent(k, () => p);
+          (byKey[k] ??= []).add(p);
         }
       }
     }

@@ -98,6 +98,14 @@ const moreStrings = <String, Map<String, String>>{
     'issue_cancelled': 'Reading {name} was cancelled.',
     'issue_unsupportedCharset':
         '{name} uses a text encoding this app can’t read. Re-export it as UTF-8 and try again.',
+    'numbersUnread':
+        '{n} contacts left as they are (a number couldn’t be read)',
+    'regionTitle': 'Which country uses +{cc}?',
+    'regionPick': 'Tap to choose your country',
+    'nAlreadyOnPhone':
+        '{n} contacts are already on this phone. Skip them, or save them again anyway?',
+    'skipThem': 'Skip them',
+    'includeAnyway': 'Save anyway',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -198,6 +206,13 @@ const moreStrings = <String, Map<String, String>>{
     'issue_cancelled': 'تم إلغاء قراءة {name}.',
     'issue_unsupportedCharset':
         'الملف {name} يستخدم ترميز نص لا يستطيع التطبيق قراءته. أعد تصديره بترميز UTF-8 وحاول مرة أخرى.',
+    'numbersUnread': 'تُرك {n} من جهات الاتصال كما هي (تعذّرت قراءة رقم)',
+    'regionTitle': 'أي دولة تستخدم +{cc}؟',
+    'regionPick': 'اضغط لاختيار دولتك',
+    'nAlreadyOnPhone':
+        '{n} من جهات الاتصال موجودة بالفعل على هذا الهاتف. هل تتخطاها أم تحفظها مرة أخرى؟',
+    'skipThem': 'تخطَّها',
+    'includeAnyway': 'احفظها على أي حال',
   },
   'zh': {
     'aliases': '别名',
@@ -582,6 +597,12 @@ const moreStrings = <String, Map<String, String>>{
     'issue_timedOut': '读取 {name} 耗时过长，已停止。请尝试较小的文件。',
     'issue_cancelled': '已取消读取 {name}。',
     'issue_unsupportedCharset': '{name} 使用了本应用无法读取的文本编码。请重新导出为 UTF-8 后再试。',
+    'numbersUnread': '{n} 位联系人保持原样（有号码无法识别）',
+    'regionTitle': '哪个国家使用 +{cc}？',
+    'regionPick': '点按选择你的国家',
+    'nAlreadyOnPhone': '有 {n} 位联系人已在此手机上。要跳过，还是仍然再次保存？',
+    'skipThem': '跳过',
+    'includeAnyway': '仍然保存',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1008,6 +1029,13 @@ const moreStrings = <String, Map<String, String>>{
     'issue_cancelled': 'Se canceló la lectura de {name}.',
     'issue_unsupportedCharset':
         '{name} usa una codificación de texto que esta app no puede leer. Expórtalo de nuevo como UTF-8 e inténtalo otra vez.',
+    'numbersUnread': '{n} contactos sin cambios (no se pudo leer un número)',
+    'regionTitle': '¿Qué país usa +{cc}?',
+    'regionPick': 'Toca para elegir tu país',
+    'nAlreadyOnPhone':
+        '{n} contactos ya están en este teléfono. ¿Omitirlos o guardarlos de nuevo de todos modos?',
+    'skipThem': 'Omitirlos',
+    'includeAnyway': 'Guardar igualmente',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1441,5 +1469,13 @@ const moreStrings = <String, Map<String, String>>{
     'issue_cancelled': 'La lecture de {name} a été annulée.',
     'issue_unsupportedCharset':
         '{name} utilise un encodage de texte que cette app ne peut pas lire. Réexportez-le en UTF-8 et réessayez.',
+    'numbersUnread':
+        '{n} contacts laissés tels quels (un numéro est illisible)',
+    'regionTitle': 'Quel pays utilise +{cc} ?',
+    'regionPick': 'Touchez pour choisir votre pays',
+    'nAlreadyOnPhone':
+        '{n} contacts sont déjà sur ce téléphone. Les ignorer ou les enregistrer quand même ?',
+    'skipThem': 'Les ignorer',
+    'includeAnyway': 'Enregistrer quand même',
   },
 };

@@ -24,7 +24,7 @@ Future<void> main() async {
   registerFontLicenses();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   final state = AppState();
-  await state.init();
+  await state.init(detectRegion: true);
   final ContactSource source = PhoneSource.supported
       ? PhoneSource()
       : FakeSource(

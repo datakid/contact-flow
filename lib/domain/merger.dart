@@ -1,6 +1,7 @@
 import '../models/person.dart';
 import 'change_set.dart';
 import 'names.dart';
+import '../phone/phone_key.dart';
 
 enum DuplicateReason { sharedNumber, sameName }
 
@@ -13,13 +14,19 @@ class DuplicateGroup {
 
 class Merger {
   static List<PhoneEntry> unionPhones(Iterable<List<PhoneEntry>> lists) {
-    final seen = <String>{};
+    final seen = <String, List<String>>{};
     final out = <PhoneEntry>[];
     for (final list in lists) {
       for (final e in list) {
         final k = Phones.key(e.number);
         final id = k.isEmpty ? Phones.digits(e.number) : k;
-        if (id.isEmpty || !seen.add(id)) continue;
+        if (id.isEmpty) continue;
+        final bucket = seen[id] ??= [];
+        if (bucket.any((n) => PhoneKey.compatible(n, e.number)) ||
+            (k.isEmpty && bucket.isNotEmpty)) {
+          continue;
+        }
+        bucket.add(e.number);
         out.add(PhoneEntry(e.number.trim(), e.label));
       }
     }
@@ -133,19 +140,25 @@ class Merger {
       if (ra != rb) parent[rb] = ra;
     }
 
-    final firstByKey = <String, int>{};
+    final firstByKey = <String, List<(int, String)>>{};
     final firstByName = <String, int>{};
     for (var i = 0; i < people.length; i++) {
       final p = people[i];
       for (final e in p.phones) {
         final k = Phones.key(e.number);
         if (k.isEmpty) continue;
-        final j = firstByKey[k];
-        if (j == null) {
-          firstByKey[k] = i;
-        } else if (j != i) {
-          join(j, i, DuplicateReason.sharedNumber, e.number.trim());
+        final bucket = firstByKey[k] ??= [];
+        (int, String)? match;
+        for (final entry in bucket) {
+          if (entry.$1 != i && PhoneKey.compatible(entry.$2, e.number)) {
+            match = entry;
+            break;
+          }
         }
+        if (match != null) {
+          join(match.$1, i, DuplicateReason.sharedNumber, e.number.trim());
+        }
+        bucket.add((i, e.number));
       }
       final n = NameParts.normalized(p.name);
       if (n.isEmpty) continue;

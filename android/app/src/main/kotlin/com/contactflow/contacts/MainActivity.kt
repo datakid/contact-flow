@@ -3,6 +3,7 @@ package com.contactflow.contacts
 import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.telephony.TelephonyManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -24,6 +25,14 @@ class MainActivity : FlutterActivity() {
                 } else {
                     result.notImplemented()
                 }
+            }
+        }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "contactflow/device").setMethodCallHandler { call, result ->
+            if (call.method == "simCountry") {
+                val tm = getSystemService(TELEPHONY_SERVICE) as? TelephonyManager
+                result.success((tm?.simCountryIso ?: "").uppercase())
+            } else {
+                result.notImplemented()
             }
         }
         ingest(intent)

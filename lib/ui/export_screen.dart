@@ -15,6 +15,7 @@ import '../state/phone_book.dart';
 import 'pipeline.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import '../domain/phone_dupes.dart';
 
 Future<void> openExport(BuildContext context, List<Person> people) {
   final l = L.of(context);
@@ -175,10 +176,34 @@ class _ExportScreenState extends State<ExportScreen> {
         return;
       }
     }
-    final set = ChangeSet(ChangeIntent.create, [
+    final candidates = [
       for (final p in widget.people)
-        if (p.phoneId == null || book.byPhoneId(p.phoneId!) == null)
-          CreateChange(p.copy(clearPhoneId: true)),
+        if (p.phoneId == null || book.byPhoneId(p.phoneId!) == null) p,
+    ];
+    final (fresh, already) = PhoneDupes.split(candidates, book.people);
+    var chosen = fresh;
+    if (already.isNotEmpty) {
+      final include = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          content: Text(l.t('nAlreadyOnPhone', {'n': already.length})),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: Text(l.t('skipThem')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: Text(l.t('includeAnyway')),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (include == true) chosen = candidates;
+    }
+    final set = ChangeSet(ChangeIntent.create, [
+      for (final p in chosen) CreateChange(p.copy(clearPhoneId: true)),
     ]);
     if (set.isEmpty) {
       toast(context, l.t('alreadyOnPhone'));
