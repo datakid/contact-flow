@@ -8,11 +8,13 @@ import 'package:provider/provider.dart';
 import '../data/sample.dart';
 import '../domain/sheet_template.dart';
 import '../io/codec.dart';
+import '../io/cancel_token.dart';
 import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../services/device_contacts.dart';
 import '../services/file_out.dart';
+import '../services/incoming_read.dart';
 import '../state/app_state.dart';
 import '../state/phone_book.dart';
 import 'import_issues.dart';
@@ -61,9 +63,11 @@ class _ImportSheetState extends State<_ImportSheet> {
   bool _templateHint = false;
   String? _note;
   final _paste = TextEditingController();
+  final _cancel = CancelToken();
 
   @override
   void dispose() {
+    _cancel.cancel();
     _paste.dispose();
     super.dispose();
   }
@@ -159,7 +163,7 @@ class _ImportSheetState extends State<_ImportSheet> {
     try {
       res = await FilePicker.pickFiles(
         allowMultiple: true,
-        withData: true,
+        withData: kIsWeb,
         type: FileType.any,
       );
     } catch (_) {
@@ -172,16 +176,22 @@ class _ImportSheetState extends State<_ImportSheet> {
     }
     final results = <ImportResult>[];
     for (final f in res.files) {
-      final bytes = f.bytes;
+      if (f.size > maxImportBytes) {
+        results.add(ImportResult.problem(f.name, ImportIssue.tooLarge));
+        continue;
+      }
+      var bytes = f.bytes;
+      final path = f.path;
+      if (bytes == null && path != null && !kIsWeb) {
+        bytes = await readFileBytes(path);
+      }
       if (bytes == null) {
         results.add(ImportResult.failed(f.name));
         continue;
       }
-      try {
-        results.add(await decodeInBackground(DecodeJob(f.name, bytes)));
-      } catch (_) {
-        results.add(ImportResult.failed(f.name));
-      }
+      results.add(
+        await decodeInBackground(DecodeJob(f.name, bytes), cancel: _cancel),
+      );
     }
     if (!mounted) return;
     await _review(results);
@@ -209,10 +219,14 @@ class _ImportSheetState extends State<_ImportSheet> {
                   1
               ? 'pasted.csv'
               : 'pasted.txt');
-    var r = Codec.decode(name, bytes);
+    var r = await decodeInBackground(DecodeJob(name, bytes), cancel: _cancel);
     if (r.people.isEmpty && name != 'pasted.txt') {
-      r = Codec.decode('pasted.txt', bytes);
+      r = await decodeInBackground(
+        DecodeJob('pasted.txt', bytes),
+        cancel: _cancel,
+      );
     }
+    if (!mounted) return;
     if (r.people.isEmpty) r = ImportResult(const [], r.format, '');
     await _review([r]);
   }

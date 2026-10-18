@@ -7,6 +7,7 @@ import 'tabular.dart';
 import 'text_decode.dart';
 import 'vcard.dart';
 import 'xlsx.dart';
+import 'zip_guard.dart';
 
 enum Format { csv, vcf, xlsx, txt, json, numbers }
 
@@ -115,6 +116,9 @@ enum ImportIssue {
   headerOnly,
   noColumns,
   noContacts,
+  tooLarge,
+  timedOut,
+  cancelled,
 }
 
 class ImportResult {
@@ -138,6 +142,12 @@ class ImportResult {
       format = Format.txt,
       detail = '',
       issue = ImportIssue.unreadable,
+      skipped = 0;
+
+  const ImportResult.problem(this.fileName, this.issue)
+    : people = const [],
+      format = Format.txt,
+      detail = '',
       skipped = 0;
 }
 
@@ -208,6 +218,8 @@ class Codec {
     ImportResult r;
     try {
       r = _decode(fileName, bytes);
+    } on ZipTooLarge {
+      r = ImportResult.problem(fileName, ImportIssue.tooLarge);
     } catch (_) {
       r = ImportResult.failed(fileName);
     }
@@ -303,6 +315,8 @@ class Codec {
       case Format.xlsx:
         try {
           return _fromWorkbook(bytes, f, src);
+        } on ZipTooLarge {
+          rethrow;
         } catch (_) {
           var people = <Person>[];
           try {
@@ -328,6 +342,8 @@ class Codec {
             final p = Tabular.toPeople(rows, m, src);
             if (p.isNotEmpty) return ImportResult(p, f, m.describe());
           }
+        } on ZipTooLarge {
+          rethrow;
         } catch (_) {}
         return ImportResult(NumbersFile.read(bytes, src), f, '');
       case Format.json:
@@ -351,7 +367,12 @@ class Codec {
   }
 
   static String sniffDelimiter(String text) {
-    final sample = text.split('\n').take(20).join('\n');
+    final sample = text
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .split('\n')
+        .take(20)
+        .join('\n');
     const cands = [',', ';', '\t', '|'];
     var best = ',';
     var bestScore = -1.0;
@@ -391,6 +412,7 @@ class Codec {
     var row = <String>[];
     final cell = StringBuffer();
     var q = false;
+    var leading = true;
     var i = 0;
     final s = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
     while (i < s.length) {
@@ -407,18 +429,23 @@ class Codec {
           cell.write(c);
         }
       } else {
-        if (c == '"' && cell.isEmpty) {
+        if (c == '"' && leading) {
           q = true;
+          leading = false;
+          cell.clear();
         } else if (c == d) {
           row.add(cell.toString());
           cell.clear();
+          leading = true;
         } else if (c == '\n') {
           row.add(cell.toString());
           cell.clear();
+          leading = true;
           if (row.any((e) => e.trim().isNotEmpty)) rows.add(row);
           row = <String>[];
         } else {
           cell.write(c);
+          if (c != ' ' && c != '\t') leading = false;
         }
       }
       i++;

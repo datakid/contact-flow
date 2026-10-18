@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../models/person.dart';
+import 'cancel_token.dart';
 import 'codec.dart';
+import 'isolate_run.dart';
 
 class EncodeJob {
   final List<Person> people;
@@ -27,7 +31,30 @@ Future<Uint8List> encodeInBackground(EncodeJob j) async {
   return compute(runEncode, j);
 }
 
-Future<ImportResult> decodeInBackground(DecodeJob j) async {
-  if (kIsWeb || j.bytes.length < 64 * 1024) return runDecode(j);
-  return compute(runDecode, j);
+const maxImportBytes = 64 * 1024 * 1024;
+
+@visibleForTesting
+bool decodeInIsolate = true;
+
+Future<ImportResult> decodeInBackground(
+  DecodeJob j, {
+  CancelToken? cancel,
+  Duration timeout = const Duration(seconds: 20),
+}) async {
+  if (j.bytes.length > maxImportBytes) {
+    return ImportResult.problem(j.name, ImportIssue.tooLarge);
+  }
+  try {
+    if (kIsWeb || !decodeInIsolate) {
+      if (cancel != null && cancel.cancelled) throw const CancelledException();
+      return runDecode(j);
+    }
+    return await runIsolated(runDecode, j, timeout: timeout, token: cancel);
+  } on TimeoutException {
+    return ImportResult.problem(j.name, ImportIssue.timedOut);
+  } on CancelledException {
+    return ImportResult.problem(j.name, ImportIssue.cancelled);
+  } catch (_) {
+    return ImportResult.failed(j.name);
+  }
 }

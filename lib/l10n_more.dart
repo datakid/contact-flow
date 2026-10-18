@@ -91,6 +91,11 @@ const moreStrings = <String, Map<String, String>>{
     'quarantineCount': '{n} items couldn’t be read',
     'quarantineExport': 'Tap to export them as a file',
     'swapSkipped': '{n} names left as they are (no clear first and last name)',
+    'issue_tooLarge':
+        '{name} is too large to read. Try splitting it into smaller files.',
+    'issue_timedOut':
+        '{name} took too long to read, so it was stopped. Try a smaller file.',
+    'issue_cancelled': 'Reading {name} was cancelled.',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -184,6 +189,11 @@ const moreStrings = <String, Map<String, String>>{
     'quarantineExport': 'اضغط لتصديرها كملف',
     'swapSkipped':
         'تُرك {n} من الأسماء كما هي (لا يوجد اسم أول واسم عائلة واضحان)',
+    'issue_tooLarge':
+        'الملف {name} كبير جدًا ولا يمكن قراءته. جرّب تقسيمه إلى ملفات أصغر.',
+    'issue_timedOut':
+        'استغرقت قراءة {name} وقتًا طويلًا فتم إيقافها. جرّب ملفًا أصغر.',
+    'issue_cancelled': 'تم إلغاء قراءة {name}.',
   },
   'zh': {
     'aliases': '别名',
@@ -564,6 +574,9 @@ const moreStrings = <String, Map<String, String>>{
     'quarantineCount': '{n} 个项目无法读取',
     'quarantineExport': '点按以导出为文件',
     'swapSkipped': '{n} 个姓名保持原样（没有明确的名和姓）',
+    'issue_tooLarge': '{name} 太大，无法读取。请尝试拆分成较小的文件。',
+    'issue_timedOut': '读取 {name} 耗时过长，已停止。请尝试较小的文件。',
+    'issue_cancelled': '已取消读取 {name}。',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -983,6 +996,11 @@ const moreStrings = <String, Map<String, String>>{
     'quarantineCount': '{n} elementos no se pudieron leer',
     'quarantineExport': 'Toca para exportarlos como archivo',
     'swapSkipped': '{n} nombres sin cambios (sin nombre y apellido claros)',
+    'issue_tooLarge':
+        '{name} es demasiado grande para leerlo. Prueba a dividirlo en archivos más pequeños.',
+    'issue_timedOut':
+        'Leer {name} tardó demasiado y se detuvo. Prueba con un archivo más pequeño.',
+    'issue_cancelled': 'Se canceló la lectura de {name}.',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1409,5 +1427,10 @@ const moreStrings = <String, Map<String, String>>{
     'quarantineCount': '{n} éléments illisibles',
     'quarantineExport': 'Touchez pour les exporter dans un fichier',
     'swapSkipped': '{n} noms laissés tels quels (prénom et nom peu clairs)',
+    'issue_tooLarge':
+        '{name} est trop volumineux pour être lu. Essayez de le diviser en fichiers plus petits.',
+    'issue_timedOut':
+        'La lecture de {name} a pris trop de temps et a été arrêtée. Essayez un fichier plus petit.',
+    'issue_cancelled': 'La lecture de {name} a été annulée.',
   },
 };

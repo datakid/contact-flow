@@ -13,3 +13,11 @@ Future<Uint8List?> takeFileBytes(String path) async {
     } catch (_) {}
   }
 }
+
+Future<Uint8List?> readFileBytes(String path) async {
+  try {
+    return await File(path).readAsBytes();
+  } catch (_) {
+    return null;
+  }
+}

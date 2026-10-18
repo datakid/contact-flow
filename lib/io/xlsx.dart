@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'zip_guard.dart';
 
 class XlsxSheet {
   final String name;
@@ -27,7 +28,7 @@ class Xlsx {
   }
 
   static List<XlsxSheet> readSheets(Uint8List bytes, {bool firstOnly = false}) {
-    final z = ZipDecoder().decodeBytes(bytes);
+    final z = ZipGuard.decode(bytes);
     String? file(String name) {
       final f = z.findFile(name);
       if (f == null) return null;
