@@ -164,3 +164,10 @@ Failing test: updated and new cases in test/batch_ops_test.dart (written, not ru
 Change: Add uses E.164 from the parser for local numbers and leaves explicit numbers alone (00 becomes +); Remove gives the national format only for numbers of that country, so Spanish and Chinese numbers get no leading zero and Italian numbers do not gain a second one; Spaced uses international format for explicit numbers and national format for local ones, grouped from the front; extensions are kept as ' x12'; numbers that cannot be read are left alone and the preview says how many contacts were skipped (new string numbersUnread).
 verify.sh: not run
 Risks / follow-ups: with no region set, Spaced leaves local numbers alone because they cannot be parsed. The remaining behaviours depend on the package's metadata and the national-prefix formatting rule lookup, which uses dynamic access to unexported metadata types.
+
+Task: 2.6  Status: UNVERIFIED (branch: phase-1-7, it was done last)
+Callers checked: L.n is called from phone_actions, sync_screen, queue_screen, batch_screen; only contacts, numbers and selected got the full six forms, the rest fall back to their existing singular and plural keys.
+Failing test: test/l10n_test.dart (Arabic form table 0..1011, presence of all forms, {n} rules, n() output; written, not run). The old blanket skip of Arabic _one keys was replaced by a check that the Arabic singular only uses placeholders English has.
+Change: L.arabicForm returns zero, one, two, few (3-10 mod 100), many (11-99 mod 100) or other; n() looks up <many>_<form> for Arabic and falls back otherwise.
+verify.sh: not run
+Risks / follow-ups: the other plural pairs (rowsN, willDeleteN, noNumberN, opApplied, updatedN) still use the two-form fallback in Arabic; Phase 2.6 asks for all of them to get Arabic forms over time. Chinese has no plural forms and English, Spanish and French are unchanged.

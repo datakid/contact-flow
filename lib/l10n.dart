@@ -35,18 +35,22 @@ class L {
   }
 
   String n(int count, String one, String many) {
-    final form = code == 'ar' ? _arabicForm(count) : null;
-    if (form != null && _m.containsKey('${many}_$form')) {
-      return t('${many}_$form', {'n': count});
+    final form = code == 'ar' ? arabicForm(count) : null;
+    if (form != null) {
+      final k = form == 'one' ? one : '${many}_$form';
+      if (_m.containsKey(k)) return t(k, {'n': count});
     }
     return t(count == 1 ? one : many, {'n': count});
   }
 
-  static String? _arabicForm(int count) {
+  static String arabicForm(int count) {
+    if (count == 0) return 'zero';
+    if (count == 1) return 'one';
     if (count == 2) return 'two';
     final r = count % 100;
     if (r >= 3 && r <= 10) return 'few';
-    return null;
+    if (r >= 11) return 'many';
+    return 'other';
   }
 
   bool has(String k) => _m.containsKey(k) || _en.containsKey(k);
@@ -533,6 +537,21 @@ class L {
       'numbers_many': '{n} رقم',
       'selected_one': 'تم تحديد واحدة',
       'selected_many': 'تم تحديد {n}',
+      'contacts_many_zero': 'لا توجد جهات اتصال',
+      'contacts_many_two': 'جهتا اتصال',
+      'contacts_many_few': '{n} جهات اتصال',
+      'contacts_many_many': '{n} جهة اتصال',
+      'contacts_many_other': '{n} جهة اتصال',
+      'numbers_many_zero': 'لا توجد أرقام',
+      'numbers_many_two': 'رقمان',
+      'numbers_many_few': '{n} أرقام',
+      'numbers_many_many': '{n} رقمًا',
+      'numbers_many_other': '{n} رقم',
+      'selected_many_zero': 'لم يتم تحديد شيء',
+      'selected_many_two': 'تم تحديد اثنتين',
+      'selected_many_few': 'تم تحديد {n}',
+      'selected_many_many': 'تم تحديد {n}',
+      'selected_many_other': 'تم تحديد {n}',
       'emptyTitle': 'صفحة هادئة وفارغة.',
       'emptyBody':
           'أحضر جهات اتصالك من هذا الهاتف أو من أي ملف — CSV أو vCard أو Excel أو Numbers أو JSON أو نص عادي.',
