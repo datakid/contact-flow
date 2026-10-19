@@ -100,6 +100,16 @@ class NumberQuery {
 
   bool get isPattern => hasNumberAtoms || hasTagAtoms;
 
+  bool get beyondFuzzy {
+    if (isEmpty) return false;
+    if (hasTagAtoms) return true;
+    if (alternatives.length > 1 && hasNumberAtoms) return true;
+    if (digitsOnly && mode != DigitMode.anywhere) return true;
+    return alternatives.any(
+      (alt) => alt.any((a) => a is NumberAtom && (a.wildcard || a.plus)),
+    );
+  }
+
   bool get digitsOnly =>
       alternatives.length == 1 &&
       alternatives.first.length == 1 &&

@@ -6,6 +6,8 @@ import '../domain/number_check.dart';
 import '../models/person.dart';
 import '../search/fold.dart';
 import '../search/fuzzy.dart';
+import '../search/number_pattern.dart';
+import '../search/pattern_search.dart';
 
 enum SortMode { name, recent }
 
@@ -52,6 +54,8 @@ abstract class ContactList extends ChangeNotifier {
   List<Person> _filtered = [];
   List<Hit> _hits = [];
   Map<Person, Hit> _hitBy = Map<Person, Hit>.identity();
+  final PatternSearch _pattern = PatternSearch();
+  DigitMode digitMode = DigitMode.anywhere;
   final Set<String> selected = {};
   String _query = '';
   SortMode sort = SortMode.name;
@@ -104,6 +108,7 @@ abstract class ContactList extends ChangeNotifier {
     final ids = {for (final p in next) p.id};
     selected.retainAll(ids);
     _dirtyIndex = true;
+    _pattern.invalidate();
     _numberStats = null;
     resort();
   }
@@ -196,7 +201,23 @@ abstract class ContactList extends ChangeNotifier {
       _index.build(_people);
       _dirtyIndex = false;
     }
+    final q = NumberQuery.parse(_query, mode: digitMode);
+    if (q.beyondFuzzy) {
+      _setHits(_pattern.search(q, _people, _index));
+      return;
+    }
     _setHits(_index.search(_query));
+  }
+
+  void invalidateNumbers() => _pattern.invalidate();
+
+  void setDigitMode(DigitMode mode) {
+    if (mode == digitMode) return;
+    digitMode = mode;
+    if (searching) {
+      _runSearch();
+    }
+    notifyListeners();
   }
 
   void warmIndex() {

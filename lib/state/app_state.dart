@@ -153,6 +153,7 @@ class AppState extends ContactList {
     if (r != null) {
       region = r.name;
       PhoneKey.useRegion(region);
+      invalidateNumbers();
     }
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
@@ -166,6 +167,7 @@ class AppState extends ContactList {
     region = r.name;
     country = PhoneKey.callingCode(r);
     PhoneKey.useRegion(region);
+    invalidateNumbers();
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('region', region);
