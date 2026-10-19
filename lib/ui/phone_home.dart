@@ -17,6 +17,7 @@ import 'person_row.dart';
 import 'pipeline.dart';
 import 'queue_screen.dart';
 import 'settings_sheet.dart';
+import 'search_extras.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'workspace.dart';
@@ -121,6 +122,8 @@ class _PhoneHomeState extends State<PhoneHome> {
                     SliverToBoxAdapter(child: _queueBanner(l, p)),
                     if (!book.searching)
                       SliverToBoxAdapter(child: _filters(book, l, p)),
+                    if (book.searching)
+                      SliverToBoxAdapter(child: DigitModeChips(list: book)),
                     if (book.searching || book.filtering)
                       SliverToBoxAdapter(child: _resultRow(book, l, p)),
                     ..._list(book, l, p),
@@ -435,7 +438,7 @@ class _PhoneHomeState extends State<PhoneHome> {
                   ),
                 )
               else
-                const SizedBox(width: 12),
+                const SearchHelpButton(),
             ],
           ),
         ),

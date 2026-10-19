@@ -186,3 +186,11 @@ Failing test: test/pattern_search_test.dart (12 cases through AppState: wildcard
 Change: PatternSearch (lib/search/pattern_search.dart) scores contacts with NumberQuery, caches PhoneForms per contact keyed by the contact's numbers, and combines a name part with the fuzzy index. ContactList uses it when the query has a tag, a wildcard, a leading plus, a comma, or a digit chip other than "anywhere"; plain digits and names still use the fuzzy path. ContactList.digitMode and setDigitMode are ready for the chips. Tags currently match group names, case-insensitively, until Phase 4 adds number tags.
 verify.sh: not run
 Risks / follow-ups: no chips, help sheet, recent searches or Save as smart filter in the UI yet; no highlight of the matched digits in rows; the speed tests (10k contacts, 20k numbers, p95 under 8 ms) are not written and PhoneForms for 20k numbers is built on the UI thread on the first pattern search.
+
+
+Task: 3 (search UI)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: both workspaces build their own search bar (home.dart and phone_home.dart); both extend ContactList.
+Failing test: test/search_chips_test.dart (written, not run)
+Change: lib/ui/search_extras.dart adds DigitModeChips (Anywhere, Ends with, Starts with, Contains; shown only for a digits-only query), a help bottom sheet and a help button that replaces the empty spacer at the end of each search bar. Strings in five languages (digit* and searchHelp*).
+verify.sh: not run
+Risks / follow-ups: the plan's other pieces are still open: recent searches under the field, Save as smart filter, the highlight of matched digits, and an RTL and 300 px overflow check of the chip row. The help button is 48 px wide where a 12 px spacer used to be, so the search field is narrower; check the existing goldens and overflow tests.

@@ -10,7 +10,7 @@ def add(strings):
         for k,v in strings.items():
             if f"    '{k}':" in existing: continue
             val=v[lang]
-            val=val.replace("\\","\\\\").replace("'","\\'")
+            val=val.replace("\\","\\\\").replace("'","\\'").replace("\n","\\n")
             line=f"    '{k}': '{val}',"
             if len(line)>80: line=f"    '{k}':\n        '{val}',"
             add+="\n"+line

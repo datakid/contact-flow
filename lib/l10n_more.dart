@@ -106,6 +106,13 @@ const moreStrings = <String, Map<String, String>>{
         '{n} contacts are already on this phone. Skip them, or save them again anyway?',
     'skipThem': 'Skip them',
     'includeAnyway': 'Save anyway',
+    'digitAnywhere': 'Anywhere',
+    'digitEnds': 'Ends with',
+    'digitStarts': 'Starts with',
+    'digitContains': 'Contains',
+    'searchHelpTitle': 'Search by number',
+    'searchHelpBody':
+        '*36  ends with 36\n02*  starts with 02\n*55*  contains 55\n02*36  starts with 02 and ends with 36\n05?1*  ? is exactly one digit\nname *36  name and number together\n*36, *37  either one\n#family  contacts in the group Family',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -213,6 +220,13 @@ const moreStrings = <String, Map<String, String>>{
         '{n} من جهات الاتصال موجودة بالفعل على هذا الهاتف. هل تتخطاها أم تحفظها مرة أخرى؟',
     'skipThem': 'تخطَّها',
     'includeAnyway': 'احفظها على أي حال',
+    'digitAnywhere': 'في أي مكان',
+    'digitEnds': 'ينتهي بـ',
+    'digitStarts': 'يبدأ بـ',
+    'digitContains': 'يحتوي',
+    'searchHelpTitle': 'البحث بالرقم',
+    'searchHelpBody':
+        '*36  ينتهي بـ 36\n02*  يبدأ بـ 02\n*55*  يحتوي على 55\n02*36  يبدأ بـ 02 وينتهي بـ 36\n05?1*  ? تعني رقمًا واحدًا بالضبط\nاسم *36  الاسم والرقم معًا\n*36, *37  أيٌّ منهما\n#العائلة  جهات الاتصال في مجموعة العائلة',
   },
   'zh': {
     'aliases': '别名',
@@ -603,6 +617,13 @@ const moreStrings = <String, Map<String, String>>{
     'nAlreadyOnPhone': '有 {n} 位联系人已在此手机上。要跳过，还是仍然再次保存？',
     'skipThem': '跳过',
     'includeAnyway': '仍然保存',
+    'digitAnywhere': '任意位置',
+    'digitEnds': '结尾为',
+    'digitStarts': '开头为',
+    'digitContains': '包含',
+    'searchHelpTitle': '按号码搜索',
+    'searchHelpBody':
+        '*36  以 36 结尾\n02*  以 02 开头\n*55*  包含 55\n02*36  以 02 开头并以 36 结尾\n05?1*  ? 代表恰好一位数字\n姓名 *36  姓名与号码同时匹配\n*36, *37  任一即可\n#家人  属于“家人”群组的联系人',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1036,6 +1057,13 @@ const moreStrings = <String, Map<String, String>>{
         '{n} contactos ya están en este teléfono. ¿Omitirlos o guardarlos de nuevo de todos modos?',
     'skipThem': 'Omitirlos',
     'includeAnyway': 'Guardar igualmente',
+    'digitAnywhere': 'En cualquier parte',
+    'digitEnds': 'Termina en',
+    'digitStarts': 'Empieza por',
+    'digitContains': 'Contiene',
+    'searchHelpTitle': 'Buscar por número',
+    'searchHelpBody':
+        '*36  termina en 36\n02*  empieza por 02\n*55*  contiene 55\n02*36  empieza por 02 y termina en 36\n05?1*  ? es exactamente un dígito\nnombre *36  nombre y número a la vez\n*36, *37  cualquiera de los dos\n#familia  contactos del grupo Familia',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1477,5 +1505,12 @@ const moreStrings = <String, Map<String, String>>{
         '{n} contacts sont déjà sur ce téléphone. Les ignorer ou les enregistrer quand même ?',
     'skipThem': 'Les ignorer',
     'includeAnyway': 'Enregistrer quand même',
+    'digitAnywhere': 'N’importe où',
+    'digitEnds': 'Se termine par',
+    'digitStarts': 'Commence par',
+    'digitContains': 'Contient',
+    'searchHelpTitle': 'Rechercher par numéro',
+    'searchHelpBody':
+        '*36  se termine par 36\n02*  commence par 02\n*55*  contient 55\n02*36  commence par 02 et se termine par 36\n05?1*  ? est exactement un chiffre\nnom *36  nom et numéro ensemble\n*36, *37  l’un ou l’autre\n#famille  contacts du groupe Famille',
   },
 };

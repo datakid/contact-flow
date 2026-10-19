@@ -12,6 +12,7 @@ import 'detail.dart';
 import 'export_screen.dart';
 import 'import_sheet.dart';
 import 'settings_sheet.dart';
+import 'search_extras.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'workspace.dart';
@@ -99,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   else ...[
                     if (!s.searching)
                       SliverToBoxAdapter(child: _sortRow(s, l, p)),
+                    if (s.searching)
+                      SliverToBoxAdapter(child: DigitModeChips(list: s)),
                     if (s.searching)
                       SliverToBoxAdapter(child: _resultRow(s, l, p, list)),
                     SliverList.builder(
@@ -321,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 )
               else
-                const SizedBox(width: 12),
+                const SearchHelpButton(),
             ],
           ),
         ),
