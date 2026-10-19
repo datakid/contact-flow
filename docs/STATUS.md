@@ -171,3 +171,10 @@ Failing test: test/l10n_test.dart (Arabic form table 0..1011, presence of all fo
 Change: L.arabicForm returns zero, one, two, few (3-10 mod 100), many (11-99 mod 100) or other; n() looks up <many>_<form> for Arabic and falls back otherwise.
 verify.sh: not run
 Risks / follow-ups: the other plural pairs (rowsN, willDeleteN, noNumberN, opApplied, updatedN) still use the two-form fallback in Arabic; Phase 2.6 asks for all of them to get Arabic forms over time. Chinese has no plural forms and English, Spanish and French are unchanged.
+
+Task: 3 (number pattern core)  Status: UNVERIFIED, NOT INTEGRATED (branch: phase-1-7)
+Callers checked: none yet; nothing calls the new module.
+Failing test: test/number_pattern_test.dart (48 parser cases, matching, chips, AND/OR, tags, highlights, forms; written, not run). The parser and scorer were ported to Python and run on the same cases, all agreed.
+Change: lib/search/number_pattern.dart adds NumberQuery.parse and score, NumberAtom, TagAtom, TextAtom, DigitMode (anywhere, ends, starts, contains), PhoneForms (saved, national and E.164 digits per number, extensions removed) and highlights. Arabic and full-width ? , * # + and digits are normalised first. A query made only of digits, spaces, dashes and brackets is one number. Plain digits are ranked exact 4, ends 3, starts 2, contains 1; wildcard patterns score 3; AND needs one number to satisfy every number atom; comma is OR; a # atom needs the hasTag callback.
+verify.sh: not run
+Risks / follow-ups: not done: wiring into ContactList and both workspaces, the chips and help sheet, recent searches and Save as smart filter, the per-number precomputed index (PhoneForms is computed per call), the speed tests (10k contacts / 20k numbers, p95 under 8 ms, 16 ms per keystroke) and moving fuzzy search off the UI thread. Mixed text and number queries are parsed (TextAtom plus NumberAtom) but the caller still has to combine the fuzzy name score with NumberQuery.score.
