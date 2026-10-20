@@ -20,6 +20,9 @@ import 'tags/tag_store.dart';
 import 'ui/root.dart';
 import 'ui/store_error.dart';
 import 'ui/theme.dart';
+import 'calls/ignore_book.dart';
+import 'services/edition.dart';
+import 'ui/edition_error.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +30,11 @@ Future<void> main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   final state = AppState();
   await state.init(detectRegion: true);
+  final badEdition = Edition.mismatch(await Edition.nativeName());
+  if (badEdition != null) {
+    runApp(EditionErrorApp(native: badEdition, lang: state.lang));
+    return;
+  }
   final ContactSource source = PhoneSource.supported
       ? PhoneSource()
       : FakeSource(
@@ -42,6 +50,10 @@ Future<void> main() async {
   try {
     await tags.load();
   } catch (_) {}
+  final ignore = IgnoreBook(HiveTagStore(boxName: 'ignore_v1'));
+  try {
+    await ignore.load();
+  } catch (_) {}
   state.tagMatcher = tags.personHasTag;
   book.tagMatcher = tags.personHasTag;
   runApp(
@@ -51,6 +63,7 @@ Future<void> main() async {
       queue: queue,
       launcher: const SystemLauncher(),
       tags: tags,
+      ignore: ignore,
       child: const ContactFlowApp(),
     ),
   );
@@ -62,6 +75,7 @@ class AppProviders extends StatelessWidget {
   final QueueState queue;
   final Launcher launcher;
   final TagBook? tags;
+  final IgnoreBook? ignore;
   final Widget child;
   const AppProviders({
     super.key,
@@ -71,6 +85,7 @@ class AppProviders extends StatelessWidget {
     required this.launcher,
     required this.child,
     this.tags,
+    this.ignore,
   });
 
   @override
@@ -80,6 +95,7 @@ class AppProviders extends StatelessWidget {
       ChangeNotifierProvider.value(value: book),
       ChangeNotifierProvider.value(value: queue),
       if (tags != null) ChangeNotifierProvider.value(value: tags!),
+      if (ignore != null) ChangeNotifierProvider.value(value: ignore!),
       Provider<Launcher>.value(value: launcher),
     ],
     child: child,

@@ -35,6 +35,18 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "edition"
+
+    productFlavors {
+        create("lite") {
+            dimension = "edition"
+        }
+        create("full") {
+            dimension = "edition"
+            applicationIdSuffix = ".full"
+        }
+    }
+
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {

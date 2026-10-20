@@ -11,6 +11,12 @@ import 'history_screen.dart';
 import 'reach_ui.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import '../calls/ignore_book.dart';
+import '../services/data_move.dart';
+import '../services/incoming_read.dart';
+import '../tags/tag_book.dart';
 
 const appVersion = '2.5.0';
 
@@ -116,6 +122,72 @@ class _Settings extends StatelessWidget {
             },
           ),
           SectionLabel(l.t('library')),
+          if (_maybe<TagBook>(context) case final tags?)
+            if (_maybe<IgnoreBook>(context) case final ignore?) ...[
+              _Action(
+                key: const ValueKey('set-move-export'),
+                icon: Icons.upload_file_rounded,
+                label: l.t('moveExport'),
+                sub: l.t('moveSub'),
+                onTap: () async {
+                  final json = DataMove.export(
+                    people: s.people,
+                    tags: tags,
+                    ignore: ignore,
+                  );
+                  await shareBytes(
+                    Uint8List.fromList(utf8.encode(json)),
+                    'contact-flow-data.json',
+                    'application/json',
+                  );
+                },
+              ),
+              _Action(
+                key: const ValueKey('set-move-import'),
+                icon: Icons.download_rounded,
+                label: l.t('moveImport'),
+                sub: l.t('moveSub'),
+                onTap: () async {
+                  final res = await FilePicker.pickFiles(
+                    withData: kIsWeb,
+                    type: FileType.any,
+                  );
+                  final f = res == null || res.files.isEmpty
+                      ? null
+                      : res.files.first;
+                  if (f == null) return;
+                  var bytes = f.bytes;
+                  final path = f.path;
+                  if (bytes == null && path != null && !kIsWeb) {
+                    bytes = await readFileBytes(path);
+                  }
+                  if (bytes == null) {
+                    if (context.mounted) toast(context, l.t('moveBad'));
+                    return;
+                  }
+                  try {
+                    final r = await DataMove.import(
+                      utf8.decode(bytes, allowMalformed: true),
+                      state: s,
+                      tags: tags,
+                      ignore: ignore,
+                    );
+                    if (context.mounted) {
+                      toast(
+                        context,
+                        l.t('moveDone', {
+                          'n': r.people,
+                          'm': r.tags,
+                          'k': r.ignored,
+                        }),
+                      );
+                    }
+                  } on FormatException {
+                    if (context.mounted) toast(context, l.t('moveBad'));
+                  }
+                },
+              ),
+            ],
           if (s.quarantined > 0)
             _Action(
               key: const ValueKey('set-quarantine'),
@@ -434,3 +506,12 @@ class _Action extends StatelessWidget {
     );
   }
 }
+
+T? _maybe<T>(BuildContext context) {
+  try {
+    return context.read<T>();
+  } catch (_) {
+    return null;
+  }
+}
+

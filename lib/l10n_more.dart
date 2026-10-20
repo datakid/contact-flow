@@ -115,6 +115,13 @@ const moreStrings = <String, Map<String, String>>{
         '*36  ends with 36\n02*  starts with 02\n*55*  contains 55\n02*36  starts with 02 and ends with 36\n05?1*  ? is exactly one digit\nname *36  name and number together\n*36, *37  either one\n#family  contacts in the group Family',
     'excluded_one': '1 excluded',
     'excluded_many': '{n} excluded',
+    'editionMismatch':
+        'This build is inconsistent: the app was built as “{native}” but the Dart side expects “{dart}”. Rebuild with the matching flavor and --dart-define=CALLS setting.',
+    'moveExport': 'Move my data: export',
+    'moveImport': 'Move my data: import',
+    'moveSub': 'Contacts, tags and ignored numbers in one file',
+    'moveDone': 'Added {n} contacts, {m} tags and {k} ignored numbers',
+    'moveBad': 'This file is not a Contact Flow data export.',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -231,6 +238,14 @@ const moreStrings = <String, Map<String, String>>{
         '*36  ينتهي بـ 36\n02*  يبدأ بـ 02\n*55*  يحتوي على 55\n02*36  يبدأ بـ 02 وينتهي بـ 36\n05?1*  ? تعني رقمًا واحدًا بالضبط\nاسم *36  الاسم والرقم معًا\n*36, *37  أيٌّ منهما\n#العائلة  جهات الاتصال في مجموعة العائلة',
     'excluded_one': 'مستبعد واحد',
     'excluded_many': 'مستبعد: {n}',
+    'editionMismatch':
+        'هذا الإصدار غير متسق: بُني التطبيق بنسخة «{native}» بينما يتوقع جانب Dart النسخة «{dart}». أعد البناء بالنكهة المطابقة وإعداد --dart-define=CALLS.',
+    'moveExport': 'نقل بياناتي: تصدير',
+    'moveImport': 'نقل بياناتي: استيراد',
+    'moveSub': 'جهات الاتصال والوسوم والأرقام المتجاهلة في ملف واحد',
+    'moveDone':
+        'أُضيفت {n} من جهات الاتصال و{m} من الوسوم و{k} من الأرقام المتجاهلة',
+    'moveBad': 'هذا الملف ليس تصدير بيانات من Contact Flow.',
   },
   'zh': {
     'aliases': '别名',
@@ -630,6 +645,13 @@ const moreStrings = <String, Map<String, String>>{
         '*36  以 36 结尾\n02*  以 02 开头\n*55*  包含 55\n02*36  以 02 开头并以 36 结尾\n05?1*  ? 代表恰好一位数字\n姓名 *36  姓名与号码同时匹配\n*36, *37  任一即可\n#家人  属于“家人”群组的联系人',
     'excluded_one': '已排除 1 个',
     'excluded_many': '已排除 {n} 个',
+    'editionMismatch':
+        '此构建不一致：应用以“{native}”版本构建，但 Dart 端期望“{dart}”。请使用匹配的 flavor 和 --dart-define=CALLS 设置重新构建。',
+    'moveExport': '迁移我的数据：导出',
+    'moveImport': '迁移我的数据：导入',
+    'moveSub': '联系人、标签和已忽略号码合并为一个文件',
+    'moveDone': '已添加 {n} 位联系人、{m} 个标签和 {k} 个已忽略号码',
+    'moveBad': '此文件不是 Contact Flow 数据导出文件。',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1072,6 +1094,14 @@ const moreStrings = <String, Map<String, String>>{
         '*36  termina en 36\n02*  empieza por 02\n*55*  contiene 55\n02*36  empieza por 02 y termina en 36\n05?1*  ? es exactamente un dígito\nnombre *36  nombre y número a la vez\n*36, *37  cualquiera de los dos\n#familia  contactos del grupo Familia',
     'excluded_one': '1 excluido',
     'excluded_many': '{n} excluidos',
+    'editionMismatch':
+        'Esta compilación es incoherente: la app se compiló como «{native}» pero Dart espera «{dart}». Vuelve a compilar con el flavor y el valor de --dart-define=CALLS que coincidan.',
+    'moveExport': 'Mover mis datos: exportar',
+    'moveImport': 'Mover mis datos: importar',
+    'moveSub': 'Contactos, etiquetas y números ignorados en un archivo',
+    'moveDone':
+        'Se añadieron {n} contactos, {m} etiquetas y {k} números ignorados',
+    'moveBad': 'Este archivo no es una exportación de datos de Contact Flow.',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1522,5 +1552,12 @@ const moreStrings = <String, Map<String, String>>{
         '*36  se termine par 36\n02*  commence par 02\n*55*  contient 55\n02*36  commence par 02 et se termine par 36\n05?1*  ? est exactement un chiffre\nnom *36  nom et numéro ensemble\n*36, *37  l’un ou l’autre\n#famille  contacts du groupe Famille',
     'excluded_one': '1 exclu',
     'excluded_many': '{n} exclus',
+    'editionMismatch':
+        'Cette version est incohérente : l’app a été compilée en « {native} » mais Dart attend « {dart} ». Recompilez avec le flavor et la valeur de --dart-define=CALLS correspondants.',
+    'moveExport': 'Déplacer mes données : exporter',
+    'moveImport': 'Déplacer mes données : importer',
+    'moveSub': 'Contacts, étiquettes et numéros ignorés dans un seul fichier',
+    'moveDone': '{n} contacts, {m} étiquettes et {k} numéros ignorés ajoutés',
+    'moveBad': 'Ce fichier n’est pas une exportation de données Contact Flow.',
   },
 };

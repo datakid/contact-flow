@@ -28,14 +28,26 @@ class MainActivity : FlutterActivity() {
             }
         }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "contactflow/device").setMethodCallHandler { call, result ->
-            if (call.method == "simCountry") {
-                val tm = getSystemService(TELEPHONY_SERVICE) as? TelephonyManager
-                result.success((tm?.simCountryIso ?: "").uppercase())
-            } else {
-                result.notImplemented()
+            when (call.method) {
+                "simCountry" -> {
+                    val tm = getSystemService(TELEPHONY_SERVICE) as? TelephonyManager
+                    result.success((tm?.simCountryIso ?: "").uppercase())
+                }
+                "edition" -> result.success(Edition.NAME)
+                else -> result.notImplemented()
             }
         }
+        Edition.install(this, flutterEngine)
         ingest(intent)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Edition.onPermissionResult(requestCode, grantResults)
     }
 
     override fun onNewIntent(intent: Intent) {
