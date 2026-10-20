@@ -224,3 +224,10 @@ Failing test: none (build scripts); tool/check_permissions.sh fails the build if
 Change: CI builds lite and full debug APKs and runs the permission check; README documents --flavor and --dart-define=CALLS=true; the F-Droid recipe has a draft 3.0.0 entry that builds only the lite flavor (older entries untouched).
 verify.sh: not run
 Risks / follow-ups: the 3.0.0 entry, version code 8 and tag v3.0.0 are guesses; CurrentVersion in the recipe was left at 2.5.0. The permission script needs aapt from the Android build-tools on the runner. No distinct icon for the full edition.
+
+Task: 5 (calls controller)  Status: UNVERIFIED, NO SCREENS (branch: phase-1-7)
+Callers checked: new code only; it combines CallSource, CallGrouper, CallFilter, CallSelection, IgnoreBook, TagBook, PhoneDupes and CallNaming.
+Failing test: test/calls_controller_test.dart (permission flow, load and error, saved contacts hidden, filters, selection, ignore with undo, hidden numbers, drafts and naming, save with the re-check right before saving, tag-only, #tag filter; written, not run)
+Change: CallsController (lib/calls/calls_controller.dart) holds the phase, progress, filter, selection and the grouped lists; save re-reads contacts through refreshContacts, drops numbers saved in the meantime with PhoneDupes.split, calls saveToPhone for the rest and reports how many were saved and how many were already there; tagChosen tags the chosen numbers without saving.
+verify.sh: not run
+Risks / follow-ups: the screens (Calls tab, row layout, swipe gestures, the save sheet with the template field and preview, the Settings screen for ignored numbers) are not built; saveToPhone has to be wired to the existing ChangeSet create flow (see ExportScreen._toPhone) with batches for the 500-contact case; the controller is not provided in AppProviders yet.
