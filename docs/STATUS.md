@@ -194,3 +194,11 @@ Failing test: test/search_chips_test.dart (written, not run)
 Change: lib/ui/search_extras.dart adds DigitModeChips (Anywhere, Ends with, Starts with, Contains; shown only for a digits-only query), a help bottom sheet and a help button that replaces the empty spacer at the end of each search bar. Strings in five languages (digit* and searchHelp*).
 verify.sh: not run
 Risks / follow-ups: the plan's other pieces are still open: recent searches under the field, Save as smart filter, the highlight of matched digits, and an RTL and 300 px overflow check of the chip row. The help button is 48 px wide where a 12 px spacer used to be, so the search field is narrower; check the existing goldens and overflow tests.
+
+
+Task: 4 (tags data layer)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: new code only; ContactList gets a tagMatcher hook and main.dart creates the TagBook and sets the hook on AppState and PhoneBook; AppProviders takes an optional TagBook so existing widget tests are unaffected.
+Failing test: test/tag_book_test.dart (create, rename, recolour, assign on unsaved numbers, shared tags across number formats, union per contact, delete and merge with undo, key stability and re-keying, persistence including a Hive round trip, backup export and import, #tag search; written, not run)
+Change: lib/tags adds Tag, NumberTag, TagKey (E.164 when the number is valid, otherwise u:<last 9>@<region>), TagStore with MemoryTagStore and HiveTagStore (box tags_v1 with a schema marker), and TagBook with create, rename, recolour, delete, merge, assign, unassign, undo, per-number and per-contact lookups, rekeyUnparsed (returns how many moved), JSON export and import. A #tag in the search box now also matches through TagBook.
+verify.sh: not run
+Risks / follow-ups: not done: the Tags tab and every Phase 4 screen, the tag picker, batch tagging from search results, the Settings Tags backup entry and its warning text, tags in CSV, XLSX, JSON and vCard export and filter-by-tag, importing tags from Google labels and vCard CATEGORIES, and showing "N tags moved" after a region change (call TagBook.rekeyUnparsed from AppState.setRegion and surface the count). TagBook does not refresh the search results when tags change. The tags box is not excluded from cloud backup separately; it sits in app_flutter, which is already excluded.

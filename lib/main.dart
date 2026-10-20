@@ -15,6 +15,8 @@ import 'services/library_store.dart';
 import 'state/app_state.dart';
 import 'state/phone_book.dart';
 import 'state/queue_state.dart';
+import 'tags/tag_book.dart';
+import 'tags/tag_store.dart';
 import 'ui/root.dart';
 import 'ui/store_error.dart';
 import 'ui/theme.dart';
@@ -36,12 +38,19 @@ Future<void> main() async {
   book.sortLang = state.lang;
   final queue = QueueState(HiveKeyValue(), const SystemLauncher());
   await queue.load();
+  final tags = TagBook(HiveTagStore());
+  try {
+    await tags.load();
+  } catch (_) {}
+  state.tagMatcher = tags.personHasTag;
+  book.tagMatcher = tags.personHasTag;
   runApp(
     AppProviders(
       state: state,
       book: book,
       queue: queue,
       launcher: const SystemLauncher(),
+      tags: tags,
       child: const ContactFlowApp(),
     ),
   );
@@ -52,6 +61,7 @@ class AppProviders extends StatelessWidget {
   final PhoneBook book;
   final QueueState queue;
   final Launcher launcher;
+  final TagBook? tags;
   final Widget child;
   const AppProviders({
     super.key,
@@ -60,6 +70,7 @@ class AppProviders extends StatelessWidget {
     required this.queue,
     required this.launcher,
     required this.child,
+    this.tags,
   });
 
   @override
@@ -68,6 +79,7 @@ class AppProviders extends StatelessWidget {
       ChangeNotifierProvider.value(value: state),
       ChangeNotifierProvider.value(value: book),
       ChangeNotifierProvider.value(value: queue),
+      if (tags != null) ChangeNotifierProvider.value(value: tags!),
       Provider<Launcher>.value(value: launcher),
     ],
     child: child,

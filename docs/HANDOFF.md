@@ -37,7 +37,7 @@ The plan is in docs/PLAN.md. Everything below was written in a sandbox with no F
 - 1.4: files over 64 MiB show the existing unreadable text; the plan asked for decode inside the isolate rather than reading bytes on the main isolate first.
 - Phase 2 except 2.6 (design tokens, navigation, lists, import review redesign, goldens, Noto test fonts).
 - Phase 3 UI and speed: NumberQuery and PatternSearch are wired into ContactList (wildcards, tags as group names, OR, digit mode). Still to do: the chips and help sheet, recent searches, Save as smart filter, highlighting matched digits, the precomputed per-number index off the UI thread, and the speed tests.
-- Phase 4 tags, Phase 5 calls, Phase 6 release work: not started.
+- Phase 4: only the data layer (lib/tags, TagBook, tests) exists. Everything with a screen, export or import is still to do. Phase 5 calls and Phase 6 release work: not started.
 
 ## Decisions that were taken without the owner
 

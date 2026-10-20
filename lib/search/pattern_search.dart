@@ -19,7 +19,12 @@ class PatternSearch {
   static bool hasGroup(Person p, String tag) =>
       p.groups.any((g) => g.toLowerCase() == tag);
 
-  List<Hit> search(NumberQuery q, Iterable<Person> people, FuzzyIndex fuzzy) {
+  List<Hit> search(
+    NumberQuery q,
+    Iterable<Person> people,
+    FuzzyIndex fuzzy, {
+    bool Function(Person, String)? extraTag,
+  }) {
     final text = q.text;
     Map<Person, Hit>? textHits;
     if (text.isNotEmpty) {
@@ -33,7 +38,7 @@ class PatternSearch {
       final textHit = textHits?[p];
       if (textHits != null && textHit == null) continue;
       final forms = formsOf(p);
-      bool tag(String t) => hasGroup(p, t);
+      bool tag(String t) => hasGroup(p, t) || (extraTag?.call(p, t) ?? false);
       int? best;
       String? number;
       if (q.hasNumberAtoms) {

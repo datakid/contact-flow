@@ -56,6 +56,7 @@ abstract class ContactList extends ChangeNotifier {
   Map<Person, Hit> _hitBy = Map<Person, Hit>.identity();
   final PatternSearch _pattern = PatternSearch();
   DigitMode digitMode = DigitMode.anywhere;
+  bool Function(Person, String)? tagMatcher;
   final Set<String> selected = {};
   String _query = '';
   SortMode sort = SortMode.name;
@@ -203,7 +204,9 @@ abstract class ContactList extends ChangeNotifier {
     }
     final q = NumberQuery.parse(_query, mode: digitMode);
     if (q.beyondFuzzy) {
-      _setHits(_pattern.search(q, _people, _index));
+      _setHits(
+        _pattern.search(q, _people, _index, extraTag: tagMatcher),
+      );
       return;
     }
     _setHits(_index.search(_query));
