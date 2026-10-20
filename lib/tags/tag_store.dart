@@ -25,11 +25,14 @@ class MemoryTagStore implements TagStore {
 }
 
 class HiveTagStore implements TagStore {
-  static const boxName = 'tags_v1';
+  static const defaultBox = 'tags_v1';
   static const schemaKey = 'meta:schema';
   static const schemaVersion = 1;
 
+  final String boxName;
   Box<String>? _b;
+
+  HiveTagStore({this.boxName = defaultBox});
 
   Future<Box<String>> _box() async {
     final b = _b ??= await Hive.openBox<String>(boxName);

@@ -113,6 +113,8 @@ const moreStrings = <String, Map<String, String>>{
     'searchHelpTitle': 'Search by number',
     'searchHelpBody':
         '*36  ends with 36\n02*  starts with 02\n*55*  contains 55\n02*36  starts with 02 and ends with 36\n05?1*  ? is exactly one digit\nname *36  name and number together\n*36, *37  either one\n#family  contacts in the group Family',
+    'excluded_one': '1 excluded',
+    'excluded_many': '{n} excluded',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -227,6 +229,8 @@ const moreStrings = <String, Map<String, String>>{
     'searchHelpTitle': 'البحث بالرقم',
     'searchHelpBody':
         '*36  ينتهي بـ 36\n02*  يبدأ بـ 02\n*55*  يحتوي على 55\n02*36  يبدأ بـ 02 وينتهي بـ 36\n05?1*  ? تعني رقمًا واحدًا بالضبط\nاسم *36  الاسم والرقم معًا\n*36, *37  أيٌّ منهما\n#العائلة  جهات الاتصال في مجموعة العائلة',
+    'excluded_one': 'مستبعد واحد',
+    'excluded_many': 'مستبعد: {n}',
   },
   'zh': {
     'aliases': '别名',
@@ -624,6 +628,8 @@ const moreStrings = <String, Map<String, String>>{
     'searchHelpTitle': '按号码搜索',
     'searchHelpBody':
         '*36  以 36 结尾\n02*  以 02 开头\n*55*  包含 55\n02*36  以 02 开头并以 36 结尾\n05?1*  ? 代表恰好一位数字\n姓名 *36  姓名与号码同时匹配\n*36, *37  任一即可\n#家人  属于“家人”群组的联系人',
+    'excluded_one': '已排除 1 个',
+    'excluded_many': '已排除 {n} 个',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1064,6 +1070,8 @@ const moreStrings = <String, Map<String, String>>{
     'searchHelpTitle': 'Buscar por número',
     'searchHelpBody':
         '*36  termina en 36\n02*  empieza por 02\n*55*  contiene 55\n02*36  empieza por 02 y termina en 36\n05?1*  ? es exactamente un dígito\nnombre *36  nombre y número a la vez\n*36, *37  cualquiera de los dos\n#familia  contactos del grupo Familia',
+    'excluded_one': '1 excluido',
+    'excluded_many': '{n} excluidos',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1512,5 +1520,7 @@ const moreStrings = <String, Map<String, String>>{
     'searchHelpTitle': 'Rechercher par numéro',
     'searchHelpBody':
         '*36  se termine par 36\n02*  commence par 02\n*55*  contient 55\n02*36  commence par 02 et se termine par 36\n05?1*  ? est exactement un chiffre\nnom *36  nom et numéro ensemble\n*36, *37  l’un ou l’autre\n#famille  contacts du groupe Famille',
+    'excluded_one': '1 exclu',
+    'excluded_many': '{n} exclus',
   },
 };

@@ -552,6 +552,11 @@ class L {
       'selected_many_few': 'تم تحديد {n}',
       'selected_many_many': 'تم تحديد {n}',
       'selected_many_other': 'تم تحديد {n}',
+      'excluded_many_zero': 'لا مستبعد',
+      'excluded_many_two': 'مستبعدان',
+      'excluded_many_few': 'مستبعد: {n}',
+      'excluded_many_many': 'مستبعد: {n}',
+      'excluded_many_other': 'مستبعد: {n}',
       'emptyTitle': 'صفحة هادئة وفارغة.',
       'emptyBody':
           'أحضر جهات اتصالك من هذا الهاتف أو من أي ملف — CSV أو vCard أو Excel أو Numbers أو JSON أو نص عادي.',
