@@ -14,7 +14,7 @@ The plan is in docs/PLAN.md. Everything below was written in a sandbox with no F
 2. `dart format .` and commit it alone (task 0.2). Many new files were formatted by hand and have lines over 80 columns.
 3. `flutter analyze --fatal-infos`. Expect a handful of findings: unnecessary or unused imports, long lines, a few type errors from code that was never compiled.
 4. `flutter test --exclude-tags "perf || golden"`. Fix failures one at a time, each with its own commit.
-5. `flutter test --tags perf`, then `flutter build apk --debug` (this is the first compile of the Kotlin in MainActivity.kt) and `flutter build web`.
+5. `flutter test --tags perf`, then `flutter build apk --debug --flavor lite`, `flutter build apk --debug --flavor full --dart-define=CALLS=true` (the first compile of the Kotlin in MainActivity.kt, the flavor sources and CallsReader.kt), `tool/check_permissions.sh`, and `flutter build web`. Every Android build and run now needs a flavor.
 6. Fill in the baseline in docs/STATUS.md (task 0.1) with real output, then replace each UNVERIFIED line with FIXED or NOT REPRODUCED and paste the verify.sh result.
 
 ## Most likely to need fixing
@@ -37,12 +37,15 @@ The plan is in docs/PLAN.md. Everything below was written in a sandbox with no F
 - 1.4: files over 64 MiB show the existing unreadable text; the plan asked for decode inside the isolate rather than reading bytes on the main isolate first.
 - Phase 2 except 2.6 (design tokens, navigation, lists, import review redesign, goldens, Noto test fonts).
 - Phase 3 UI and speed: NumberQuery and PatternSearch are wired into ContactList (wildcards, tags as group names, OR, digit mode). Still to do: the chips and help sheet, recent searches, Save as smart filter, highlighting matched digits, the precomputed per-number index off the UI thread, and the speed tests.
-- Phase 4: only the data layer (lib/tags, TagBook, tests) exists. Everything with a screen, export or import is still to do. Phase 5 calls and Phase 6 release work: not started.
+- Phase 4: only the data layer (lib/tags, TagBook, tests) exists. Everything with a screen, export or import is still to do.
+- Phase 5: the flavors, call-log reader, call grouping, filters, selection, ignore list, naming and Move my data exist with tests; the Calls tab screens, swipe gestures, the Never-suggest screen in Settings and the save flow do not.
+- Phase 6 release work: not started.
 
 ## Decisions that were taken without the owner
 
 - 1.16 backup: contacts and tags are excluded from Google backup (the plan's default). Device-to-device transfer is not restricted.
 - 1.20: Job Title and Groups columns are off by default for CSV and on for XLSX and JSON.
+- 5.1: the F-Droid 3.0.0 entry (version code 8, tag v3.0.0) is a guess; the full edition has no separate icon.
 - 1.7: matching keeps the old last-9-digit key and only refuses two explicit numbers with different country codes, so nothing that matched before stops matching unless the codes differ.
 
 ## Conventions kept

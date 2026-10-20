@@ -216,3 +216,11 @@ Failing test: test/call_source_test.dart (2000-row paging by date, permission ca
 Change: Gradle flavors lite (com.contactflow.contacts) and full (suffix .full, app name Contact Flow Full); READ_CALL_LOG only in src/full/AndroidManifest.xml; src/full has Edition.kt and CallsReader.kt (permission request, keyset paging by date, 2000 rows per call), src/lite has an empty Edition.kt; MainActivity answers an edition query and forwards permission results. Dart: --dart-define=CALLS (callsBuild), Edition.mismatch at startup shows a blocking error app if the native edition and the define disagree; ChannelCallSource and FakeCallSource; DataMove exports and imports contacts, tags and the ignore list in one file, merging through AppState.plan and commit; two new Settings rows when a TagBook and IgnoreBook are provided.
 verify.sh: not run
 Risks / follow-ups: every flutter build and run now needs --flavor lite or --flavor full, and the full flavor also needs --dart-define=CALLS=true; ci.yml, README and the F-Droid recipe still use the old commands (updated next). No distinct launcher icon for the full flavor yet (binary asset). The aapt permission check from task 5.1 is not in CI. Calls that share the exact same millisecond across a 2000-row page boundary can be skipped by the date keyset. Not done: the Calls tab screens, the call-detail view and the save flow.
+
+
+Task: 5.1 (build and docs)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: ci.yml, README Build section, fdroid recipe, tool/verify.sh (does not build, unchanged).
+Failing test: none (build scripts); tool/check_permissions.sh fails the build if lite has READ_CALL_LOG, full lacks it, or either edition requests INTERNET.
+Change: CI builds lite and full debug APKs and runs the permission check; README documents --flavor and --dart-define=CALLS=true; the F-Droid recipe has a draft 3.0.0 entry that builds only the lite flavor (older entries untouched).
+verify.sh: not run
+Risks / follow-ups: the 3.0.0 entry, version code 8 and tag v3.0.0 are guesses; CurrentVersion in the recipe was left at 2.5.0. The permission script needs aapt from the Android build-tools on the runner. No distinct icon for the full edition.

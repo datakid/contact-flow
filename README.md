@@ -94,10 +94,15 @@ Requires Flutter 3.35 / Dart 3.9.
 ```bash
 flutter pub get
 flutter test
-flutter run                              # device
-flutter build apk --release --split-per-abi
+flutter run --flavor lite                # device, no call log access
+flutter run --flavor full --dart-define=CALLS=true
+flutter build apk --release --flavor lite --split-per-abi
+flutter build apk --release --flavor full --dart-define=CALLS=true --split-per-abi
 flutter build web --release              # preview, sample data only
+tool/check_permissions.sh                # after building both debug APKs
 ```
+
+The lite edition (`com.contactflow.contacts`) never asks for the call log. The full edition (`com.contactflow.contacts.full`) adds `READ_CALL_LOG` and the Calls tab. Both flavors must be built with matching Dart defines; a mismatch shows an error screen at startup.
 
 For a signed Android build, add `android/key.properties`:
 
@@ -128,7 +133,7 @@ fdroid/      draft F-Droid build recipe
 
 ## Permissions
 
-`READ_CONTACTS` and `WRITE_CONTACTS` (Android), requested only when you import from or save to the phone.
+`READ_CONTACTS` and `WRITE_CONTACTS` (Android), requested only when you import from or save to the phone. The full edition also asks for `READ_CALL_LOG`, only when you open the Calls tab.
 
 ### Backup
 
