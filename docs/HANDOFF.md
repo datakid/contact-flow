@@ -37,8 +37,8 @@ The plan is in docs/PLAN.md. Everything below was written in a sandbox with no F
 - 1.4: files over 64 MiB show the existing unreadable text; the plan asked for decode inside the isolate rather than reading bytes on the main isolate first.
 - Phase 2 except 2.6 (design tokens, navigation, lists, import review redesign, goldens, Noto test fonts).
 - Phase 3 UI and speed: NumberQuery and PatternSearch are wired into ContactList (wildcards, tags as group names, OR, digit mode). Still to do: the chips and help sheet, recent searches, Save as smart filter, highlighting matched digits, the precomputed per-number index off the UI thread, and the speed tests.
-- Phase 4: only the data layer (lib/tags, TagBook, tests) exists. Everything with a screen, export or import is still to do.
-- Phase 5: the flavors, call-log reader, call grouping, filters, selection, ignore list, naming, the controller, a first Calls tab screen and Move my data exist with tests. Still to do: swipe gestures, the Settings screen to manage ignored numbers, call detail, creating a new tag from the tag-only action, RTL and narrow-screen checks, and the 500-create timing test.
+- Phase 4: the data layer (lib/tags, TagBook, tests) and a Tags management screen with a Settings row exist. Still to do: putting a tag on a number from a contact or call detail, tag chips on rows, a filter-by-tag chip row, tags in exports, and importing tags from Google labels or vCard CATEGORIES.
+- Phase 5: the flavors, call-log reader, call grouping, filters, selection, ignore list, naming, the controller, a first Calls tab screen and Move my data exist with tests. Still to do: swipe gestures, call detail, creating a new tag from the tag-only action, RTL and narrow-screen checks, and the 500-create timing test.
 - Phase 6 release work: not started.
 
 ## Decisions that were taken without the owner
