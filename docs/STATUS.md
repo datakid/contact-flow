@@ -238,3 +238,10 @@ Failing test: test/calls_screen_test.dart (load, select, chip, pattern, permissi
 Change: a third workspace segment (Calls, only when built with --dart-define=CALLS=true) and lib/ui/calls_screen.dart: permission explainer with Allow button, loading counter, filter chips (2+ calls, talked 30 s+, last 30 days, missed only, outgoing only), a pattern or #tag field, a counter (N selected · M excluded), rows you tap to select with a menu to exclude or never suggest (with undo), a header menu (select all shown, invert, clear, show private and short numbers), and a save sheet with a name template, a three-name preview, Save and Tag only. Saving uses applyChanges with a create ChangeSet, so it is journaled and undoable like other phone writes. About 25 new strings in five languages, with Arabic plural forms for calls.
 verify.sh: not run
 Risks / follow-ups: not done: swipe gestures (rows use tap and a menu instead), the Settings screen to manage the ignore list, the call detail view and per-call history, an RTL and 300 px overflow pass, a picker that can create a new tag from the tag-only action (it only lists existing tags), and the 500-create timing test. The screen creates its controller in initState and requires IgnoreBook in the provider tree (main.dart provides it).
+
+Task: 5 (ignored numbers screen)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: Settings builds its rows in settings_sheet.dart; IgnoreBook is provided by main.dart.
+Failing test: test/ignored_sheet_test.dart (written, not run)
+Change: a Settings row "Never suggested numbers" (count in the subtitle) opens a sheet listing each ignored number with a Suggest again button and an Undo snackbar. Five new strings in five languages.
+verify.sh: not run
+Risks / follow-ups: the row only shows when an IgnoreBook is provided; the count in the subtitle is read once when Settings opens.

@@ -149,6 +149,12 @@ const moreStrings = <String, Map<String, String>>{
     'callsLast': 'Last call {d}',
     'calls_one': '1 call',
     'calls_many': '{n} calls',
+    'ignoredTitle': 'Never suggested numbers',
+    'ignoredEmpty':
+        'Nothing here yet. Numbers you choose “Never suggest” for will appear here.',
+    'ignoredRemove': 'Suggest again',
+    'ignoredRemoved': 'Will be suggested again',
+    'ignoredCount': '{n} numbers',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -300,6 +306,12 @@ const moreStrings = <String, Map<String, String>>{
     'callsLast': 'آخر مكالمة {d}',
     'calls_one': 'مكالمة واحدة',
     'calls_many': '{n} مكالمة',
+    'ignoredTitle': 'أرقام لا تُقترح مجددًا',
+    'ignoredEmpty':
+        'لا شيء هنا بعد. ستظهر هنا الأرقام التي تختار لها «لا تقترح مجددًا».',
+    'ignoredRemove': 'اقتراح مجددًا',
+    'ignoredRemoved': 'ستُقترح مجددًا',
+    'ignoredCount': '{n} رقم',
   },
   'zh': {
     'aliases': '别名',
@@ -732,6 +744,11 @@ const moreStrings = <String, Map<String, String>>{
     'callsLast': '最近通话 {d}',
     'calls_one': '1 次通话',
     'calls_many': '{n} 次通话',
+    'ignoredTitle': '不再建议的号码',
+    'ignoredEmpty': '这里还没有内容。你选择“不再建议”的号码会显示在这里。',
+    'ignoredRemove': '恢复建议',
+    'ignoredRemoved': '将重新建议',
+    'ignoredCount': '{n} 个号码',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1209,6 +1226,12 @@ const moreStrings = <String, Map<String, String>>{
     'callsLast': 'Última llamada {d}',
     'calls_one': '1 llamada',
     'calls_many': '{n} llamadas',
+    'ignoredTitle': 'Números que no se sugieren',
+    'ignoredEmpty':
+        'Aún no hay nada. Los números para los que elijas «No sugerir más» aparecerán aquí.',
+    'ignoredRemove': 'Volver a sugerir',
+    'ignoredRemoved': 'Se volverá a sugerir',
+    'ignoredCount': '{n} números',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1693,5 +1716,11 @@ const moreStrings = <String, Map<String, String>>{
     'callsLast': 'Dernier appel {d}',
     'calls_one': '1 appel',
     'calls_many': '{n} appels',
+    'ignoredTitle': 'Numéros jamais proposés',
+    'ignoredEmpty':
+        'Rien pour l’instant. Les numéros pour lesquels vous choisissez « Ne plus proposer » apparaîtront ici.',
+    'ignoredRemove': 'Proposer à nouveau',
+    'ignoredRemoved': 'Sera à nouveau proposé',
+    'ignoredCount': '{n} numéros',
   },
 };

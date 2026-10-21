@@ -17,6 +17,7 @@ import '../calls/ignore_book.dart';
 import '../services/data_move.dart';
 import '../services/incoming_read.dart';
 import '../tags/tag_book.dart';
+import 'ignored_sheet.dart';
 
 const appVersion = '2.5.0';
 
@@ -122,6 +123,14 @@ class _Settings extends StatelessWidget {
             },
           ),
           SectionLabel(l.t('library')),
+          if (_maybe<IgnoreBook>(context) case final ignored?)
+            _Action(
+              key: const ValueKey('set-ignored'),
+              icon: Icons.phone_disabled_rounded,
+              label: l.t('ignoredTitle'),
+              sub: l.t('ignoredCount', {'n': ignored.keys.length}),
+              onTap: () => showIgnoredSheet(context),
+            ),
           if (_maybe<TagBook>(context) case final tags?)
             if (_maybe<IgnoreBook>(context) case final ignore?) ...[
               _Action(
