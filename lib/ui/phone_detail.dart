@@ -12,6 +12,7 @@ import 'pipeline.dart';
 import 'reach_ui.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'number_tags.dart';
 
 Future<void> openPhoneDetail(BuildContext context, Person person) {
   return Navigator.of(
@@ -155,6 +156,7 @@ class PhoneDetailScreen extends StatelessWidget {
                 ),
                 child: Column(children: lines),
               ),
+            NumberTags(person: person),
             const SizedBox(height: 18),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),

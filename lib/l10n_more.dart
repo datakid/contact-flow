@@ -170,6 +170,8 @@ const moreStrings = <String, Map<String, String>>{
     'tagExists': 'A tag with that name already exists.',
     'tagNumbers': '{n} numbers',
     'tagsMoved': '{n} tags moved to match your country',
+    'tagAdd': 'Tag',
+    'tagPickTitle': 'Add a tag',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -342,6 +344,8 @@ const moreStrings = <String, Map<String, String>>{
     'tagExists': 'يوجد وسم بهذا الاسم بالفعل.',
     'tagNumbers': '{n} رقم',
     'tagsMoved': 'نُقل {n} من الوسوم لتطابق دولتك',
+    'tagAdd': 'وسم',
+    'tagPickTitle': 'إضافة وسم',
   },
   'zh': {
     'aliases': '别名',
@@ -793,6 +797,8 @@ const moreStrings = <String, Map<String, String>>{
     'tagExists': '已有同名标签。',
     'tagNumbers': '{n} 个号码',
     'tagsMoved': '已调整 {n} 个标签以匹配你的国家',
+    'tagAdd': '加标签',
+    'tagPickTitle': '添加标签',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1291,6 +1297,8 @@ const moreStrings = <String, Map<String, String>>{
     'tagExists': 'Ya existe una etiqueta con ese nombre.',
     'tagNumbers': '{n} números',
     'tagsMoved': '{n} etiquetas ajustadas a tu país',
+    'tagAdd': 'Etiquetar',
+    'tagPickTitle': 'Añadir una etiqueta',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1796,5 +1804,7 @@ const moreStrings = <String, Map<String, String>>{
     'tagExists': 'Une étiquette porte déjà ce nom.',
     'tagNumbers': '{n} numéros',
     'tagsMoved': '{n} étiquettes ajustées à votre pays',
+    'tagAdd': 'Étiqueter',
+    'tagPickTitle': 'Ajouter une étiquette',
   },
 };

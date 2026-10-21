@@ -252,3 +252,10 @@ Failing test: test/tags_screen_test.dart (empty state, create, duplicate rename,
 Change: lib/ui/tags_screen.dart lists tags with their number counts and lets you create, rename, change colour (eight swatches), merge into another tag and delete, with undo for merge and delete; a Settings row opens it; changing the country in Settings now calls TagBook.rekeyUnparsed and shows "N tags moved to match your country" when any moved. Twelve new strings in five languages.
 verify.sh: not run
 Risks / follow-ups: still no way to put a tag on a number from a contact or a call detail screen (the Calls tab's Tag only action works through TagBook.assign), no tag chips on rows, no filter-by-tag chip row, and the Tags-in-export columns are not built.
+
+Task: 4 (tags on numbers)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: PhoneDetailScreen is the only phone detail; the card reads TagBook only when it is provided.
+Failing test: test/number_tags_test.dart (create and assign, pick and remove, hidden without a book; written, not run; the remove step taps the InputChip delete icon, which may be Icons.cancel or another icon depending on the Flutter version)
+Change: lib/ui/number_tags.dart is a card on the phone contact detail with, for every number, its tag chips (tap the x to remove) and a Tag button that opens a picker of the tags not yet on that number plus New tag. Two new strings in five languages.
+verify.sh: not run
+Risks / follow-ups: the Files workspace detail (detail.dart) has no tag card yet; tag chips are not shown in list rows; the filter-by-tag chip row and tags in export are not built.
