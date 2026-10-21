@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import '../services/edition.dart';
 
 class WorkspaceSwitch extends StatelessWidget {
   final int tab;
@@ -61,6 +62,7 @@ class WorkspaceSwitch extends StatelessWidget {
         children: [
           seg(0, l.t('wsPhone'), Icons.smartphone_rounded),
           seg(1, l.t('wsFiles'), Icons.folder_open_rounded),
+          if (callsBuild) seg(2, l.t('wsCalls'), Icons.phone_callback_rounded),
         ],
       ),
     );

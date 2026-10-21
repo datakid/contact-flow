@@ -557,6 +557,11 @@ class L {
       'excluded_many_few': 'مستبعد: {n}',
       'excluded_many_many': 'مستبعد: {n}',
       'excluded_many_other': 'مستبعد: {n}',
+      'calls_many_zero': 'لا مكالمات',
+      'calls_many_two': 'مكالمتان',
+      'calls_many_few': '{n} مكالمات',
+      'calls_many_many': '{n} مكالمة',
+      'calls_many_other': '{n} مكالمة',
       'emptyTitle': 'صفحة هادئة وفارغة.',
       'emptyBody':
           'أحضر جهات اتصالك من هذا الهاتف أو من أي ملف — CSV أو vCard أو Excel أو Numbers أو JSON أو نص عادي.',

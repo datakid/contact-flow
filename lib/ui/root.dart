@@ -13,6 +13,8 @@ import 'home.dart';
 import 'import_issues.dart';
 import 'import_sheet.dart';
 import 'phone_home.dart';
+import '../services/edition.dart';
+import 'calls_screen.dart';
 
 int effectiveTab(AppState app, PhoneBook book) {
   if (app.tab >= 0) return app.tab;
@@ -107,7 +109,9 @@ class _WorkspaceRootState extends State<WorkspaceRoot>
     void go(int t) => app.setTab(t);
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 260),
-      child: tab == 0
+      child: tab == 2 && callsBuild
+          ? CallsScreen(key: const ValueKey('calls'), onTab: go)
+          : tab == 0
           ? PhoneHome(key: const ValueKey('phone'), onTab: go)
           : HomeScreen(key: const ValueKey('files'), onTab: go),
     );
