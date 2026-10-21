@@ -18,6 +18,7 @@ import '../services/data_move.dart';
 import '../services/incoming_read.dart';
 import '../tags/tag_book.dart';
 import 'ignored_sheet.dart';
+import 'tags_screen.dart';
 
 const appVersion = '2.5.0';
 
@@ -109,7 +110,16 @@ class _Settings extends StatelessWidget {
                 : (s.needsRegionPick
                       ? l.t('regionPick')
                       : '${s.country} · ${regionFlag(s.region)} ${s.region}'),
-            onTap: () => askCountry(context, force: true),
+            onTap: () async {
+              await askCountry(context, force: true);
+              if (!context.mounted) return;
+              final tagBook = _maybe<TagBook>(context);
+              if (tagBook == null) return;
+              final moved = await tagBook.rekeyUnparsed();
+              if (moved > 0 && context.mounted) {
+                toast(context, l.t('tagsMoved', {'n': moved}));
+              }
+            },
           ),
           Builder(
             builder: (context) {
@@ -131,8 +141,18 @@ class _Settings extends StatelessWidget {
               sub: l.t('ignoredCount', {'n': ignored.keys.length}),
               onTap: () => showIgnoredSheet(context),
             ),
+          if (_maybe<TagBook>(context) case final tagBook?)
+            _Action(
+              key: const ValueKey('set-tags'),
+              icon: Icons.label_outline_rounded,
+              label: l.t('tagsTitle'),
+              sub: l.t('tagNumbers', {'n': tagBook.tags.length}),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const TagsScreen()),
+              ),
+            ),
           if (_maybe<TagBook>(context) case final tags?)
-            if (_maybe<IgnoreBook>(context) case final ignore?) ...[
+            if (_maybe<IgnoreBook>(context) case final ignore?) ...
               _Action(
                 key: const ValueKey('set-move-export'),
                 icon: Icons.upload_file_rounded,

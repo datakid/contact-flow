@@ -245,3 +245,10 @@ Failing test: test/ignored_sheet_test.dart (written, not run)
 Change: a Settings row "Never suggested numbers" (count in the subtitle) opens a sheet listing each ignored number with a Suggest again button and an Undo snackbar. Five new strings in five languages.
 verify.sh: not run
 Risks / follow-ups: the row only shows when an IgnoreBook is provided; the count in the subtitle is read once when Settings opens.
+
+Task: 4 (tags screen)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: Settings builds its rows in settings_sheet.dart; TagBook is provided by main.dart above MaterialApp, so pushed routes can read it.
+Failing test: test/tags_screen_test.dart (empty state, create, duplicate rename, delete with undo, merge; written, not run)
+Change: lib/ui/tags_screen.dart lists tags with their number counts and lets you create, rename, change colour (eight swatches), merge into another tag and delete, with undo for merge and delete; a Settings row opens it; changing the country in Settings now calls TagBook.rekeyUnparsed and shows "N tags moved to match your country" when any moved. Twelve new strings in five languages.
+verify.sh: not run
+Risks / follow-ups: still no way to put a tag on a number from a contact or a call detail screen (the Calls tab's Tag only action works through TagBook.assign), no tag chips on rows, no filter-by-tag chip row, and the Tags-in-export columns are not built.
