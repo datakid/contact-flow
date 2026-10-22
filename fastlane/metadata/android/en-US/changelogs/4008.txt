@@ -1,8 +1,8 @@
-3.0.0 — calls, tags and number search
-• Two builds: Lite (no call log) and Full (adds a Calls tab that suggests numbers you called but never saved)
-• Search by number pattern: *36 ends with, 02* starts with, ?, commas, #tags and Lite/Full chips
-• Tags on numbers, with a Tags screen, a tag filter and tags in exports
-• Country-aware number matching: the same number in two countries is no longer treated as one
-• Import: Windows-1256 and Windows-1252 files, quoted-printable vCards, Excel files with prefixed XML, other sheets and leading zeros
-• Dedupe now shows a preview and can be undone; Move my data exports contacts, tags and ignored numbers in one file
-• Contacts and tags are no longer included in Google Drive backup
+3.0.0 — calls, tags, number search
+• Lite and Full builds; Full adds a Calls tab for numbers you called but never saved
+• Search by pattern: *36, 02*, ?, commas, #tags
+• Tags on numbers, a tag filter, tags in exports
+• The same number in two countries no longer matches as one
+• Import: Windows-1256/1252, vCard charsets, Excel prefixes and later sheets
+• Dedupe preview with undo; Move my data
+• Contacts and tags are left out of Google backup
