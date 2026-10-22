@@ -266,3 +266,10 @@ Failing test: new group in test/export_fields_test.dart (written, not run)
 Change: ExportOptions.includeTags (null means off for CSV, on for others); a Tags column after Groups and before contact_id (values joined with " ::: ") when someone has tags; vCard puts tags in CATEGORIES next to groups without repeating a name; JSON gets a tags list; EncodeJob carries a person-id to tag-names map so it still works in an isolate; the export screen builds that map from TagBook and shows an Include tags switch when any contact has tags.
 verify.sh: not run
 Risks / follow-ups: re-importing a CSV or XLSX puts a Tags column into the contact's groups (the importer maps the header to groups), not back into TagBook; there is no filter-by-tag in the export screen yet.
+
+Task: 4 (filter by tag)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: ContactList._passes and filtering are used by both workspaces; setFilter is called from many places in phone_home.dart and was left alone (the tag filter is a separate field so those calls keep it).
+Failing test: test/tag_filter_test.dart (written, not run)
+Change: ContactList.tagFilter and setTagFilter; a contact passes when any of its numbers has that tag; clearFilters also clears it; the phone workspace filter row shows one pill per tag before the group pills.
+verify.sh: not run
+Risks / follow-ups: the Files workspace (home.dart) has no tag pills yet; changing tags does not re-run the active tag filter until the list is refreshed (call setTagFilter again or resort); no per-row tag chips.

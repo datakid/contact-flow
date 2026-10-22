@@ -21,6 +21,7 @@ import 'search_extras.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'workspace.dart';
+import '../tags/tag_book.dart';
 
 class PhoneHome extends StatefulWidget {
   final ValueChanged<int> onTab;
@@ -548,6 +549,16 @@ class _PhoneHomeState extends State<PhoneHome> {
                 ),
               ),
             ],
+          for (final t in _tagNames(context)) ...[
+            gap(),
+            Pill(
+              key: ValueKey('tagfilter-$t'),
+              label: t,
+              icon: Icons.sell_outlined,
+              active: book.tagFilter == t,
+              onTap: () => book.setTagFilter(book.tagFilter == t ? null : t),
+            ),
+          ],
           for (final g in groups) ...[
             gap(),
             Pill(
@@ -564,6 +575,14 @@ class _PhoneHomeState extends State<PhoneHome> {
         ],
       ),
     );
+  }
+
+  List<String> _tagNames(BuildContext context) {
+    try {
+      return [for (final t in context.watch<TagBook>().tags) t.name];
+    } catch (_) {
+      return const [];
+    }
   }
 
   List<Widget> _numberPills(PhoneBook book, L l) {

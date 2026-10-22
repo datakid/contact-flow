@@ -64,6 +64,7 @@ abstract class ContactList extends ChangeNotifier {
   ListFilter filter = ListFilter.all;
   String? accountFilter;
   String? groupFilter;
+  String? tagFilter;
   bool _dirtyIndex = true;
   NumberStats? _numberStats;
   Timer? _debounce;
@@ -77,7 +78,10 @@ abstract class ContactList extends ChangeNotifier {
   bool get selecting => selected.isNotEmpty;
   int get phoneCount => _people.fold(0, (s, p) => s + p.phones.length);
   bool get filtering =>
-      filter != ListFilter.all || accountFilter != null || groupFilter != null;
+      filter != ListFilter.all ||
+      accountFilter != null ||
+      groupFilter != null ||
+      tagFilter != null;
 
   List<Person> get visible => searching
       ? [
@@ -133,6 +137,8 @@ abstract class ContactList extends ChangeNotifier {
       return false;
     }
     if (groupFilter != null && !p.groups.contains(groupFilter)) return false;
+    final tag = tagFilter;
+    if (tag != null && !(tagMatcher?.call(p, tag) ?? false)) return false;
     return true;
   }
 
@@ -180,7 +186,16 @@ abstract class ContactList extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearFilters() => setFilter(ListFilter.all);
+  void setTagFilter(String? tag) {
+    tagFilter = tag;
+    resort();
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    tagFilter = null;
+    setFilter(ListFilter.all);
+  }
 
   void setQuery(String q) {
     _query = q;
