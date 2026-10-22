@@ -273,3 +273,10 @@ Failing test: test/tag_filter_test.dart (written, not run)
 Change: ContactList.tagFilter and setTagFilter; a contact passes when any of its numbers has that tag; clearFilters also clears it; the phone workspace filter row shows one pill per tag before the group pills.
 verify.sh: not run
 Risks / follow-ups: the Files workspace (home.dart) has no tag pills yet; changing tags does not re-run the active tag filter until the list is refreshed (call setTagFilter again or resort); no per-row tag chips.
+
+Task: Phase 6 (release prep)  Status: PARTLY DONE, UNVERIFIED (branch: phase-1-7)
+Callers checked: appVersion is used by the Settings footer and test/version_test.dart, which compares it with pubspec.yaml.
+Failing test: test/version_test.dart should still pass (both say 3.0.0)
+Change: version 3.0.0+8 in pubspec.yaml and appVersion; CHANGELOG.md; What's new in 3.0.0 in the README; fastlane changelogs 8, 1008, 2008 and 4008 in English and Arabic; docs/QA.md with one line per feature (all NOT RUN) and a measurements table (all NOT MEASURED).
+verify.sh: not run
+Risks / follow-ups: the performance and APK size tables in the README were not updated because nothing could be measured; screenshots were not updated; QA.md has to be run on real phones for both builds. The version code 8 matches the draft F-Droid entry.
