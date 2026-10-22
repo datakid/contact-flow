@@ -172,6 +172,7 @@ const moreStrings = <String, Map<String, String>>{
     'tagsMoved': '{n} tags moved to match your country',
     'tagAdd': 'Tag',
     'tagPickTitle': 'Add a tag',
+    'includeTags': 'Include tags',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -346,6 +347,7 @@ const moreStrings = <String, Map<String, String>>{
     'tagsMoved': 'نُقل {n} من الوسوم لتطابق دولتك',
     'tagAdd': 'وسم',
     'tagPickTitle': 'إضافة وسم',
+    'includeTags': 'تضمين الوسوم',
   },
   'zh': {
     'aliases': '别名',
@@ -799,6 +801,7 @@ const moreStrings = <String, Map<String, String>>{
     'tagsMoved': '已调整 {n} 个标签以匹配你的国家',
     'tagAdd': '加标签',
     'tagPickTitle': '添加标签',
+    'includeTags': '包含标签',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1299,6 +1302,7 @@ const moreStrings = <String, Map<String, String>>{
     'tagsMoved': '{n} etiquetas ajustadas a tu país',
     'tagAdd': 'Etiquetar',
     'tagPickTitle': 'Añadir una etiqueta',
+    'includeTags': 'Incluir etiquetas',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1806,5 +1810,6 @@ const moreStrings = <String, Map<String, String>>{
     'tagsMoved': '{n} étiquettes ajustées à votre pays',
     'tagAdd': 'Étiqueter',
     'tagPickTitle': 'Ajouter une étiquette',
+    'includeTags': 'Inclure les étiquettes',
   },
 };

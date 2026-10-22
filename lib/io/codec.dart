@@ -59,6 +59,7 @@ class ExportOptions {
   final bool includeAliases;
   final bool? includeTitle;
   final bool? includeGroups;
+  final bool? includeTags;
 
   const ExportOptions({
     this.header = true,
@@ -73,11 +74,14 @@ class ExportOptions {
     this.includeAliases = true,
     this.includeTitle,
     this.includeGroups,
+    this.includeTags,
   });
 
   bool titleFor(Format f) => includeTitle ?? f != Format.csv;
 
   bool groupsFor(Format f) => includeGroups ?? f != Format.csv;
+
+  bool tagsFor(Format f) => includeTags ?? f != Format.csv;
 
   ExportOptions copyWith({
     bool? header,
@@ -92,6 +96,7 @@ class ExportOptions {
     bool? includeAliases,
     bool? includeTitle,
     bool? includeGroups,
+    bool? includeTags,
   }) => ExportOptions(
     header: header ?? this.header,
     includeEmail: includeEmail ?? this.includeEmail,
@@ -105,6 +110,7 @@ class ExportOptions {
     includeAliases: includeAliases ?? this.includeAliases,
     includeTitle: includeTitle ?? this.includeTitle,
     includeGroups: includeGroups ?? this.includeGroups,
+    includeTags: includeTags ?? this.includeTags,
   );
 }
 
@@ -668,6 +674,7 @@ class Codec {
     ExportOptions o, {
     List<String>? headers,
     Format format = Format.xlsx,
+    Map<String, List<String>>? tags,
   }) {
     final maxPhones = o.allNumbers
         ? people.fold<int>(
@@ -686,6 +693,9 @@ class Codec {
     final withTitle = o.titleFor(format) && people.any((p) => p.jobTitle.isNotEmpty);
     final withGroups =
         o.groupsFor(format) && people.any((p) => p.groups.isNotEmpty);
+    final withTags =
+        o.tagsFor(format) &&
+        people.any((p) => (tags?[p.id] ?? const <String>[]).isNotEmpty);
     final h = <String>[
       headers?[0] ?? 'Name',
       for (var i = 0; i < maxPhones; i++)
@@ -704,6 +714,8 @@ class Codec {
         (headers != null && headers.length > 5 ? headers[5] : 'Alias'),
       if (withGroups)
         (headers != null && headers.length > 7 ? headers[7] : 'Groups'),
+      if (withTags)
+        (headers != null && headers.length > 8 ? headers[8] : 'Tags'),
       if (withId) 'contact_id',
     ];
     final rows = <List<String>>[if (o.header) h];
@@ -723,6 +735,7 @@ class Codec {
         if (o.includeNote) p.note,
         if (withAlias) Aliases.join(p.cleanAliases),
         if (withGroups) p.groups.join(' ::: '),
+        if (withTags) (tags?[p.id] ?? const <String>[]).join(' ::: '),
         if (withId) p.phoneId ?? '',
       ]);
     }
@@ -802,10 +815,11 @@ class Codec {
     Format f,
     ExportOptions o, {
     List<String>? headers,
+    Map<String, List<String>>? tags,
   }) {
     switch (f) {
       case Format.csv:
-        final rows = table(people, o, headers: headers, format: f);
+        final rows = table(people, o, headers: headers, format: f, tags: tags);
         final s = rows.map((r) => r.map(_csvCell).join(',')).join('\r\n');
         return Uint8List.fromList([0xEF, 0xBB, 0xBF, ...utf8.encode('$s\r\n')]);
       case Format.vcf:
@@ -818,7 +832,12 @@ class Codec {
                 emails: o.includeEmail ? p.emails : [],
                 org: o.includeOrg ? p.org : '',
                 jobTitle: p.jobTitle,
-                groups: o.groupsFor(Format.vcf) ? p.groups : [],
+                groups: [
+                  if (o.groupsFor(Format.vcf)) ...p.groups,
+                  if (o.tagsFor(Format.vcf))
+                    for (final t in tags?[p.id] ?? const <String>[])
+                      if (!p.groups.contains(t)) t,
+                ],
                 note: o.includeNote ? p.note : '',
                 aliases: o.includeAliases ? p.cleanAliases : [],
               ),
@@ -832,7 +851,7 @@ class Codec {
       case Format.xlsx:
       case Format.numbers:
         return Xlsx.write(
-          table(people, o, headers: headers, format: f),
+          table(people, o, headers: headers, format: f, tags: tags),
           rtl: o.rtl,
         );
       case Format.txt:
@@ -871,6 +890,9 @@ class Codec {
                   'job_title': p.jobTitle,
                 if (o.groupsFor(Format.json) && p.groups.isNotEmpty)
                   'groups': p.groups,
+                if (o.tagsFor(Format.json) &&
+                    (tags?[p.id] ?? const <String>[]).isNotEmpty)
+                  'tags': tags![p.id],
                 if (o.includeNote && p.note.isNotEmpty) 'note': p.note,
                 if (o.includeAliases && p.cleanAliases.isNotEmpty)
                   'aliases': p.cleanAliases,

@@ -86,4 +86,73 @@ void main() {
     expect(ann.jobTitle, 'Engineer');
     expect(ann.groups, ['Work', 'VIP']);
   });
+
+  group('tags', () {
+    final tags = {
+      people[0].id: ['Work', 'VIP'],
+    };
+
+    test('CSV leaves tags out by default and can include them', () {
+      final off = Codec.table(
+        people,
+        const ExportOptions(),
+        format: Format.csv,
+        tags: tags,
+      );
+      expect(off.first, isNot(contains('Tags')));
+      final on = Codec.table(
+        people,
+        const ExportOptions(includeTags: true),
+        format: Format.csv,
+        tags: tags,
+      );
+      expect(on.first, contains('Tags'));
+      expect(on[1].last, 'Work ::: VIP');
+    });
+
+    test('XLSX includes a Tags column by default', () {
+      final rows = Codec.table(people, const ExportOptions(), tags: tags);
+      expect(rows.first, contains('Tags'));
+    });
+
+    test('no Tags column when nobody has tags', () {
+      final rows = Codec.table(people, const ExportOptions(), tags: const {});
+      expect(rows.first, isNot(contains('Tags')));
+      final none = Codec.table(people, const ExportOptions());
+      expect(none.first, isNot(contains('Tags')));
+    });
+
+    test('contact_id stays last with tags present', () {
+      final withId = [people[0]..phoneId = '7'];
+      final rows = Codec.table(
+        withId,
+        const ExportOptions(contactId: true),
+        tags: tags,
+      );
+      expect(rows.first.last, 'contact_id');
+    });
+
+    test('vCard puts tags in CATEGORIES without repeating a group', () {
+      final withGroup = [
+        people[0].copy()..groups = ['Work'],
+      ];
+      final text = utf8.decode(
+        Codec.encode(
+          withGroup,
+          Format.vcf,
+          const ExportOptions(),
+          tags: {withGroup[0].id: ['Work', 'VIP']},
+        ),
+      );
+      expect(text, contains('CATEGORIES:Work,VIP'));
+    });
+
+    test('JSON carries tags', () {
+      final text = utf8.decode(
+        Codec.encode(people, Format.json, const ExportOptions(), tags: tags),
+      );
+      final first = (jsonDecode(text)['contacts'] as List).first as Map;
+      expect(first['tags'], ['Work', 'VIP']);
+    });
+  });
 }

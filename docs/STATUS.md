@@ -259,3 +259,10 @@ Failing test: test/number_tags_test.dart (create and assign, pick and remove, hi
 Change: lib/ui/number_tags.dart is a card on the phone contact detail with, for every number, its tag chips (tap the x to remove) and a Tag button that opens a picker of the tags not yet on that number plus New tag. Two new strings in five languages.
 verify.sh: not run
 Risks / follow-ups: the Files workspace detail (detail.dart) has no tag card yet; tag chips are not shown in list rows; the filter-by-tag chip row and tags in export are not built.
+
+Task: 4 (tags in export)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: Codec.table and Codec.encode (export screen preview, export run, EncodeJob), ExportOptions.
+Failing test: new group in test/export_fields_test.dart (written, not run)
+Change: ExportOptions.includeTags (null means off for CSV, on for others); a Tags column after Groups and before contact_id (values joined with " ::: ") when someone has tags; vCard puts tags in CATEGORIES next to groups without repeating a name; JSON gets a tags list; EncodeJob carries a person-id to tag-names map so it still works in an isolate; the export screen builds that map from TagBook and shows an Include tags switch when any contact has tags.
+verify.sh: not run
+Risks / follow-ups: re-importing a CSV or XLSX puts a Tags column into the contact's groups (the importer maps the header to groups), not back into TagBook; there is no filter-by-tag in the export screen yet.

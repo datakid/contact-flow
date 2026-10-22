@@ -12,7 +12,14 @@ class EncodeJob {
   final Format format;
   final ExportOptions options;
   final List<String>? headers;
-  const EncodeJob(this.people, this.format, this.options, this.headers);
+  final Map<String, List<String>>? tags;
+  const EncodeJob(
+    this.people,
+    this.format,
+    this.options,
+    this.headers, [
+    this.tags,
+  ]);
 }
 
 class DecodeJob {
@@ -22,7 +29,7 @@ class DecodeJob {
 }
 
 Uint8List runEncode(EncodeJob j) =>
-    Codec.encode(j.people, j.format, j.options, headers: j.headers);
+    Codec.encode(j.people, j.format, j.options, headers: j.headers, tags: j.tags);
 
 ImportResult runDecode(DecodeJob j) => Codec.decode(j.name, j.bytes);
 
