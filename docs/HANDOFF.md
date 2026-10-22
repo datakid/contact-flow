@@ -37,9 +37,9 @@ The plan is in docs/PLAN.md. Everything below was written in a sandbox with no F
 - 1.4: files over 64 MiB show the existing unreadable text; the plan asked for decode inside the isolate rather than reading bytes on the main isolate first.
 - Phase 2 except 2.6 (design tokens, navigation, lists, import review redesign, goldens, Noto test fonts).
 - Phase 3 UI and speed: NumberQuery and PatternSearch are wired into ContactList (wildcards, tags as group names, OR, digit mode). Still to do: the chips and help sheet, recent searches, Save as smart filter, highlighting matched digits, the precomputed per-number index off the UI thread, and the speed tests.
-- Phase 4: the data layer (lib/tags, TagBook, tests) and a Tags management screen with a Settings row exist. Still to do: putting a tag on a number from a contact or call detail, tag chips on rows, a filter-by-tag chip row, tags in exports, and importing tags from Google labels or vCard CATEGORIES.
+- Phase 4: the data layer (lib/tags, TagBook, tests), a Tags management screen, tag chips on numbers in the phone contact detail, a tag filter in the phone workspace and tags in exports exist. Still to do: the same tag card and filter in the Files workspace, tag chips on list rows, importing tags into TagBook from Google labels or vCard CATEGORIES (they currently import as groups).
 - Phase 5: the flavors, call-log reader, call grouping, filters, selection, ignore list, naming, the controller, a first Calls tab screen and Move my data exist with tests. Still to do: swipe gestures, call detail, creating a new tag from the tag-only action, RTL and narrow-screen checks, and the 500-create timing test.
-- Phase 6 release work: not started.
+- Phase 6: version 3.0.0+8, CHANGELOG.md, README What's new, store changelogs and docs/QA.md are written. Still to do: run QA.md on real phones for both builds, update the performance and APK size tables and screenshots with measured values.
 
 ## Decisions that were taken without the owner
 
