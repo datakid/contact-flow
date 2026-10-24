@@ -173,6 +173,9 @@ const moreStrings = <String, Map<String, String>>{
     'tagAdd': 'Tag',
     'tagPickTitle': 'Add a tag',
     'includeTags': 'Include tags',
+    'saveSearch': 'Save this search',
+    'unsaveSearch': 'Remove saved search',
+    'clearRecent': 'Clear recent',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -348,6 +351,9 @@ const moreStrings = <String, Map<String, String>>{
     'tagAdd': 'وسم',
     'tagPickTitle': 'إضافة وسم',
     'includeTags': 'تضمين الوسوم',
+    'saveSearch': 'حفظ هذا البحث',
+    'unsaveSearch': 'إزالة البحث المحفوظ',
+    'clearRecent': 'مسح الأخيرة',
   },
   'zh': {
     'aliases': '别名',
@@ -802,6 +808,9 @@ const moreStrings = <String, Map<String, String>>{
     'tagAdd': '加标签',
     'tagPickTitle': '添加标签',
     'includeTags': '包含标签',
+    'saveSearch': '保存此搜索',
+    'unsaveSearch': '移除已保存的搜索',
+    'clearRecent': '清除最近搜索',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1303,6 +1312,9 @@ const moreStrings = <String, Map<String, String>>{
     'tagAdd': 'Etiquetar',
     'tagPickTitle': 'Añadir una etiqueta',
     'includeTags': 'Incluir etiquetas',
+    'saveSearch': 'Guardar esta búsqueda',
+    'unsaveSearch': 'Quitar búsqueda guardada',
+    'clearRecent': 'Borrar recientes',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1811,5 +1823,8 @@ const moreStrings = <String, Map<String, String>>{
     'tagAdd': 'Étiqueter',
     'tagPickTitle': 'Ajouter une étiquette',
     'includeTags': 'Inclure les étiquettes',
+    'saveSearch': 'Enregistrer cette recherche',
+    'unsaveSearch': 'Retirer la recherche enregistrée',
+    'clearRecent': 'Effacer les récentes',
   },
 };

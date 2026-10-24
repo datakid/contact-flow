@@ -53,6 +53,8 @@ class AppState extends ContactList {
   ThemeMode themeMode = ThemeMode.system;
   String lang = 'en';
   String country = '';
+  List<String> recent = [];
+  List<String> saved = [];
   String region = '';
   bool get needsRegionPick => country.isNotEmpty && region.isEmpty;
   bool ready = false;
@@ -80,6 +82,8 @@ class AppState extends ContactList {
     sortLang = lang;
     country = prefs.getString('country') ?? '';
     region = prefs.getString('region') ?? '';
+    recent = prefs.getStringList('recentSearches') ?? [];
+    saved = prefs.getStringList('savedSearches') ?? [];
     if (region.isEmpty && country.isNotEmpty) {
       final r = PhoneKey.uniqueRegionForCode(country);
       if (r != null) {
@@ -159,6 +163,46 @@ class AppState extends ContactList {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('country', country);
     if (r != null) await prefs.setString('region', region);
+  }
+
+  Future<void> rememberSearch(String q) async {
+    final t = q.trim();
+    if (t.length < 2 || saved.contains(t)) return;
+    recent = [t, ...recent.where((e) => e != t)].take(10).toList();
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setStringList(
+      'recentSearches',
+      recent,
+    );
+  }
+
+  Future<void> forgetRecent() async {
+    recent = [];
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setStringList(
+      'recentSearches',
+      recent,
+    );
+  }
+
+  Future<void> saveSearch(String q) async {
+    final t = q.trim();
+    if (t.isEmpty || saved.contains(t)) return;
+    saved = [t, ...saved].take(20).toList();
+    recent = recent.where((e) => e != t).toList();
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('savedSearches', saved);
+    await prefs.setStringList('recentSearches', recent);
+  }
+
+  Future<void> unsaveSearch(String q) async {
+    saved = saved.where((e) => e != q).toList();
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setStringList(
+      'savedSearches',
+      saved,
+    );
   }
 
   Future<void> setRegion(String iso) async {

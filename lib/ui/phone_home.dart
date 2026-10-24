@@ -123,6 +123,20 @@ class _PhoneHomeState extends State<PhoneHome> {
                     SliverToBoxAdapter(child: _queueBanner(l, p)),
                     if (!book.searching)
                       SliverToBoxAdapter(child: _filters(book, l, p)),
+                    if (!book.searching && _focus.hasFocus)
+                      SliverToBoxAdapter(
+                        child: RecentSearchChips(
+                          onPick: (q) {
+                            _search.text = q;
+                            _search.selection = TextSelection.collapsed(
+                              offset: q.length,
+                            );
+                            book.setQuery(q);
+                          },
+                        ),
+                      ),
+                    if (book.searching)
+                      SliverToBoxAdapter(child: SaveSearchButton(list: book)),
                     if (book.searching)
                       SliverToBoxAdapter(child: DigitModeChips(list: book)),
                     if (book.searching || book.filtering)
@@ -392,7 +406,10 @@ class _PhoneHomeState extends State<PhoneHome> {
                   focusNode: _focus,
                   onChanged: book.setQuery,
                   textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _focus.unfocus(),
+                  onSubmitted: (v) {
+                    context.read<AppState>().rememberSearch(v);
+                    _focus.unfocus();
+                  },
                   autocorrect: false,
                   enableSuggestions: false,
                   textAlignVertical: TextAlignVertical.center,

@@ -101,6 +101,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (!s.searching)
                       SliverToBoxAdapter(child: _sortRow(s, l, p)),
                     SliverToBoxAdapter(child: TagFilterRow(list: s)),
+                    if (!s.searching && _focus.hasFocus)
+                      SliverToBoxAdapter(
+                        child: RecentSearchChips(
+                          onPick: (q) {
+                            _search.text = q;
+                            _search.selection = TextSelection.collapsed(
+                              offset: q.length,
+                            );
+                            s.setQuery(q);
+                          },
+                        ),
+                      ),
+                    if (s.searching)
+                      SliverToBoxAdapter(child: SaveSearchButton(list: s)),
                     if (s.searching)
                       SliverToBoxAdapter(child: DigitModeChips(list: s)),
                     if (s.searching)
@@ -277,7 +291,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   enabled: enabled,
                   onChanged: s.setQuery,
                   textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _focus.unfocus(),
+                  onSubmitted: (v) {
+                    s.rememberSearch(v);
+                    _focus.unfocus();
+                  },
                   autocorrect: false,
                   enableSuggestions: false,
                   textAlignVertical: TextAlignVertical.center,

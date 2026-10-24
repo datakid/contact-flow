@@ -7,6 +7,7 @@ import 'theme.dart';
 import 'package:provider/provider.dart';
 import '../tags/tag_book.dart';
 import 'widgets.dart';
+import '../state/app_state.dart';
 
 class DigitModeChips extends StatelessWidget {
   final ContactList list;
@@ -132,6 +133,81 @@ class TagFilterRow extends StatelessWidget {
             const SizedBox(width: 8),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class RecentSearchChips extends StatelessWidget {
+  final ValueChanged<String> onPick;
+  const RecentSearchChips({super.key, required this.onPick});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    if (app.recent.isEmpty && app.saved.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final l = L.of(context);
+    final p = context.pal;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final q in app.saved)
+            InputChip(
+              key: ValueKey('saved-$q'),
+              avatar: Icon(Icons.push_pin_rounded, size: 16, color: p.accent),
+              label: Text(q, textDirection: TextDirection.ltr),
+              onPressed: () => onPick(q),
+              onDeleted: () => app.unsaveSearch(q),
+              deleteButtonTooltipMessage: l.t('unsaveSearch'),
+            ),
+          for (final q in app.recent)
+            ActionChip(
+              key: ValueKey('recent-$q'),
+              avatar: Icon(Icons.history_rounded, size: 16, color: p.inkFaint),
+              label: Text(q, textDirection: TextDirection.ltr),
+              onPressed: () => onPick(q),
+            ),
+          if (app.recent.isNotEmpty)
+            TextButton(
+              key: const ValueKey('recent-clear'),
+              onPressed: app.forgetRecent,
+              child: Text(l.t('clearRecent')),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class SaveSearchButton extends StatelessWidget {
+  final ContactList list;
+  const SaveSearchButton({super.key, required this.list});
+
+  @override
+  Widget build(BuildContext context) {
+    final q = list.query.trim();
+    if (q.isEmpty || !NumberQuery.parse(q).isPattern) {
+      return const SizedBox.shrink();
+    }
+    final app = context.watch<AppState>();
+    if (app.saved.contains(q)) return const SizedBox.shrink();
+    final l = L.of(context);
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+        child: TextButton.icon(
+          key: const ValueKey('save-search'),
+          onPressed: () => app.saveSearch(q),
+          icon: const Icon(Icons.push_pin_outlined, size: 18),
+          label: Text(l.t('saveSearch')),
+        ),
       ),
     );
   }

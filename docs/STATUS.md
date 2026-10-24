@@ -287,3 +287,10 @@ Failing test: test/tag_filter_ui_test.dart (written, not run)
 Change: the Files workspace now has a scrolling row of tag pills under the search bar (TagFilterRow, hidden when there are no tags) and the same per-number tag card as the phone workspace in its contact detail.
 verify.sh: not run
 Risks / follow-ups: the phone workspace still has its own inline tag pills inside its filter row; the two could share TagFilterRow later.
+
+Task: 3 (recent and saved searches)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: both search fields (home.dart and phone_home.dart) call setQuery from onChanged; onSubmitted is the only place that remembers a search.
+Failing test: test/recent_searches_test.dart (state and widgets; written, not run)
+Change: AppState keeps up to ten recent searches (two characters or more, newest first, no repeats) and up to twenty saved searches (pinned), both in SharedPreferences; RecentSearchChips shows saved (with a remove cross) and recent chips under the search bar when it is focused and empty, plus a Clear recent button; SaveSearchButton appears next to the results when the query is a number pattern or #tag and pins it. Three new strings in five languages.
+verify.sh: not run
+Risks / follow-ups: saved searches are plain query text rather than structured filters, so they re-run through the same parser; no highlight of matched digits in rows yet.
