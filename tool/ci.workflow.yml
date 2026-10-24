@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.35.4
+          channel: stable
+          cache: true
+      - run: flutter config --no-analytics
+      - run: flutter pub get --enforce-lockfile
+      - run: tool/verify.sh
+      - run: flutter build apk --debug --flavor lite
+      - run: flutter build apk --debug --flavor full --dart-define=CALLS=true
+      - run: tool/check_permissions.sh
+      - run: flutter build web

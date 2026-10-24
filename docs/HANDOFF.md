@@ -2,6 +2,10 @@
 
 The plan is in docs/PLAN.md. Everything below was written in a sandbox with no Flutter, Dart or Kotlin compiler and no push access. Nothing has been compiled, analysed or run. Treat every change as a draft that has to be proven by tool/verify.sh. docs/STATUS.md has one report per task with the exact tests that were written.
 
+## CI workflow
+
+The GitHub token used to push these branches could not write workflow files, so the CI workflow is stored as tool/ci.workflow.yml instead of .github/workflows/ci.yml. Copy it into .github/workflows/ci.yml (the GitHub web editor or any token with the workflow scope can do that). Until then nothing runs in CI.
+
 ## Branches
 
 - phase-1 starts at 2c38c77 and holds tasks 0.3, 0.4, 1.1, 1.2, 1.3, 1.4, 1.6, 1.8, 1.9, 1.10, 1.11, 1.12, 1.14, 1.16, 1.17(b)(c), 1.18, 1.19, 1.20.
