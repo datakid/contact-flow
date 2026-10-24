@@ -280,3 +280,10 @@ Failing test: test/version_test.dart should still pass (both say 3.0.0)
 Change: version 3.0.0+8 in pubspec.yaml and appVersion; CHANGELOG.md; What's new in 3.0.0 in the README; fastlane changelogs 8, 1008, 2008 and 4008 in English and Arabic; docs/QA.md with one line per feature (all NOT RUN) and a measurements table (all NOT MEASURED).
 verify.sh: not run
 Risks / follow-ups: the performance and APK size tables in the README were not updated because nothing could be measured; screenshots were not updated; QA.md has to be run on real phones for both builds. The version code 8 matches the draft F-Droid entry.
+
+Task: 4 (Files workspace tags)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: HomeScreen builds its list slivers in one place; detail.dart has one detail screen.
+Failing test: test/tag_filter_ui_test.dart (written, not run)
+Change: the Files workspace now has a scrolling row of tag pills under the search bar (TagFilterRow, hidden when there are no tags) and the same per-number tag card as the phone workspace in its contact detail.
+verify.sh: not run
+Risks / follow-ups: the phone workspace still has its own inline tag pills inside its filter row; the two could share TagFilterRow later.

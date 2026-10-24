@@ -10,6 +10,7 @@ import 'edit_screen.dart';
 import 'export_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'number_tags.dart';
 
 Future<void> showDetail(BuildContext context, Person person) {
   return showModalBottomSheet(
@@ -122,6 +123,7 @@ class _Detail extends StatelessWidget {
               ],
             ),
           ),
+          NumberTags(person: person),
           const SizedBox(height: 18),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),

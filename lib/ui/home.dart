@@ -100,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   else ...[
                     if (!s.searching)
                       SliverToBoxAdapter(child: _sortRow(s, l, p)),
+                    SliverToBoxAdapter(child: TagFilterRow(list: s)),
                     if (s.searching)
                       SliverToBoxAdapter(child: DigitModeChips(list: s)),
                     if (s.searching)

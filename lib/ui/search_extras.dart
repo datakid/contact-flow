@@ -4,6 +4,9 @@ import '../l10n.dart';
 import '../search/number_pattern.dart';
 import '../state/contact_list.dart';
 import 'theme.dart';
+import 'package:provider/provider.dart';
+import '../tags/tag_book.dart';
+import 'widgets.dart';
 
 class DigitModeChips extends StatelessWidget {
   final ContactList list;
@@ -98,3 +101,39 @@ class SearchHelpButton extends StatelessWidget {
     );
   }
 }
+
+class TagFilterRow extends StatelessWidget {
+  final ContactList list;
+  const TagFilterRow({super.key, required this.list});
+
+  @override
+  Widget build(BuildContext context) {
+    List<String> names;
+    try {
+      names = [for (final t in context.watch<TagBook>().tags) t.name];
+    } catch (_) {
+      names = const [];
+    }
+    if (names.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+        children: [
+          for (final t in names) ...[
+            Pill(
+              key: ValueKey('tagfilter-$t'),
+              label: t,
+              icon: Icons.sell_outlined,
+              active: list.tagFilter == t,
+              onTap: () => list.setTagFilter(list.tagFilter == t ? null : t),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
