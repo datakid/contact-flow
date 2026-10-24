@@ -22,6 +22,10 @@ class DigitModeChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(listenable: list, builder: _build);
+  }
+
+  Widget _build(BuildContext context, Widget? _) {
     if (!NumberQuery.parse(list.query).digitsOnly) {
       return const SizedBox.shrink();
     }
@@ -191,25 +195,29 @@ class SaveSearchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final q = list.query.trim();
-    if (q.isEmpty || !NumberQuery.parse(q).isPattern) {
-      return const SizedBox.shrink();
-    }
-    final app = context.watch<AppState>();
-    if (app.saved.contains(q)) return const SizedBox.shrink();
-    final l = L.of(context);
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-        child: TextButton.icon(
-          key: const ValueKey('save-search'),
-          onPressed: () => app.saveSearch(q),
-          icon: const Icon(Icons.push_pin_outlined, size: 18),
-          label: Text(l.t('saveSearch')),
-        ),
-      ),
+    final app = context.read<AppState>();
+    return ListenableBuilder(
+      listenable: Listenable.merge([list, app]),
+      builder: (context, _) {
+        final q = list.query.trim();
+        if (q.isEmpty || !NumberQuery.parse(q).isPattern) {
+          return const SizedBox.shrink();
+        }
+        if (app.saved.contains(q)) return const SizedBox.shrink();
+        final l = L.of(context);
+        return Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: TextButton.icon(
+              key: const ValueKey('save-search'),
+              onPressed: () => app.saveSearch(q),
+              icon: const Icon(Icons.push_pin_outlined, size: 18),
+              label: Text(l.t('saveSearch')),
+            ),
+          ),
+        );
+      },
     );
   }
 }
-
