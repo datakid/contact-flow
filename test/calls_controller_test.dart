@@ -209,7 +209,7 @@ void main() {
       call('+971501234567', days: 3),
     ]);
     await h.c.start();
-    final g = h.c.all.firstWhere((x) => x.number.contains('501234567') && x.number.startsWith('0') || x.number == '+966501234567');
+    final g = h.c.all.firstWhere((x) => x.count == 2);
     final history = h.c.historyOf(g);
     expect(history.length, 2);
     expect(history.first.dateMs > history.last.dateMs, isTrue);
