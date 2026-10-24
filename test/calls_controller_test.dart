@@ -201,6 +201,28 @@ void main() {
     expect(h.c.all.length, 3);
   });
 
+  test('history lists every call of a number newest first', () async {
+    final h = Harness([
+      call('+966501234567', days: 5),
+      call('0501234567', days: 1),
+      call('+966559876543', days: 2),
+      call('+971501234567', days: 3),
+    ]);
+    await h.c.start();
+    final g = h.c.all.firstWhere((x) => x.number.contains('501234567') && x.number.startsWith('0') || x.number == '+966501234567');
+    final history = h.c.historyOf(g);
+    expect(history.length, 2);
+    expect(history.first.dateMs > history.last.dateMs, isTrue);
+  });
+
+  test('history does not mix the same national number of another country', () async {
+    final h = Harness([call('+966501234567'), call('+971501234567')]);
+    await h.c.start();
+    for (final g in h.c.all) {
+      expect(h.c.historyOf(g).length, 1);
+    }
+  });
+
   test('a pattern filter can use tags', () async {
     final h = Harness(calls);
     await h.c.start();

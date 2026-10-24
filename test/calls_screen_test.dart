@@ -132,4 +132,51 @@ void main() {
     );
     expect(find.textContaining('Saved 1'), findsOneWidget);
   });
+
+  testWidgets('swiping right selects and swiping left excludes', (t) async {
+    final (rig, ignore) = await started(t);
+    await t.pumpWidget(app(rig, ignore, FakeCallSource(records)));
+    await t.pumpAndSettle();
+
+    final row = find.ancestor(
+      of: find.textContaining('+966511100003'),
+      matching: find.byType(Dismissible),
+    );
+    await t.drag(row, const Offset(500, 0));
+    await t.pumpAndSettle();
+    expect(find.text('1 selected · 0 excluded'), findsOneWidget);
+    expect(find.textContaining('+966511100003'), findsOneWidget);
+
+    await t.drag(row, const Offset(-500, 0));
+    await t.pumpAndSettle();
+    expect(find.text('0 selected · 1 excluded'), findsOneWidget);
+  });
+
+  testWidgets('long press shows the call history with actions', (t) async {
+    final (rig, ignore) = await started(t);
+    await t.pumpWidget(app(rig, ignore, FakeCallSource(records)));
+    await t.pumpAndSettle();
+
+    await t.longPress(find.textContaining('+966511100001'));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('call-history')), findsOneWidget);
+    expect(find.text(en.t('callIn')), findsNWidgets(2));
+
+    await t.tap(find.byKey(const ValueKey('detail-include')));
+    await t.pumpAndSettle();
+    expect(find.text('1 selected · 0 excluded'), findsOneWidget);
+  });
+
+  testWidgets('never suggest from the detail removes the number', (t) async {
+    final (rig, ignore) = await started(t);
+    await t.pumpWidget(app(rig, ignore, FakeCallSource(records)));
+    await t.pumpAndSettle();
+
+    await t.longPress(find.textContaining('+966511100003'));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('detail-never')));
+    await t.pumpAndSettle();
+    expect(find.textContaining('+966511100003'), findsNothing);
+    expect(ignore.keys.length, 1);
+  });
 }

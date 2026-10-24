@@ -294,3 +294,10 @@ Failing test: test/recent_searches_test.dart (state and widgets; written, not ru
 Change: AppState keeps up to ten recent searches (two characters or more, newest first, no repeats) and up to twenty saved searches (pinned), both in SharedPreferences; RecentSearchChips shows saved (with a remove cross) and recent chips under the search bar when it is focused and empty, plus a Clear recent button; SaveSearchButton appears next to the results when the query is a number pattern or #tag and pins it. Three new strings in five languages.
 verify.sh: not run
 Risks / follow-ups: saved searches are plain query text rather than structured filters, so they re-run through the same parser; no highlight of matched digits in rows yet.
+
+Task: 5 (swipe and call detail)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: CallsScreen._row is the only row builder; CallsController keeps the raw records.
+Failing test: new cases in test/calls_screen_test.dart (swipe right and left, long press history, never suggest from the detail) and test/calls_controller_test.dart (historyOf), written, not run
+Change: rows are Dismissible (right selects, left excludes, the row stays in the list); long press opens a sheet with the call history of that number (type, date and time, duration) and Select, Exclude and Never suggest; CallsController.historyOf lists up to 100 calls of one number newest first without mixing countries. Nine new strings in five languages.
+verify.sh: not run
+Risks / follow-ups: the swipe uses confirmDismiss returning false, so the Dismissible only animates back; if Flutter's drag threshold needs a larger drag in the test, raise the offset.

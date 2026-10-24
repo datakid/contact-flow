@@ -157,9 +157,10 @@ class _CallsScreenState extends State<CallsScreen> {
     final on = c.selection.isIncluded(g.key);
     final out = c.selection.isExcluded(g.key);
     final title = g.cachedName.isNotEmpty ? g.cachedName : g.number;
-    return ListTile(
+    final tile = ListTile(
       key: ValueKey('call-${g.key}'),
       onTap: () => c.toggle(g),
+      onLongPress: () => _detail(g, l),
       leading: Icon(
         on
             ? Icons.check_circle_rounded
@@ -202,6 +203,141 @@ class _CallsScreenState extends State<CallsScreen> {
           PopupMenuItem(value: 'exclude', child: Text(l.t('callsExclude'))),
           PopupMenuItem(value: 'never', child: Text(l.t('callsNever'))),
         ],
+      ),
+    );
+    return Dismissible(
+      key: ValueKey('swipe-${g.key}'),
+      confirmDismiss: (dir) async {
+        if (dir == DismissDirection.startToEnd) {
+          c.include(g);
+        } else {
+          c.exclude(g);
+        }
+        return false;
+      },
+      background: Container(
+        color: p.accent.withValues(alpha: 0.18),
+        alignment: AlignmentDirectional.centerStart,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Icon(Icons.check_circle_rounded, color: p.accent),
+      ),
+      secondaryBackground: Container(
+        color: p.inkFaint.withValues(alpha: 0.18),
+        alignment: AlignmentDirectional.centerEnd,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Icon(Icons.block_rounded, color: p.inkSoft),
+      ),
+      child: tile,
+    );
+  }
+
+  static String _clock(int ms) {
+    final d = DateTime.fromMillisecondsSinceEpoch(ms);
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${_date(ms)} ${two(d.hour)}:${two(d.minute)}';
+  }
+
+  static String _duration(int secs) {
+    if (secs <= 0) return '0:00';
+    final m = secs ~/ 60;
+    final s = secs % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
+  }
+
+  static String _typeKey(CallType t) => switch (t) {
+    CallType.incoming => 'callIn',
+    CallType.outgoing => 'callOut',
+    CallType.missed => 'callMissed',
+    CallType.rejected => 'callRejected',
+    CallType.voicemail => 'callVoicemail',
+    CallType.blocked => 'callBlocked',
+    CallType.other => 'callOther',
+  };
+
+  Future<void> _detail(CallGroup g, L l) async {
+    final c = _c!;
+    final history = c.historyOf(g);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
+                child: Text(
+                  g.cachedName.isNotEmpty ? g.cachedName : g.number,
+                  textDirection: TextDirection.ltr,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Text(
+                  '${l.n(g.count, 'calls_one', 'calls_many')} · '
+                  '${l.t('callsTalked', {'t': _duration(g.talkSec)})}',
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  key: const ValueKey('call-history'),
+                  shrinkWrap: true,
+                  itemCount: history.length,
+                  itemBuilder: (_, i) {
+                    final h = history[i];
+                    return ListTile(
+                      dense: true,
+                      title: Text(l.t(_typeKey(h.type))),
+                      subtitle: Text(_clock(h.dateMs)),
+                      trailing: Text(_duration(h.durationSec)),
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      key: const ValueKey('detail-include'),
+                      onPressed: () {
+                        c.include(g);
+                        Navigator.of(ctx).pop();
+                      },
+                      child: Text(l.t('callsInclude')),
+                    ),
+                    TextButton(
+                      key: const ValueKey('detail-exclude'),
+                      onPressed: () {
+                        c.exclude(g);
+                        Navigator.of(ctx).pop();
+                      },
+                      child: Text(l.t('callsExclude')),
+                    ),
+                    TextButton(
+                      key: const ValueKey('detail-never'),
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        await c.ignoreNumbers([g]);
+                      },
+                      child: Text(l.t('callsNever')),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

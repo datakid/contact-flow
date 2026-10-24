@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../domain/phone_dupes.dart';
 import '../models/person.dart';
+import '../phone/phone_key.dart';
 import '../tags/tag_book.dart';
 import 'call_filter.dart';
 import 'call_grouper.dart';
@@ -101,6 +102,18 @@ class CallsController extends ChangeNotifier {
       phase = CallsPhase.error;
     }
     notifyListeners();
+  }
+
+  List<CallRecord> historyOf(CallGroup g, {int limit = 100}) {
+    final key = PhoneKey.key(g.number);
+    final out = [
+      for (final c in _records)
+        if (!c.hiddenNumber &&
+            PhoneKey.key(c.number) == key &&
+            PhoneKey.compatible(c.number, g.number))
+          c,
+    ]..sort((a, b) => b.dateMs.compareTo(a.dateMs));
+    return out.take(limit).toList();
   }
 
   void _regroup() {
