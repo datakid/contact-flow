@@ -19,6 +19,7 @@ import '../services/incoming_read.dart';
 import '../tags/tag_book.dart';
 import 'ignored_sheet.dart';
 import 'tags_screen.dart';
+import 'group_tags_sheet.dart';
 
 const appVersion = '3.0.0';
 
@@ -151,8 +152,16 @@ class _Settings extends StatelessWidget {
                 MaterialPageRoute<void>(builder: (_) => const TagsScreen()),
               ),
             ),
+          if (_maybe<TagBook>(context) != null)
+            _Action(
+              key: const ValueKey('set-group-tags'),
+              icon: Icons.group_work_outlined,
+              label: l.t('groupTagsTitle'),
+              sub: l.t('groupTagsSub'),
+              onTap: () => showGroupTagsSheet(context),
+            ),
           if (_maybe<TagBook>(context) case final tags?)
-            if (_maybe<IgnoreBook>(context) case final ignore?) ...
+            if (_maybe<IgnoreBook>(context) case final ignore?) ...[
               _Action(
                 key: const ValueKey('set-move-export'),
                 icon: Icons.upload_file_rounded,

@@ -188,6 +188,12 @@ const moreStrings = <String, Map<String, String>>{
     'tagResults': 'Tag {n} numbers…',
     'tagResultsDone': 'Tagged {n} numbers',
     'labelsAsTags': 'Also create tags from labels and categories',
+    'groupTagsTitle': 'Import tags from phone groups',
+    'groupTagsSub': 'Pick groups; each becomes a tag on its numbers',
+    'groupTagsInfo': '{n} contacts · {m} numbers',
+    'groupTagsApply': 'Import {n} groups as tags',
+    'groupTagsNone': 'No phone groups with contacts were found.',
+    'groupTagsDone': 'Added {n} tags to numbers',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -378,6 +384,12 @@ const moreStrings = <String, Map<String, String>>{
     'tagResults': 'وسم {n} رقم…',
     'tagResultsDone': 'تم وسم {n} رقم',
     'labelsAsTags': 'إنشاء وسوم أيضًا من التصنيفات والفئات',
+    'groupTagsTitle': 'استيراد وسوم من مجموعات الهاتف',
+    'groupTagsSub': 'اختر مجموعات؛ تصبح كل مجموعة وسمًا على أرقامها',
+    'groupTagsInfo': '{n} جهة اتصال · {m} رقم',
+    'groupTagsApply': 'استيراد {n} مجموعة كوسوم',
+    'groupTagsNone': 'لم يتم العثور على مجموعات هاتف بها جهات اتصال.',
+    'groupTagsDone': 'تمت إضافة {n} وسمًا إلى الأرقام',
   },
   'zh': {
     'aliases': '别名',
@@ -847,6 +859,12 @@ const moreStrings = <String, Map<String, String>>{
     'tagResults': '为 {n} 个号码加标签…',
     'tagResultsDone': '已为 {n} 个号码加标签',
     'labelsAsTags': '同时根据标签和类别创建标签',
+    'groupTagsTitle': '从手机群组导入标签',
+    'groupTagsSub': '选择群组；每个群组会成为其号码上的标签',
+    'groupTagsInfo': '{n} 位联系人 · {m} 个号码',
+    'groupTagsApply': '将 {n} 个群组导入为标签',
+    'groupTagsNone': '没有找到包含联系人的手机群组。',
+    'groupTagsDone': '已为号码添加 {n} 个标签',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1363,6 +1381,13 @@ const moreStrings = <String, Map<String, String>>{
     'tagResults': 'Etiquetar {n} números…',
     'tagResultsDone': '{n} números etiquetados',
     'labelsAsTags': 'Crear también etiquetas desde etiquetas y categorías',
+    'groupTagsTitle': 'Importar etiquetas desde grupos del teléfono',
+    'groupTagsSub':
+        'Elige grupos; cada uno se convierte en etiqueta de sus números',
+    'groupTagsInfo': '{n} contactos · {m} números',
+    'groupTagsApply': 'Importar {n} grupos como etiquetas',
+    'groupTagsNone': 'No se encontraron grupos del teléfono con contactos.',
+    'groupTagsDone': 'Se añadieron {n} etiquetas a números',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1887,5 +1912,13 @@ const moreStrings = <String, Map<String, String>>{
     'tagResultsDone': '{n} numéros étiquetés',
     'labelsAsTags':
         'Créer aussi des étiquettes à partir des libellés et catégories',
+    'groupTagsTitle': 'Importer des étiquettes depuis les groupes du téléphone',
+    'groupTagsSub':
+        'Choisissez des groupes ; chacun devient une étiquette sur ses numéros',
+    'groupTagsInfo': '{n} contacts · {m} numéros',
+    'groupTagsApply': 'Importer {n} groupes comme étiquettes',
+    'groupTagsNone':
+        'Aucun groupe du téléphone avec des contacts n’a été trouvé.',
+    'groupTagsDone': '{n} étiquettes ajoutées à des numéros',
   },
 };
