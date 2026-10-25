@@ -308,3 +308,10 @@ Failing test: test/tag_results_test.dart and two new cases in test/review_screen
 Change: when the query is a number pattern (any number atom), a "Tag N numbers…" button under the search bar opens the tag picker (which can create a tag) and tags the number each result matched; the import review screen shows "Also create tags from labels and categories" (on by default, only when a TagBook exists and the file has labels) and, after the import, creates a tag per label and puts it on that contact's numbers. Four new strings in five languages.
 verify.sh: not run
 Risks / follow-ups: labels still import as groups as well as tags; the phone-groups import with member counts and preview (plan item c) and a Tags column in the template (item d) are not built; the batch button only covers pattern searches, not name searches.
+
+Task: 4 (import tags from phone groups)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: PhoneBook.people already carries the account-aware, system-group-free groups from task 1.14.
+Failing test: test/group_tags_test.dart (written, not run)
+Change: GroupTagImport.plan lists groups with contact and number counts; GroupTagImport.apply creates or reuses a tag per chosen group and puts it on every number of the members; Settings has an "Import tags from phone groups" row that opens a sheet with a checkbox per group, the counts and an Import N groups button, then reports how many tags were added. Six new strings in five languages.
+verify.sh: not run
+Risks / follow-ups: the plan's separate preview step is the checkbox list with counts, with no second confirmation screen; a Tags column in the template (item d) is not built.
