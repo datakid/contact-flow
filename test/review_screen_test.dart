@@ -3,6 +3,8 @@ import 'package:contact_flow/l10n.dart';
 import 'package:contact_flow/main.dart';
 import 'package:contact_flow/models/person.dart';
 import 'package:contact_flow/state/app_state.dart';
+import 'package:contact_flow/tags/tag_book.dart';
+import 'package:contact_flow/tags/tag_store.dart';
 import 'package:contact_flow/ui/import_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -109,5 +111,92 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text(en.t('importFailed')), findsOneWidget);
     expect(find.byType(ReviewScreen), findsOneWidget);
+  });
+
+  testWidgets('labels become tags on numbers when the switch is on', (t) async {
+    final rig = await rigFor(t, AppState());
+    final book = TagBook(MemoryTagStore());
+    await t.runAsync(book.load);
+    final ann = Person(
+      name: 'Ann',
+      phones: [const PhoneEntry('+966511100001')],
+      groups: ['Family'],
+    );
+    await t.pumpWidget(
+      AppProviders(
+        state: rig.app,
+        book: rig.book,
+        queue: rig.queue,
+        launcher: rig.launcher,
+        tags: book,
+        child: ContactFlowApp(
+          home: Builder(
+            builder: (c) => Scaffold(
+              body: TextButton(
+                key: const ValueKey('go'),
+                onPressed: () => Navigator.of(c).push(
+                  MaterialPageRoute<int>(
+                    builder: (_) => ReviewScreen(plan: planOf([ann])),
+                  ),
+                ),
+                child: const Text('go'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('go')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('labels-to-tags')), findsOneWidget);
+
+    await t.tap(find.text(en.t('addN', {'n': 1})));
+    await t.pumpAndSettle();
+    expect(book.byName('Family'), isNotNull);
+    expect(book.tagsForNumber('+966511100001').single.name, 'Family');
+  });
+
+  testWidgets('turning the switch off creates no tags', (t) async {
+    final rig = await rigFor(t, AppState());
+    final book = TagBook(MemoryTagStore());
+    await t.runAsync(book.load);
+    final ann = Person(
+      name: 'Ann',
+      phones: [const PhoneEntry('+966511100001')],
+      groups: ['Family'],
+    );
+    await t.pumpWidget(
+      AppProviders(
+        state: rig.app,
+        book: rig.book,
+        queue: rig.queue,
+        launcher: rig.launcher,
+        tags: book,
+        child: ContactFlowApp(
+          home: Builder(
+            builder: (c) => Scaffold(
+              body: TextButton(
+                key: const ValueKey('go'),
+                onPressed: () => Navigator.of(c).push(
+                  MaterialPageRoute<int>(
+                    builder: (_) => ReviewScreen(plan: planOf([ann])),
+                  ),
+                ),
+                child: const Text('go'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('go')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('labels-to-tags')));
+    await t.pumpAndSettle();
+    await t.tap(find.text(en.t('addN', {'n': 1})));
+    await t.pumpAndSettle();
+    expect(book.tags, isEmpty);
   });
 }

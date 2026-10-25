@@ -21,6 +21,7 @@ import 'import_issues.dart';
 import 'sync_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import '../tags/tag_book.dart';
 
 Future<void> saveTemplate(BuildContext context, Format f) async {
   final l = L.of(context);
@@ -568,6 +569,33 @@ class ReviewScreen extends StatefulWidget {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   bool _merge = true;
+  bool _labelsToTags = true;
+
+  TagBook? get _tagBook {
+    try {
+      return context.read<TagBook>();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get _hasLabels =>
+      _fresh.any((p) => p.groups.isNotEmpty) ||
+      widget.plan.dupes.any((d) => d.$1.groups.isNotEmpty);
+
+  Future<void> _tagFromLabels(
+    TagBook book,
+    Iterable<Person> people,
+  ) async {
+    for (final p in people) {
+      final numbers = [for (final e in p.phones) e.number];
+      if (numbers.isEmpty) continue;
+      for (final g in p.groups) {
+        final tag = await book.create(g);
+        await book.assign([tag.id], numbers);
+      }
+    }
+  }
   bool _busy = false;
   late final Set<String> _skip = {};
 
@@ -595,6 +623,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
         ImportPlan(plan.incoming, keep, dupes, plan.sources, plan.formats),
         merge: _merge,
       );
+      final book = _tagBook;
+      if (_labelsToTags && book != null) {
+        try {
+          await _tagFromLabels(book, [...keep, ...dupes.map((d) => d.$1)]);
+        } catch (_) {}
+      }
       if (mounted) Navigator.pop(context, n);
     } catch (_) {
       if (!mounted) return;
@@ -709,6 +743,25 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           onChanged: (v) => setState(() => _merge = v),
                           title: Text(
                             l.t('mergeDupes'),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: p.ink,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_tagBook != null && _hasLabels)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                        child: SwitchListTile(
+                          key: const ValueKey('labels-to-tags'),
+                          value: _labelsToTags,
+                          onChanged: (v) => setState(() => _labelsToTags = v),
+                          title: Text(
+                            l.t('labelsAsTags'),
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,

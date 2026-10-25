@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../tags/tag_book.dart';
 import 'widgets.dart';
 import '../state/app_state.dart';
+import 'number_tags.dart';
 
 class DigitModeChips extends StatelessWidget {
   final ContactList list;
@@ -214,6 +215,59 @@ class SaveSearchButton extends StatelessWidget {
               onPressed: () => app.saveSearch(q),
               icon: const Icon(Icons.push_pin_outlined, size: 18),
               label: Text(l.t('saveSearch')),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class TagResultsButton extends StatelessWidget {
+  final ContactList list;
+  const TagResultsButton({super.key, required this.list});
+
+  static List<String> numbersOf(ContactList list) => [
+    for (final h in list.hits)
+      if (h.matchedPhone != null && h.matchedPhone!.trim().isNotEmpty)
+        h.matchedPhone!,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    TagBook? book;
+    try {
+      book = context.read<TagBook>();
+    } catch (_) {
+      book = null;
+    }
+    if (book == null) return const SizedBox.shrink();
+    final tags = book;
+    return ListenableBuilder(
+      listenable: list,
+      builder: (context, _) {
+        final q = list.query.trim();
+        if (q.isEmpty || !NumberQuery.parse(q).hasNumberAtoms) {
+          return const SizedBox.shrink();
+        }
+        final numbers = numbersOf(list);
+        if (numbers.isEmpty) return const SizedBox.shrink();
+        final l = L.of(context);
+        return Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: TextButton.icon(
+              key: const ValueKey('tag-results'),
+              onPressed: () async {
+                final id = await pickTagId(context, tags, l);
+                if (id == null) return;
+                final added = await tags.assign([id], numbers);
+                if (!context.mounted) return;
+                toast(context, l.t('tagResultsDone', {'n': added}));
+              },
+              icon: const Icon(Icons.sell_outlined, size: 18),
+              label: Text(l.t('tagResults', {'n': numbers.length})),
             ),
           ),
         );

@@ -185,6 +185,9 @@ const moreStrings = <String, Map<String, String>>{
     'callOther': 'Other',
     'callsInclude': 'Select',
     'callsTalked': 'Talked {t}',
+    'tagResults': 'Tag {n} numbers…',
+    'tagResultsDone': 'Tagged {n} numbers',
+    'labelsAsTags': 'Also create tags from labels and categories',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -372,6 +375,9 @@ const moreStrings = <String, Map<String, String>>{
     'callOther': 'أخرى',
     'callsInclude': 'تحديد',
     'callsTalked': 'مدة الحديث {t}',
+    'tagResults': 'وسم {n} رقم…',
+    'tagResultsDone': 'تم وسم {n} رقم',
+    'labelsAsTags': 'إنشاء وسوم أيضًا من التصنيفات والفئات',
   },
   'zh': {
     'aliases': '别名',
@@ -838,6 +844,9 @@ const moreStrings = <String, Map<String, String>>{
     'callOther': '其他',
     'callsInclude': '选择',
     'callsTalked': '通话 {t}',
+    'tagResults': '为 {n} 个号码加标签…',
+    'tagResultsDone': '已为 {n} 个号码加标签',
+    'labelsAsTags': '同时根据标签和类别创建标签',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1351,6 +1360,9 @@ const moreStrings = <String, Map<String, String>>{
     'callOther': 'Otra',
     'callsInclude': 'Seleccionar',
     'callsTalked': 'Hablado {t}',
+    'tagResults': 'Etiquetar {n} números…',
+    'tagResultsDone': '{n} números etiquetados',
+    'labelsAsTags': 'Crear también etiquetas desde etiquetas y categorías',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1871,5 +1883,9 @@ const moreStrings = <String, Map<String, String>>{
     'callOther': 'Autre',
     'callsInclude': 'Sélectionner',
     'callsTalked': 'Parlé {t}',
+    'tagResults': 'Étiqueter {n} numéros…',
+    'tagResultsDone': '{n} numéros étiquetés',
+    'labelsAsTags':
+        'Créer aussi des étiquettes à partir des libellés et catégories',
   },
 };

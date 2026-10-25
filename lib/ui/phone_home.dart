@@ -138,6 +138,8 @@ class _PhoneHomeState extends State<PhoneHome> {
                     if (book.searching)
                       SliverToBoxAdapter(child: SaveSearchButton(list: book)),
                     if (book.searching)
+                      SliverToBoxAdapter(child: TagResultsButton(list: book)),
+                    if (book.searching)
                       SliverToBoxAdapter(child: DigitModeChips(list: book)),
                     if (book.searching || book.filtering)
                       SliverToBoxAdapter(child: _resultRow(book, l, p)),

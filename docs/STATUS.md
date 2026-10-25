@@ -301,3 +301,10 @@ Failing test: new cases in test/calls_screen_test.dart (swipe right and left, lo
 Change: rows are Dismissible (right selects, left excludes, the row stays in the list); long press opens a sheet with the call history of that number (type, date and time, duration) and Select, Exclude and Never suggest; CallsController.historyOf lists up to 100 calls of one number newest first without mixing countries. Nine new strings in five languages.
 verify.sh: not run
 Risks / follow-ups: the swipe uses confirmDismiss returning false, so the Dismissible only animates back; if Flutter's drag threshold needs a larger drag in the test, raise the offset.
+
+Task: 4 (batch tagging and label import)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: NumberTags._pick now uses the shared pickTagId; ReviewScreen._commit is the only place imports are applied.
+Failing test: test/tag_results_test.dart and two new cases in test/review_screen_test.dart (written, not run)
+Change: when the query is a number pattern (any number atom), a "Tag N numbers…" button under the search bar opens the tag picker (which can create a tag) and tags the number each result matched; the import review screen shows "Also create tags from labels and categories" (on by default, only when a TagBook exists and the file has labels) and, after the import, creates a tag per label and puts it on that contact's numbers. Four new strings in five languages.
+verify.sh: not run
+Risks / follow-ups: labels still import as groups as well as tags; the phone-groups import with member counts and preview (plan item c) and a Tags column in the template (item d) are not built; the batch button only covers pattern searches, not name searches.

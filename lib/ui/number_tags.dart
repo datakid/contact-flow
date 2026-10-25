@@ -16,63 +16,13 @@ class NumberTags extends StatelessWidget {
     L l,
     String number,
   ) async {
-    final have = book.tagIdsForNumber(number);
-    final options = [
-      for (final t in book.tags)
-        if (!have.contains(t.id)) t,
-    ];
-    final choice = await showDialog<String>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(l.t('tagPickTitle')),
-        children: [
-          for (final t in options)
-            SimpleDialogOption(
-              key: ValueKey('pick-${t.id}'),
-              onPressed: () => Navigator.pop(ctx, t.id),
-              child: Text(t.name),
-            ),
-          SimpleDialogOption(
-            key: const ValueKey('pick-new'),
-            onPressed: () => Navigator.pop(ctx, '\u0000new'),
-            child: Text(l.t('tagNew')),
-          ),
-        ],
-      ),
+    final id = await pickTagId(
+      context,
+      book,
+      l,
+      exclude: book.tagIdsForNumber(number),
     );
-    if (choice == null) return;
-    if (choice == '\u0000new') {
-      if (!context.mounted) return;
-      final ctl = TextEditingController();
-      final name = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          content: TextField(
-            key: const ValueKey('tag-name'),
-            controller: ctl,
-            autofocus: true,
-            decoration: InputDecoration(labelText: l.t('tagName')),
-            onSubmitted: (v) => Navigator.pop(ctx, v),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l.t('cancel')),
-            ),
-            FilledButton(
-              key: const ValueKey('tag-name-ok'),
-              onPressed: () => Navigator.pop(ctx, ctl.text),
-              child: Text(l.t('save')),
-            ),
-          ],
-        ),
-      );
-      if (name == null || name.trim().isEmpty) return;
-      final tag = await book.create(name);
-      await book.assign([tag.id], [number]);
-      return;
-    }
-    await book.assign([choice], [number]);
+    if (id != null) await book.assign([id], [number]);
   }
 
   @override
@@ -131,4 +81,64 @@ class NumberTags extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<String?> pickTagId(
+  BuildContext context,
+  TagBook book,
+  L l, {
+  Set<String> exclude = const {},
+}) async {
+  final options = [
+    for (final t in book.tags)
+      if (!exclude.contains(t.id)) t,
+  ];
+  final choice = await showDialog<String>(
+    context: context,
+    builder: (ctx) => SimpleDialog(
+      title: Text(l.t('tagPickTitle')),
+      children: [
+        for (final t in options)
+          SimpleDialogOption(
+            key: ValueKey('pick-${t.id}'),
+            onPressed: () => Navigator.pop(ctx, t.id),
+            child: Text(t.name),
+          ),
+        SimpleDialogOption(
+          key: const ValueKey('pick-new'),
+          onPressed: () => Navigator.pop(ctx, '\u0000new'),
+          child: Text(l.t('tagNew')),
+        ),
+      ],
+    ),
+  );
+  if (choice == null) return null;
+  if (choice != '\u0000new') return choice;
+  if (!context.mounted) return null;
+  final ctl = TextEditingController();
+  final name = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      content: TextField(
+        key: const ValueKey('tag-name'),
+        controller: ctl,
+        autofocus: true,
+        decoration: InputDecoration(labelText: l.t('tagName')),
+        onSubmitted: (v) => Navigator.pop(ctx, v),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(l.t('cancel')),
+        ),
+        FilledButton(
+          key: const ValueKey('tag-name-ok'),
+          onPressed: () => Navigator.pop(ctx, ctl.text),
+          child: Text(l.t('save')),
+        ),
+      ],
+    ),
+  );
+  if (name == null || name.trim().isEmpty) return null;
+  return (await book.create(name)).id;
 }

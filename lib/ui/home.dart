@@ -116,6 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (s.searching)
                       SliverToBoxAdapter(child: SaveSearchButton(list: s)),
                     if (s.searching)
+                      SliverToBoxAdapter(child: TagResultsButton(list: s)),
+                    if (s.searching)
                       SliverToBoxAdapter(child: DigitModeChips(list: s)),
                     if (s.searching)
                       SliverToBoxAdapter(child: _resultRow(s, l, p, list)),
