@@ -6,6 +6,13 @@ The plan is in docs/PLAN.md. Everything below was written in a sandbox with no F
 
 The GitHub token used to push these branches could not write workflow files, so the CI workflow is stored as tool/ci.workflow.yml instead of .github/workflows/ci.yml. Copy it into .github/workflows/ci.yml (the GitHub web editor or any token with the workflow scope can do that). Until then nothing runs in CI.
 
+## Static checks that were possible without a compiler
+
+- tool/dart_syntax_check.py parses every Dart file with the tree-sitter Dart grammar (`python3 -m venv v && v/bin/pip install tree-sitter tree-sitter-dart && v/bin/python tool/dart_syntax_check.py plain`). All 163 Dart files in lib and test parse cleanly, and the same grammar parses all 90 original files cleanly. It caught one real slip (a dropped bracket in settings_sheet.dart) that is now fixed.
+- The Kotlin files (MainActivity, both Edition.kt, CallsReader) parse cleanly with tree-sitter-kotlin.
+- tool/import_check.py reports project classes used without an import and project imports that are never used. It found no missing imports; its "unused import" lines for theme.dart and harness.dart are false positives (extension members and top-level functions are not tracked).
+- None of this checks types, named parameters, or whether a member exists, so expect analyzer errors of that kind.
+
 ## Branches
 
 - phase-1 starts at 2c38c77 and holds tasks 0.3, 0.4, 1.1, 1.2, 1.3, 1.4, 1.6, 1.8, 1.9, 1.10, 1.11, 1.12, 1.14, 1.16, 1.17(b)(c), 1.18, 1.19, 1.20.
