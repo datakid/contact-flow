@@ -95,20 +95,31 @@ class VCard {
         .replaceAll('\r', '\n')
         .split('\n');
     final out = <String>[];
-    var qpContinue = false;
-    for (final l in raw) {
-      if (out.isNotEmpty && qpContinue) {
-        final last = out.removeLast();
-        out.add(last.substring(0, last.length - 1) + l);
-      } else if (out.isNotEmpty && (l.startsWith(' ') || l.startsWith('\t'))) {
-        out[out.length - 1] = out.last + l.substring(1);
-      } else {
-        out.add(l);
-      }
-      final cur = out.last;
-      qpContinue =
-          cur.toUpperCase().contains('QUOTED-PRINTABLE') && cur.endsWith('=');
+    var parts = <String>[];
+    var qpLine = false;
+    var lastEq = false;
+    void flush() {
+      if (parts.isEmpty) return;
+      out.add(parts.length == 1 ? parts.first : parts.join());
+      parts = <String>[];
     }
+
+    for (final l in raw) {
+      if (parts.isNotEmpty && qpLine && lastEq) {
+        final last = parts.removeLast();
+        parts.add(last.substring(0, last.length - 1));
+        parts.add(l);
+      } else if (parts.isNotEmpty &&
+          (l.startsWith(' ') || l.startsWith('\t'))) {
+        parts.add(l.substring(1));
+      } else {
+        flush();
+        parts.add(l);
+        qpLine = l.toUpperCase().contains('QUOTED-PRINTABLE');
+      }
+      lastEq = l.endsWith('=');
+    }
+    flush();
     return out;
   }
 
