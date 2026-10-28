@@ -456,9 +456,7 @@ class Codec {
     return rows;
   }
 
-  static final _txtEmail = RegExp(
-    r'[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+',
-  );
+  static final _txtEmail = RegExp(r'[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+');
   static final _txtPunct = RegExp(r'[\t,;:|<>\-–—=•·：，；、()（）\[\]]+');
   static final _txtLabel = RegExp(
     r'\b(tel|phone|mobile|cell|fax|ph|mob|hp)\b\.?',

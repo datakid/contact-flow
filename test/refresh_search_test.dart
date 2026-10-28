@@ -18,25 +18,26 @@ void main() {
     await book.checkAccess();
   });
 
-  test('a refresh with nothing changed does not rebuild the search index', () async {
-    book.setQuery('a');
-    await settle();
-    final before = book.indexBuilds;
-    expect(before, 1);
-    await book.refresh(quiet: true);
-    await book.refresh(quiet: true);
-    expect(book.indexBuilds, before);
-    expect(book.hits, isNotEmpty);
-  });
+  test(
+    'a refresh with nothing changed does not rebuild the search index',
+    () async {
+      book.setQuery('a');
+      await settle();
+      final before = book.indexBuilds;
+      expect(before, 1);
+      await book.refresh(quiet: true);
+      await book.refresh(quiet: true);
+      expect(book.indexBuilds, before);
+      expect(book.hits, isNotEmpty);
+    },
+  );
 
   test('a refresh after a change rebuilds the index once', () async {
     book.setQuery('a');
     await settle();
     final before = book.indexBuilds;
     final first = book.people.first;
-    await source.update(
-      first.copy()..name = '${first.name} changed',
-    );
+    await source.update(first.copy()..name = '${first.name} changed');
     await book.refresh(quiet: true);
     expect(book.indexBuilds, before + 1);
     expect(book.people.any((p) => p.name.endsWith('changed')), isTrue);
@@ -46,7 +47,10 @@ void main() {
     final big = FakeSource(
       seed: [
         for (var i = 0; i < 10000; i++)
-          Person(name: 'Contact $i', phones: [PhoneEntry('055${i.toString().padLeft(7, '0')}')]),
+          Person(
+            name: 'Contact $i',
+            phones: [PhoneEntry('055${i.toString().padLeft(7, '0')}')],
+          ),
       ],
     );
     final b = PhoneBook(big, Journal(MemoryJournalStore()));
