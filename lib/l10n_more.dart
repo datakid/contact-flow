@@ -123,6 +123,7 @@ const moreStrings = <String, Map<String, String>>{
     'moveDone': 'Added {n} contacts, {m} tags and {k} ignored numbers',
     'moveBad': 'This file is not a Contact Flow data export.',
     'wsCalls': 'Calls',
+    'navContacts': 'Contacts',
     'callsAllow': 'Allow call log access',
     'callsAllowBody':
         'Contact Flow reads your call log on this phone only, to suggest numbers you called that are not saved. Nothing leaves your phone.',
@@ -319,6 +320,7 @@ const moreStrings = <String, Map<String, String>>{
         'أُضيفت {n} من جهات الاتصال و{m} من الوسوم و{k} من الأرقام المتجاهلة',
     'moveBad': 'هذا الملف ليس تصدير بيانات من Contact Flow.',
     'wsCalls': 'المكالمات',
+    'navContacts': 'جهات الاتصال',
     'callsAllow': 'السماح بالوصول إلى سجل المكالمات',
     'callsAllowBody':
         'يقرأ Contact Flow سجل مكالماتك على هذا الهاتف فقط ليقترح أرقامًا اتصلت بها ولم تُحفظ. لا يغادر شيء هاتفك.',
@@ -797,6 +799,7 @@ const moreStrings = <String, Map<String, String>>{
     'moveDone': '已添加 {n} 位联系人、{m} 个标签和 {k} 个已忽略号码',
     'moveBad': '此文件不是 Contact Flow 数据导出文件。',
     'wsCalls': '通话',
+    'navContacts': '联系人',
     'callsAllow': '允许访问通话记录',
     'callsAllowBody': 'Contact Flow 只在本机读取你的通话记录，用来建议尚未保存的号码。任何内容都不会离开你的手机。',
     'callsLoading': '正在读取通话… {n}',
@@ -1316,6 +1319,7 @@ const moreStrings = <String, Map<String, String>>{
         'Se añadieron {n} contactos, {m} etiquetas y {k} números ignorados',
     'moveBad': 'Este archivo no es una exportación de datos de Contact Flow.',
     'wsCalls': 'Llamadas',
+    'navContacts': 'Contactos',
     'callsAllow': 'Permitir acceso al registro de llamadas',
     'callsAllowBody':
         'Contact Flow lee tu registro de llamadas solo en este teléfono, para sugerir números con los que hablaste y que no están guardados. Nada sale de tu teléfono.',
@@ -1846,6 +1850,7 @@ const moreStrings = <String, Map<String, String>>{
     'moveDone': '{n} contacts, {m} étiquettes et {k} numéros ignorés ajoutés',
     'moveBad': 'Ce fichier n’est pas une exportation de données Contact Flow.',
     'wsCalls': 'Appels',
+    'navContacts': 'Contacts',
     'callsAllow': 'Autoriser l’accès au journal d’appels',
     'callsAllowBody':
         'Contact Flow lit votre journal d’appels uniquement sur ce téléphone, pour proposer des numéros non enregistrés. Rien ne quitte votre téléphone.',

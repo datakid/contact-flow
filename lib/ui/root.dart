@@ -15,11 +15,20 @@ import 'import_sheet.dart';
 import 'phone_home.dart';
 import '../services/edition.dart';
 import 'calls_screen.dart';
+import '../tags/tag_book.dart';
+import 'tags_screen.dart';
+import 'theme.dart';
+import 'workspace.dart';
 
-int effectiveTab(AppState app, PhoneBook book) {
-  if (app.tab >= 0) return app.tab;
-  if (book.granted) return 0;
-  return app.people.isEmpty ? 0 : 1;
+int effectiveTab(AppState app, PhoneBook book, {bool tags = false}) {
+  if (app.tab >= 0) {
+    final t = app.tab;
+    if (t == tabCalls && !callsBuild) return tabContacts;
+    if (t == tabTags && !tags) return tabContacts;
+    return t;
+  }
+  if (book.granted) return tabContacts;
+  return app.people.isEmpty ? tabContacts : tabFiles;
 }
 
 class WorkspaceRoot extends StatefulWidget {
@@ -105,15 +114,28 @@ class _WorkspaceRootState extends State<WorkspaceRoot>
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final book = context.watch<PhoneBook>();
-    final tab = effectiveTab(app, book);
+    var hasTags = false;
+    try {
+      context.watch<TagBook>();
+      hasTags = true;
+    } catch (_) {}
+    final tab = effectiveTab(app, book, tags: hasTags);
     void go(int t) => app.setTab(t);
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 260),
-      child: tab == 2 && callsBuild
-          ? CallsScreen(key: const ValueKey('calls'), onTab: go)
-          : tab == 0
-          ? PhoneHome(key: const ValueKey('phone'), onTab: go)
-          : HomeScreen(key: const ValueKey('files'), onTab: go),
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: AnimatedSwitcher(
+        duration: AppMotion.base,
+        child: switch (tab) {
+          tabCalls => CallsScreen(key: const ValueKey('calls'), onTab: go),
+          tabTags => const TagsScreen(key: ValueKey('tags')),
+          tabFiles => HomeScreen(key: const ValueKey('files'), onTab: go),
+          _ => PhoneHome(key: const ValueKey('phone'), onTab: go),
+        },
+      ),
+      bottomNavigationBar: keyboard
+          ? null
+          : AppNavBar(tab: tab, tags: hasTags, onChanged: go),
     );
   }
 }

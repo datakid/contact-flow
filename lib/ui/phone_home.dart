@@ -186,11 +186,7 @@ class _PhoneHomeState extends State<PhoneHome> {
           Row(
             children: [
               Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: WorkspaceSwitch(tab: 0, onChanged: widget.onTab),
-                ),
+                child: ScreenTitle(l.t('navContacts')),
               ),
               const Spacer(),
               if (ready)

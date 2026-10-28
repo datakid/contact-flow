@@ -168,11 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               if (widget.onTab != null)
                 Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: AlignmentDirectional.centerStart,
-                    child: WorkspaceSwitch(tab: 1, onChanged: widget.onTab!),
-                  ),
+                  child: ScreenTitle(l.t('wsFiles')),
                 )
               else ...[
                 Container(

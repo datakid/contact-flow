@@ -455,7 +455,7 @@ class _CallsScreenState extends State<CallsScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 8, 4),
       child: Row(
         children: [
-          WorkspaceSwitch(tab: 2, onChanged: widget.onTab),
+          Flexible(child: ScreenTitle(l.t('wsCalls'))),
           const Spacer(),
           if (c.phase == CallsPhase.ready)
             PopupMenuButton<String>(

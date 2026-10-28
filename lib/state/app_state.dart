@@ -99,7 +99,7 @@ class AppState extends ContactList {
     }
     PhoneKey.useRegion(region);
     includeContactId = prefs.getBool('contactId') ?? true;
-    tab = (prefs.getInt('tab') ?? -1).clamp(-1, 1);
+    tab = (prefs.getInt('tab') ?? -1).clamp(-1, 3);
     sort = SortMode.values[(prefs.getInt('sort') ?? 0).clamp(0, 1)];
     lastFormat = Format
         .values[(prefs.getInt('fmt') ?? 0).clamp(0, Format.values.length - 1)];
