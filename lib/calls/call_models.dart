@@ -57,9 +57,11 @@ class CallGroup {
   int lastMs = 0;
   int talkSec = 0;
   String cachedName = '';
+  final List<CallRecord> calls = [];
   CallGroup(this.key, this.number);
 
   void add(CallRecord c) {
+    calls.add(c);
     count++;
     switch (c.type) {
       case CallType.incoming:

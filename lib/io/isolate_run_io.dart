@@ -27,6 +27,7 @@ Future<R> runIsolated<A, R>(
   if (token != null && token.cancelled) throw const CancelledException();
   final port = ReceivePort();
   final done = Completer<R>();
+  done.future.ignore();
   Isolate? isolate;
   late final Timer timer;
 
