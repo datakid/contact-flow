@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_contacts/flutter_contacts.dart' as fc;
 
 import '../domain/names.dart';
@@ -155,11 +156,47 @@ class PhoneSource implements ContactSource {
       if (_membership[e.value]?.contains(id) ?? false) e.key,
   ]..sort();
 
-  Future<void> _loadGroups() async {
+  static const _device = MethodChannel('contactflow/device');
+  bool _nativeMembers = false;
+
+  static Map<String, Set<String>>? parseMemberships(Object? raw) {
+    if (raw is! Map) return null;
+    final out = <String, Set<String>>{};
+    for (final e in raw.entries) {
+      final k = e.key;
+      final v = e.value;
+      if (k is! String || v is! List) return null;
+      out[k] = {for (final x in v) x.toString()};
+    }
+    return out;
+  }
+
+  static bool membershipMatches(
+    Map<String, Set<String>> membership,
+    Set<String> contactIds,
+  ) {
+    final any = membership.values.any((s) => s.isNotEmpty);
+    if (!any) return true;
+    return membership.values.any((s) => s.any(contactIds.contains));
+  }
+
+  Future<Map<String, Set<String>>?> _nativeMemberships() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return null;
+    try {
+      return parseMemberships(await _device.invokeMethod<Object?>('memberships'));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _loadGroups({bool useNative = true}) async {
     _membership.clear();
+    _nativeMembers = false;
     final groups = await fc.FlutterContacts.groups.getAll(
       withContactCount: true,
     );
+    final native = useNative ? await _nativeMemberships() : null;
+    _nativeMembers = native != null;
     final byAccount = <String, Map<String, String>>{};
     for (final g in groups) {
       final gid = g.id;
@@ -170,6 +207,11 @@ class PhoneSource implements ContactSource {
           : _accKey(g.account!.type, g.account!.name);
       (byAccount[acc] ??= {}).putIfAbsent(name, () => gid);
       if (g.contactCount == 0) continue;
+      if (native != null) {
+        final ids = native[gid];
+        if (ids != null) (_membership[gid] ??= {}).addAll(ids);
+        continue;
+      }
       final members = await fc.FlutterContacts.getAll(
         filter: fc.ContactFilter.group(gid),
       );
@@ -189,6 +231,18 @@ class PhoneSource implements ContactSource {
       _membership.clear();
     }
     final list = await fc.FlutterContacts.getAll(properties: _props);
+    if (_nativeMembers &&
+        !membershipMatches(_membership, {
+          for (final c in list)
+            if (c.id != null) c.id!,
+        })) {
+      try {
+        await _loadGroups(useNative: false);
+      } catch (_) {
+        _groupIds = {};
+        _membership.clear();
+      }
+    }
     _raw.clear();
     final out = <Person>[];
     for (final c in list) {

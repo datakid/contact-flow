@@ -2,6 +2,7 @@ package com.contactflow.contacts
 
 import android.content.Intent
 import android.net.Uri
+import android.provider.ContactsContract
 import android.provider.OpenableColumns
 import android.telephony.TelephonyManager
 import io.flutter.embedding.android.FlutterActivity
@@ -34,6 +35,20 @@ class MainActivity : FlutterActivity() {
                     result.success((tm?.simCountryIso ?: "").uppercase())
                 }
                 "edition" -> result.success(Edition.NAME)
+                "memberships" -> worker.execute {
+                    val out = try {
+                        readMemberships()
+                    } catch (_: Exception) {
+                        null
+                    }
+                    runOnUiThread {
+                        if (out == null) {
+                            result.error("unavailable", null, null)
+                        } else {
+                            result.success(out)
+                        }
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -107,6 +122,27 @@ class MainActivity : FlutterActivity() {
             }
         }
         return uris
+    }
+
+    private fun readMemberships(): Map<String, List<String>> {
+        val out = HashMap<String, MutableList<String>>()
+        val kind = ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE
+        contentResolver.query(
+            ContactsContract.Data.CONTENT_URI,
+            arrayOf(
+                ContactsContract.Data.CONTACT_ID,
+                ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID,
+            ),
+            "${ContactsContract.Data.MIMETYPE} = ?",
+            arrayOf(kind),
+            null,
+        )?.use { c ->
+            while (c.moveToNext()) {
+                if (c.isNull(0) || c.isNull(1)) continue
+                out.getOrPut(c.getLong(1).toString()) { mutableListOf() }.add(c.getLong(0).toString())
+            }
+        }
+        return out
     }
 
     private fun failure(name: String, error: String): Map<String, Any> =

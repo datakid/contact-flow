@@ -31,4 +31,44 @@ void main() {
       expect(PhoneSource.isSystemGroup(n), isFalse, reason: n);
     }
   });
+
+  group('native memberships', () {
+    test('a map of group id to contact ids is parsed', () {
+      final m = PhoneSource.parseMemberships({
+        '5': ['10', 11],
+        '6': <String>[],
+      });
+      expect(m, {
+        '5': {'10', '11'},
+        '6': <String>{},
+      });
+    });
+
+    test('anything else is rejected', () {
+      expect(PhoneSource.parseMemberships(null), isNull);
+      expect(PhoneSource.parseMemberships('x'), isNull);
+      expect(
+        PhoneSource.parseMemberships({
+          '5': 'not a list',
+        }),
+        isNull,
+      );
+    });
+
+    test('ids that never meet a contact are a mismatch', () {
+      final members = {
+        '5': {'900', '901'},
+      };
+      expect(PhoneSource.membershipMatches(members, {'1', '2'}), isFalse);
+      expect(PhoneSource.membershipMatches(members, {'1', '901'}), isTrue);
+    });
+
+    test('no memberships at all is not a mismatch', () {
+      expect(PhoneSource.membershipMatches({}, {'1'}), isTrue);
+      expect(
+        PhoneSource.membershipMatches({'5': <String>{}}, {'1'}),
+        isTrue,
+      );
+    });
+  });
 }
