@@ -45,6 +45,12 @@ jobs:
           git diff --stat | tail -n 3 >> /tmp/rep/format.txt
           git diff > /tmp/rep/format.patch
           exit 0
+      - name: format check
+        run: |
+          set +e
+          dart format --output=none --set-exit-if-changed . > /tmp/rep/format_check.txt 2>&1
+          echo "exit $?" >> /tmp/rep/format_check.txt
+          exit 0
       - name: analyze
         timeout-minutes: 15
         run: |
@@ -85,10 +91,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: tool/publish_report.sh
       - name: perf
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           set +e
-          flutter test --tags perf --reporter expanded 2>&1 | tail -n 300 | tee /tmp/rep/perf.txt
+          for f in test/perf/*_test.dart; do
+            n=$(basename "$f" .dart)
+            timeout 400 flutter test "$f" --tags perf --reporter expanded > "/tmp/rep/perf_$n.txt" 2>&1
+            echo "exit $?" >> "/tmp/rep/perf_$n.txt"
+          done
           exit 0
       - name: publish 4
         if: always()
