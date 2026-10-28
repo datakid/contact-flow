@@ -66,6 +66,9 @@ abstract class ContactList extends ChangeNotifier {
   String? groupFilter;
   String? tagFilter;
   bool _dirtyIndex = true;
+
+  @visibleForTesting
+  int indexBuilds = 0;
   NumberStats? _numberStats;
   Timer? _debounce;
   final Map<String, String> _keyCache = {};
@@ -214,6 +217,7 @@ abstract class ContactList extends ChangeNotifier {
   void _runSearch() {
     if (_dirtyIndex) {
       _index.build(_people);
+      indexBuilds++;
       _dirtyIndex = false;
     }
     final q = NumberQuery.parse(_query, mode: digitMode);
