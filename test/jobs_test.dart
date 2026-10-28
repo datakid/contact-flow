@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:contact_flow/io/cancel_token.dart';
@@ -78,5 +79,47 @@ void main() {
     final big = Uint8List(maxImportBytes + 1);
     final r = await decodeInBackground(DecodeJob('big.csv', big));
     expect(r.issue, ImportIssue.tooLarge);
+  });
+
+  group('files read inside the job', () {
+    late Directory dir;
+
+    setUp(() => dir = Directory.systemTemp.createTempSync('jobfile'));
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    test('a file is decoded and removed', () async {
+      final f = File('${dir.path}/in.csv')
+        ..writeAsBytesSync(utf8.encode('Name,Phone\nAnn,0551234567\n'));
+      final r = await decodeInBackground(DecodeJob.file('in.csv', f.path));
+      expect(r.people.single.name, 'Ann');
+      expect(f.existsSync(), isFalse);
+    });
+
+    test('the same works in a real isolate', () async {
+      decodeInIsolate = true;
+      final f = File('${dir.path}/in.csv')
+        ..writeAsBytesSync(utf8.encode('Name,Phone\nBob,0551234567\n'));
+      final r = await decodeInBackground(DecodeJob.file('in.csv', f.path));
+      expect(r.people.single.name, 'Bob');
+      expect(f.existsSync(), isFalse);
+    });
+
+    test('a missing file is a failure, not a crash', () async {
+      final r = await decodeInBackground(
+        DecodeJob.file('x.csv', '${dir.path}/missing.csv'),
+      );
+      expect(r.people, isEmpty);
+      expect(r.issue, ImportIssue.unreadable);
+    });
+
+    test('a file over the limit is refused without being read', () async {
+      final f = File('${dir.path}/big.bin');
+      final raf = f.openSync(mode: FileMode.write)
+        ..truncateSync(maxImportBytes + 1);
+      raf.closeSync();
+      final r = await decodeInBackground(DecodeJob.file('big.bin', f.path));
+      expect(r.issue, ImportIssue.tooLarge);
+      expect(f.existsSync(), isFalse);
+    });
   });
 }

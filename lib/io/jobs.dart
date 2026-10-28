@@ -6,6 +6,7 @@ import '../models/person.dart';
 import 'cancel_token.dart';
 import 'codec.dart';
 import 'isolate_run.dart';
+import 'job_file_stub.dart' if (dart.library.io) 'job_file_io.dart';
 
 class EncodeJob {
   final List<Person> people;
@@ -25,7 +26,9 @@ class EncodeJob {
 class DecodeJob {
   final String name;
   final Uint8List bytes;
-  const DecodeJob(this.name, this.bytes);
+  final String? path;
+  const DecodeJob(this.name, this.bytes) : path = null;
+  DecodeJob.file(this.name, String this.path) : bytes = Uint8List(0);
 }
 
 Uint8List runEncode(EncodeJob j) => Codec.encode(
@@ -36,7 +39,13 @@ Uint8List runEncode(EncodeJob j) => Codec.encode(
   tags: j.tags,
 );
 
-ImportResult runDecode(DecodeJob j) => Codec.decode(j.name, j.bytes);
+ImportResult runDecode(DecodeJob j) {
+  final path = j.path;
+  if (path == null) return Codec.decode(j.name, j.bytes);
+  final bytes = takeJobFile(path);
+  if (bytes == null) return ImportResult.failed(j.name);
+  return Codec.decode(j.name, bytes);
+}
 
 Future<Uint8List> encodeInBackground(EncodeJob j) async {
   if (kIsWeb || j.people.length < 400) return runEncode(j);
@@ -53,7 +62,15 @@ Future<ImportResult> decodeInBackground(
   CancelToken? cancel,
   Duration timeout = const Duration(seconds: 20),
 }) async {
-  if (j.bytes.length > maxImportBytes) {
+  final path = j.path;
+  if (path != null) {
+    final size = await jobFileLength(path);
+    if (size == null) return ImportResult.failed(j.name);
+    if (size > maxImportBytes) {
+      await dropJobFile(path);
+      return ImportResult.problem(j.name, ImportIssue.tooLarge);
+    }
+  } else if (j.bytes.length > maxImportBytes) {
     return ImportResult.problem(j.name, ImportIssue.tooLarge);
   }
   try {

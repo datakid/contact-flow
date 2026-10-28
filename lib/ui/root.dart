@@ -67,6 +67,15 @@ class _WorkspaceRootState extends State<WorkspaceRoot>
     final results = <ImportResult>[];
     for (final f in files) {
       try {
+        if (f.error == 'tooLarge') {
+          results.add(ImportResult.problem(f.name, ImportIssue.tooLarge));
+          continue;
+        }
+        final path = f.path;
+        if (f.error == null && f.bytes == null && path != null) {
+          results.add(await decodeInBackground(DecodeJob.file(f.name, path)));
+          continue;
+        }
         final bytes = f.error == null ? await f.read() : null;
         if (bytes == null) {
           results.add(ImportResult.failed(f.name));
