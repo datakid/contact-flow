@@ -299,6 +299,31 @@ class NumberQuery {
     return best;
   }
 
+  List<(int, int)> highlightsFor(String rawNumber) {
+    final saved = PhoneForms.of(rawNumber).saved;
+    if (saved.isEmpty) return const [];
+    final out = <(int, int)>[];
+    for (final alt in alternatives) {
+      for (final a in alt.whereType<NumberAtom>()) {
+        if (a.plus) continue;
+        final forms = PhoneForms(rawNumber, saved, '', '');
+        if (atomScore(a, forms) == 0) continue;
+        out.addAll(highlights(a, saved));
+      }
+    }
+    out.sort((x, y) => x.$1.compareTo(y.$1));
+    final merged = <(int, int)>[];
+    for (final r in out) {
+      if (merged.isNotEmpty && r.$1 <= merged.last.$2) {
+        final last = merged.removeLast();
+        merged.add((last.$1, r.$2 > last.$2 ? r.$2 : last.$2));
+      } else {
+        merged.add(r);
+      }
+    }
+    return merged;
+  }
+
   List<(int, int)> highlights(NumberAtom a, String digits) {
     if (digits.isEmpty) return const [];
     if (a.wildcard) return _globHighlights(a.pattern, digits);

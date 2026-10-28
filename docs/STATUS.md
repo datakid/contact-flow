@@ -315,3 +315,10 @@ Failing test: test/group_tags_test.dart (written, not run)
 Change: GroupTagImport.plan lists groups with contact and number counts; GroupTagImport.apply creates or reuses a tag per chosen group and puts it on every number of the members; Settings has an "Import tags from phone groups" row that opens a sheet with a checkbox per group, the counts and an Import N groups button, then reports how many tags were added. Six new strings in five languages.
 verify.sh: not run
 Risks / follow-ups: the plan's separate preview step is the checkbox list with counts, with no second confirmation screen; a Tags column in the template (item d) is not built.
+
+Task: 3 (matched digit highlight)  Status: UNVERIFIED (branch: phase-1-7)
+Callers checked: PersonRow draws the number line for both workspaces; Hit is created in FuzzyIndex.search and PatternSearch.search.
+Failing test: test/highlight_test.dart (written, not run)
+Change: Hit.numberRanges holds digit positions in the number that matched; NumberQuery.highlightsFor computes them (merged and sorted, only for the saved form of the number, never for a leading plus); PersonRow maps them onto the shown text (skipping spaces, dashes and the plus) and underlines them with the same style as name matches.
+verify.sh: not run
+Risks / follow-ups: matches that were found through the national or E.164 form of a number are not highlighted; the secondary line now always uses HighlightText, which keeps one line with an ellipsis.

@@ -158,10 +158,12 @@ class PersonRow extends StatelessWidget {
                             textDirection: number.isEmpty
                                 ? Directionality.of(context)
                                 : TextDirection.ltr,
-                            child: Text(
+                            child: HighlightText(
                               secondary,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              ranges: digitRangesToText(
+                                number,
+                                h?.numberRanges ?? const [],
+                              ),
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
@@ -291,4 +293,25 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
       },
     );
   }
+}
+
+List<(int, int)> digitRangesToText(String display, List<(int, int)> ranges) {
+  if (ranges.isEmpty || display.isEmpty) return const [];
+  final positions = <int>[];
+  for (var i = 0; i < display.length; i++) {
+    final c = display.codeUnitAt(i);
+    final ascii = c >= 0x30 && c <= 0x39;
+    final arabic = c >= 0x0660 && c <= 0x0669;
+    final persian = c >= 0x06F0 && c <= 0x06F9;
+    final wide = c >= 0xFF10 && c <= 0xFF19;
+    if (ascii || arabic || persian || wide) positions.add(i);
+  }
+  final out = <(int, int)>[];
+  for (final (a, b) in ranges) {
+    if (a >= b || a >= positions.length) continue;
+    final from = positions[a];
+    final to = positions[(b - 1).clamp(0, positions.length - 1)] + 1;
+    out.add((from, to));
+  }
+  return out;
 }

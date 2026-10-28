@@ -4,6 +4,7 @@ import 'package:lpinyin/lpinyin.dart';
 
 import '../models/person.dart';
 import 'fold.dart';
+import 'number_pattern.dart';
 
 class Hit {
   final Person person;
@@ -12,6 +13,7 @@ class Hit {
   final String? matchedPhone;
   final String? reason;
   final String? alias;
+  final List<(int, int)> numberRanges;
 
   const Hit(
     this.person,
@@ -20,6 +22,7 @@ class Hit {
     this.matchedPhone,
     this.reason,
     this.alias,
+    this.numberRanges = const [],
   });
 }
 
@@ -198,7 +201,15 @@ class FuzzyIndex {
       if (digitQuery && e.alias == null) {
         final m = _phone(e, qDigits);
         if (m != null) {
-          push(Hit(e.p, m.score, matchedPhone: m.phone, reason: 'phone'));
+          push(
+            Hit(
+              e.p,
+              m.score,
+              matchedPhone: m.phone,
+              reason: 'phone',
+              numberRanges: NumberQuery.parse(q).highlightsFor(m.phone),
+            ),
+          );
         }
       }
       if (digitQuery && !shortDigits) continue;

@@ -58,6 +58,7 @@ class PatternSearch {
           p,
           best * 100 + (textHit?.score ?? 0) / 10,
           matchedPhone: number,
+          numberRanges: number == null ? const [] : q.highlightsFor(number),
           reason: number == null ? 'tag' : 'phone',
           nameRanges: textHit?.nameRanges ?? const [],
         ),
