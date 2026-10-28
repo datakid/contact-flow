@@ -205,7 +205,7 @@ class FuzzyIndex {
               m.score,
               matchedPhone: m.phone,
               reason: 'phone',
-              numberRanges: NumberQuery.parse(q).highlightsFor(m.phone),
+              numberRanges: NumberQuery.parse(q).highlightsFor(m.phone ?? ''),
             ),
           );
         }

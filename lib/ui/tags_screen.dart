@@ -5,7 +5,7 @@ import '../l10n.dart';
 import '../tags/tag_book.dart';
 import '../tags/tag_models.dart';
 import 'theme.dart';
-import 'widgets.dart';
+import 'widgets.dart' hide Tag;
 
 class TagsScreen extends StatelessWidget {
   const TagsScreen({super.key});

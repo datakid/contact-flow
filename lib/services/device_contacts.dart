@@ -40,16 +40,6 @@ class DeviceContacts {
     _ => 'mobile',
   };
 
-  static fc.PhoneLabel _toLabel(String l) => switch (l) {
-    'home' => fc.PhoneLabel.home,
-    'work' => fc.PhoneLabel.work,
-    'fax' => fc.PhoneLabel.workFax,
-    'main' => fc.PhoneLabel.main,
-    'pager' => fc.PhoneLabel.pager,
-    'other' => fc.PhoneLabel.other,
-    _ => fc.PhoneLabel.mobile,
-  };
-
   static Future<List<Person>> readAll() async {
     final list = await fc.FlutterContacts.getAll(
       properties: {

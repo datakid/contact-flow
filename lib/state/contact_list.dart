@@ -107,7 +107,6 @@ abstract class ContactList extends ChangeNotifier {
     _hitBy = by;
   }
 
-  @protected
   void replacePeople(List<Person> next, {Iterable<String>? changedIds}) {
     _people = next;
     final ids = {for (final p in next) p.id};

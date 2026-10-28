@@ -29,7 +29,7 @@ CallRecord call(
   presentation: presentation,
 );
 
-List<CallGroup> group(
+List<CallGroup> grouped(
   List<CallRecord> calls, {
   List<Person> saved = const [],
   Set<String> ignored = const {},
@@ -82,13 +82,13 @@ void main() {
 
   group('grouping', () {
     test('the same number in different formats is one group', () {
-      final g = group([call('+966501234567'), call('0501234567', days: 2)]);
+      final g = grouped([call('+966501234567'), call('0501234567', days: 2)]);
       expect(g.length, 1);
       expect(g.single.count, 2);
     });
 
     test('the same national number in another country is separate', () {
-      final g = group([call('+966501234567'), call('+971501234567')]);
+      final g = grouped([call('+966501234567'), call('+971501234567')]);
       expect(g.length, 2);
     });
 
@@ -96,7 +96,7 @@ void main() {
       final saved = [
         Person(name: 'Ann', phones: [const PhoneEntry('+966501234567')]),
       ];
-      final g = group([
+      final g = grouped([
         call('0501234567'),
         call('+966559876543'),
       ], saved: saved);
@@ -107,7 +107,7 @@ void main() {
       final saved = [
         Person(name: 'Ann', phones: [const PhoneEntry('+971501234567')]),
       ];
-      expect(group([call('+966501234567')], saved: saved).length, 1);
+      expect(grouped([call('+966501234567')], saved: saved).length, 1);
     });
 
     test('hidden numbers are dropped by default and shown on request', () {
@@ -116,25 +116,25 @@ void main() {
         call('+966501234567', presentation: 3),
         call('+966559876543'),
       ];
-      expect(group(calls).length, 1);
-      expect(group(calls, showHidden: true).length, 3);
+      expect(grouped(calls).length, 1);
+      expect(grouped(calls, showHidden: true).length, 3);
     });
 
     test('short codes are hidden by default and shown on request', () {
       final calls = [call('1234'), call('+966559876543')];
-      expect(group(calls).length, 1);
-      final all = group(calls, showHidden: true);
+      expect(grouped(calls).length, 1);
+      final all = grouped(calls, showHidden: true);
       expect(all.length, 2);
       expect(all.map((g) => g.number), contains('1234'));
     });
 
     test('ignored numbers are left out', () {
-      final key = group([call('+966501234567')]).single.key;
-      expect(group([call('0501234567')], ignored: {key}), isEmpty);
+      final key = grouped([call('+966501234567')]).single.key;
+      expect(grouped([call('0501234567')], ignored: {key}), isEmpty);
     });
 
     test('counts, talk time, last call and name are summed', () {
-      final g = group([
+      final g = grouped([
         call('+966501234567', days: 5, secs: 30, type: CallType.outgoing),
         call('0501234567', days: 2, secs: 0, type: CallType.missed),
         call('+966 50 123 4567', days: 9, secs: 60, name: 'Ann'),
@@ -151,7 +151,7 @@ void main() {
     });
 
     test('newest group first', () {
-      final g = group([
+      final g = grouped([
         call('+966501234567', days: 10),
         call('+966559876543', days: 1),
         call('+966551111111', days: 5),
@@ -161,7 +161,7 @@ void main() {
   });
 
   group('filters', () {
-    final groups = group([
+    final groups = grouped([
       call('+966501234567', days: 1, secs: 40),
       call('+966501234567', days: 2, secs: 5),
       call('+966559876543', days: 40, secs: 100, type: CallType.outgoing),
@@ -268,7 +268,7 @@ void main() {
     });
 
     test('chosen returns the included groups only', () {
-      final all = group([call('+966501234567'), call('+966559876543')]);
+      final all = grouped([call('+966501234567'), call('+966559876543')]);
       final s = CallSelection()..include(all.first.key);
       expect(s.chosen(all).single.key, all.first.key);
     });
@@ -369,7 +369,7 @@ void main() {
     test('grouping honours the ignore list', () async {
       final b = IgnoreBook(MemoryTagStore());
       await b.add(['+966501234567']);
-      expect(group([call('0501234567')], ignored: b.keys), isEmpty);
+      expect(grouped([call('0501234567')], ignored: b.keys), isEmpty);
     });
   });
 }
