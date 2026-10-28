@@ -391,6 +391,7 @@ class _CallsScreenState extends State<CallsScreen> {
                     final messenger = ScaffoldMessenger.of(context);
                     nav.pop();
                     final r = await c.save(_template.text);
+                    if (r.alreadyThere == 0) return;
                     messenger.showSnackBar(
                       SnackBar(
                         content: Text(

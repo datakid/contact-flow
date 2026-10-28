@@ -3,6 +3,7 @@ import 'package:contact_flow/io/codec.dart';
 import 'package:contact_flow/main.dart' as app;
 import 'package:contact_flow/main.dart';
 import 'package:contact_flow/state/app_state.dart';
+import 'package:contact_flow/ui/settings_sheet.dart' show appVersion;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,7 +75,7 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).last,
     );
-    expect(find.text('Contact Flow 2.5.0 · MIT'), findsOneWidget);
+    expect(find.text('Contact Flow $appVersion · MIT'), findsOneWidget);
     final entries = await t.runAsync(() => LicenseRegistry.licenses.toList());
     final pkgs = entries!.expand((e) => e.packages).toSet();
     expect(pkgs, containsAll(['Manrope', 'Instrument Serif']));

@@ -134,7 +134,7 @@ void main() {
     await t.pump(const Duration(milliseconds: 400));
 
     expect(rig.book.people.any((p) => p.name == 'Caller 1'), isTrue);
-    expect(find.textContaining('Saved 1'), findsOneWidget);
+    expect(find.byKey(const ValueKey('resultSnack')), findsOneWidget);
   });
 
   testWidgets('swiping right selects and swiping left excludes', (t) async {
