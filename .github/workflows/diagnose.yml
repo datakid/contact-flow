@@ -85,6 +85,14 @@ jobs:
           set +e
           flutter build apk --debug --flavor full --dart-define=CALLS=true 2>&1 | tail -n 80 | tee /tmp/rep/build_full.txt
           exit 0
+      - name: goldens
+        timeout-minutes: 20
+        run: |
+          set +e
+          flutter test --tags golden --update-goldens --reporter expanded > /tmp/rep/goldens.txt 2>&1
+          mkdir -p /tmp/rep/goldens
+          cp test/goldens/*.png /tmp/rep/goldens/ 2>/dev/null
+          exit 0
       - name: publish 3
         if: always()
         env:
