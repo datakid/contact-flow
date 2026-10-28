@@ -1,0 +1,79 @@
+name: diagnose
+
+on:
+  push:
+    branches: ['ci/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.35.4
+          channel: stable
+          cache: true
+      - name: prepare
+        run: |
+          mkdir -p /tmp/rep
+          flutter config --no-analytics
+          flutter --version 2>&1 | tee /tmp/rep/version.txt
+      - name: pub get
+        run: |
+          set +e
+          flutter pub get 2>&1 | tee /tmp/rep/pubget.txt
+          cp pubspec.lock /tmp/rep/pubspec.lock
+          exit 0
+      - name: format
+        run: |
+          set +e
+          dart format . 2>&1 | tail -n 5 | tee /tmp/rep/format.txt
+          git diff --stat | tail -n 3 >> /tmp/rep/format.txt
+          git diff > /tmp/rep/format.patch
+          exit 0
+      - name: analyze
+        run: |
+          set +e
+          flutter analyze 2>&1 | tee /tmp/rep/analyze.txt
+          exit 0
+      - name: test
+        run: |
+          set +e
+          flutter test --exclude-tags "perf || golden" --reporter expanded 2>&1 | tee /tmp/rep/test.txt
+          exit 0
+      - name: perf
+        run: |
+          set +e
+          flutter test --tags perf --reporter expanded 2>&1 | tee /tmp/rep/perf.txt
+          exit 0
+      - name: build lite
+        run: |
+          set +e
+          flutter build apk --debug --flavor lite 2>&1 | tail -n 80 | tee /tmp/rep/build_lite.txt
+          exit 0
+      - name: build full
+        run: |
+          set +e
+          flutter build apk --debug --flavor full --dart-define=CALLS=true 2>&1 | tail -n 80 | tee /tmp/rep/build_full.txt
+          exit 0
+      - name: publish report
+        if: always()
+        run: |
+          git config user.name ci
+          git config user.email ci@users.noreply.github.com
+          git checkout -q --orphan report
+          git rm -rf -q . || true
+          cp -r /tmp/rep/. .
+          git add -A
+          git commit -q -m "report for ${GITHUB_SHA}"
+          git push -f origin "HEAD:refs/heads/ci-report-${GITHUB_REF_NAME//\//-}"
