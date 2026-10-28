@@ -167,9 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               if (widget.onTab != null)
-                Flexible(
-                  child: ScreenTitle(l.t('wsFiles')),
-                )
+                Flexible(child: ScreenTitle(l.t('wsFiles')))
               else ...[
                 Container(
                   width: 8,

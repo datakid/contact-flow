@@ -15,11 +15,7 @@ class ScreenTitle extends StatelessWidget {
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: AlignmentDirectional.centerStart,
-      child: Text(
-        text,
-        maxLines: 1,
-        style: AppText.display(p, size: 32),
-      ),
+      child: Text(text, maxLines: 1, style: AppText.display(p, size: 32)),
     );
   }
 }
@@ -87,9 +83,7 @@ class AppNavBar extends StatelessWidget {
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (s) => IconThemeData(
-            color: s.contains(WidgetState.selected)
-                ? p.accentText
-                : p.inkSoft,
+            color: s.contains(WidgetState.selected) ? p.accentText : p.inkSoft,
           ),
         ),
       ),
