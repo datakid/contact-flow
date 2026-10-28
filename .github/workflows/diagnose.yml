@@ -2,7 +2,7 @@ name: diagnose
 
 on:
   push:
-    branches: ['ci/**']
+    branches: ['ci/diagnose']
   workflow_dispatch:
 
 permissions:
