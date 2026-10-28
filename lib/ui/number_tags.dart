@@ -48,7 +48,7 @@ class NumberTags extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.t('tagsTitle'), style: Type.label(p)),
+          Text(l.t('tagsTitle'), style: AppText.label(p)),
           for (final ph in person.phones) ...[
             const SizedBox(height: 10),
             Text(

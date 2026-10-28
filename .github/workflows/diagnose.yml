@@ -38,18 +38,18 @@ jobs:
           flutter pub get 2>&1 | tee /tmp/rep/pubget.txt
           cp pubspec.lock /tmp/rep/pubspec.lock
           exit 0
+      - name: format check
+        run: |
+          set +e
+          dart format --output=none --set-exit-if-changed . > /tmp/rep/format_check.txt 2>&1
+          echo "exit $?" >> /tmp/rep/format_check.txt
+          exit 0
       - name: format
         run: |
           set +e
           dart format . 2>&1 | tail -n 5 | tee /tmp/rep/format.txt
           git diff --stat | tail -n 3 >> /tmp/rep/format.txt
           git diff > /tmp/rep/format.patch
-          exit 0
-      - name: format check
-        run: |
-          set +e
-          dart format --output=none --set-exit-if-changed . > /tmp/rep/format_check.txt 2>&1
-          echo "exit $?" >> /tmp/rep/format_check.txt
           exit 0
       - name: analyze
         timeout-minutes: 15

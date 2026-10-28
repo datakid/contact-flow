@@ -1,3 +1,4 @@
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,18 +112,33 @@ class ContactFlowApp extends StatelessWidget {
     final mode = context.select<AppState, ThemeMode>((s) => s.themeMode);
     final storeFailed = context.select<AppState, bool>((s) => s.storeFailed);
     final lang = context.select<AppState, String>((s) => s.lang);
+    final useDynamic = context.select<AppState, bool>((s) => s.dynamicColor);
     final l = L(lang);
-    Type.spaced = lang != 'ar';
+    AppText.spaced = lang != 'ar';
+    if (!useDynamic) return _app(mode, storeFailed, lang, l, null, null);
+    return DynamicColorBuilder(
+      builder: (light, dark) => _app(mode, storeFailed, lang, l, light, dark),
+    );
+  }
+
+  Widget _app(
+    ThemeMode mode,
+    bool storeFailed,
+    String lang,
+    L l,
+    ColorScheme? light,
+    ColorScheme? dark,
+  ) {
     return LScope(
       l: l,
       child: MaterialApp(
         title: 'Contact Flow',
         debugShowCheckedModeBanner: false,
         themeMode: mode,
-        theme: buildTheme(Brightness.light),
-        darkTheme: buildTheme(Brightness.dark),
-        themeAnimationDuration: const Duration(milliseconds: 380),
-        themeAnimationCurve: Curves.easeOutCubic,
+        theme: buildTheme(Brightness.light, dynamicScheme: light),
+        darkTheme: buildTheme(Brightness.dark, dynamicScheme: dark),
+        themeAnimationDuration: AppMotion.slow,
+        themeAnimationCurve: AppMotion.curve,
         locale: Locale(lang),
         supportedLocales: L.langs.keys.map(Locale.new).toList(),
         localizationsDelegates: const [

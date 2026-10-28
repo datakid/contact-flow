@@ -141,7 +141,7 @@ class StateView extends StatelessWidget {
             child: Icon(icon, color: p.accent, size: 30),
           ),
           const SizedBox(height: 24),
-          Text(title, style: Type.display(p, size: 34)),
+          Text(title, style: AppText.display(p, size: 34)),
           const SizedBox(height: 12),
           Text(
             body,

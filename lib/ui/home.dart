@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 10),
                 Text(
                   l.t('appTitle').toUpperCase(),
-                  style: Type.label(p).copyWith(color: p.inkSoft),
+                  style: AppText.label(p).copyWith(color: p.inkSoft),
                 ),
               ],
               const Spacer(),
@@ -209,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               hasPeople ? l.t('library') : l.t('greeting'),
               key: ValueKey(hasPeople),
-              style: Type.display(p, size: 52),
+              style: AppText.display(p, size: 52),
             ),
           ),
           const SizedBox(height: 10),
@@ -245,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 : Text(
                     l.t('tagline'),
                     key: const ValueKey('tag'),
-                    style: Type.display(
+                    style: AppText.display(
                       p,
                       size: 22,
                       italic: true,
@@ -406,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
               l.n(list.length, 'contacts_one', 'contacts_many'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Type.label(p),
+              style: AppText.label(p),
             ),
           ),
           TextButton.icon(
@@ -439,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           letter,
-          style: Type.display(p, size: 26).copyWith(color: p.accent),
+          style: AppText.display(p, size: 26).copyWith(color: p.accent),
         ),
         const SizedBox(width: 14),
         Expanded(child: Container(height: 1, color: p.hairline)),
@@ -484,7 +484,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 28),
           FadeSlideIn(
             index: 1,
-            child: Text(l.t('emptyTitle'), style: Type.display(p, size: 34)),
+            child: Text(l.t('emptyTitle'), style: AppText.display(p, size: 34)),
           ),
           const SizedBox(height: 12),
           FadeSlideIn(
@@ -511,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           l.t('noResults', {'q': s.query.trim()}),
-          style: Type.display(p, size: 30),
+          style: AppText.display(p, size: 30),
         ),
         const SizedBox(height: 10),
         Text(

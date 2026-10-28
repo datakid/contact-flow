@@ -437,14 +437,14 @@ class _BatchScreenState extends State<BatchScreen> {
         children: [
           SizedBox(
             width: _numW,
-            child: Center(child: Text('#', style: Type.label(p))),
+            child: Center(child: Text('#', style: AppText.label(p))),
           ),
           for (final c in cols)
             SizedBox(
               width: _w[c],
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(title(c).toUpperCase(), style: Type.label(p)),
+                child: Text(title(c).toUpperCase(), style: AppText.label(p)),
               ),
             ),
         ],
@@ -617,7 +617,7 @@ class _OpsSheet extends StatelessWidget {
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-            child: Text(l.t('operations'), style: Type.display(p, size: 36)),
+            child: Text(l.t('operations'), style: AppText.display(p, size: 36)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 6, 24, 0),
@@ -975,7 +975,7 @@ class _OpDialogState extends State<_OpDialog> {
             res.isEmpty
                 ? l.t('noChanges')
                 : l.t('willChange', {'n': res.length}),
-            style: Type.label(
+            style: AppText.label(
               p,
             ).copyWith(color: res.isEmpty ? p.inkFaint : p.accentText),
           ),

@@ -116,7 +116,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text(l.t('replaceQueue'), style: Type.display(p, size: 26)),
+        title: Text(l.t('replaceQueue'), style: AppText.display(p, size: 26)),
         content: Text(l.t('replaceQueueBody')),
         actions: [
           TextButton(
@@ -145,7 +145,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text(l.t('groupSmsTitle'), style: Type.display(p, size: 26)),
+        title: Text(l.t('groupSmsTitle'), style: AppText.display(p, size: 26)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -222,7 +222,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
                     child: Text(
                       l.n(reachable.length, 'recipientsOne', 'recipientsN'),
-                      style: Type.display(p, size: 34),
+                      style: AppText.display(p, size: 34),
                     ),
                   ),
                   Padding(
@@ -359,7 +359,7 @@ class _ComposeScreenState extends State<ComposeScreen> {
                       children: [
                         Text(
                           l.t('previewFor', {'name': sample.displayName}),
-                          style: Type.label(p),
+                          style: AppText.label(p),
                         ),
                         const SizedBox(height: 6),
                         Text(

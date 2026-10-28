@@ -36,7 +36,7 @@ class PhoneDetailScreen extends StatelessWidget {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(l.t('contactGone'), style: Type.display(p, size: 28)),
+            child: Text(l.t('contactGone'), style: AppText.display(p, size: 28)),
           ),
         ),
       );
@@ -112,7 +112,7 @@ class PhoneDetailScreen extends StatelessWidget {
               child: Text(
                 person.displayName,
                 textAlign: TextAlign.center,
-                style: Type.display(p, size: 34),
+                style: AppText.display(p, size: 34),
               ),
             ),
             AliasLine(aliases: person.cleanAliases),
@@ -134,7 +134,7 @@ class PhoneDetailScreen extends StatelessWidget {
                       accountLabel(l, person.account),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Type.label(p),
+                      style: AppText.label(p),
                     ),
                   ),
                 ],
@@ -224,7 +224,7 @@ class _Line extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label.toUpperCase(), style: Type.label(p)),
+                  Text(label.toUpperCase(), style: AppText.label(p)),
                   const SizedBox(height: 4),
                   Directionality(
                     textDirection: ltr

@@ -274,7 +274,7 @@ class _ImportSheetState extends State<_ImportSheet> {
                     Expanded(
                       child: Text(
                         l.t('import'),
-                        style: Type.display(p, size: 40),
+                        style: AppText.display(p, size: 40),
                       ),
                     ),
                     if (_busy)
@@ -673,7 +673,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         children: [
                           Text(
                             '${plan.incoming.length}',
-                            style: Type.display(
+                            style: AppText.display(
                               p,
                               size: 88,
                             ).copyWith(height: 0.95),
@@ -684,7 +684,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                               'contacts_one',
                               'contacts_many',
                             ),
-                            style: Type.display(
+                            style: AppText.display(
                               p,
                               size: 24,
                               italic: true,
@@ -786,7 +786,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                             const SizedBox(height: 12),
                             Text(
                               l.t('allKnown'),
-                              style: Type.display(p, size: 26),
+                              style: AppText.display(p, size: 26),
                             ),
                             const SizedBox(height: 6),
                             Text(
@@ -955,7 +955,7 @@ class _Stat extends StatelessWidget {
                     label.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Type.label(p),
+                    style: AppText.label(p),
                   ),
                 ),
               ],
@@ -966,7 +966,7 @@ class _Stat extends StatelessWidget {
               duration: const Duration(milliseconds: 700),
               curve: Curves.easeOutCubic,
               builder: (c, v, _) =>
-                  Text('${v.round()}', style: Type.display(p, size: 36)),
+                  Text('${v.round()}', style: AppText.display(p, size: 36)),
             ),
           ],
         ),

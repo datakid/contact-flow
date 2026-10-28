@@ -276,7 +276,7 @@ class _ExportScreenState extends State<ExportScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l.t('export'), style: Type.display(p, size: 52)),
+                        Text(l.t('export'), style: AppText.display(p, size: 52)),
                         const SizedBox(height: 6),
                         Text.rich(
                           TextSpan(
@@ -463,7 +463,7 @@ class _ExportScreenState extends State<ExportScreen> {
                             _preview(l),
                             style: TextStyle(
                               fontFamily: 'monospace',
-                              fontFamilyFallback: Type.fallback,
+                              fontFamilyFallback: AppText.fallback,
                               fontSize: 12,
                               height: 1.6,
                               color: p.inkSoft,

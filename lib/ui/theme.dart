@@ -1,6 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+const brandSeed = Color(0xFFE8664A);
+
+class AppSpace {
+  static const double s4 = 4;
+  static const double s8 = 8;
+  static const double s12 = 12;
+  static const double s16 = 16;
+  static const double s24 = 24;
+  static const double s32 = 32;
+  static const double s48 = 48;
+}
+
+class AppRadius {
+  static const double sm = 8;
+  static const double md = 14;
+  static const double lg = 24;
+  static const double xl = 28;
+  static const double pill = 999;
+}
+
+class AppMotion {
+  static const fast = Duration(milliseconds: 120);
+  static const base = Duration(milliseconds: 220);
+  static const slow = Duration(milliseconds: 380);
+  static const curve = Curves.easeOutCubic;
+}
+
+double contrastRatio(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  final hi = la > lb ? la : lb;
+  final lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+Color ensureContrast(Color fg, List<Color> on, double min) {
+  bool ok(Color c) => on.every((bg) => contrastRatio(c, bg) >= min);
+  if (ok(fg)) return fg;
+  final light = on.every((bg) => bg.computeLuminance() < 0.4);
+  final target = light ? Colors.white : Colors.black;
+  for (var i = 1; i <= 20; i++) {
+    final c = Color.lerp(fg, target, i / 20)!;
+    if (ok(c)) return c;
+  }
+  return target;
+}
+
 @immutable
 class Palette extends ThemeExtension<Palette> {
   final Color paper;
@@ -83,6 +130,45 @@ class Palette extends ThemeExtension<Palette> {
     ],
   );
 
+  factory Palette.fromScheme(ColorScheme s) {
+    final dark = s.brightness == Brightness.dark;
+    final paper = dark ? s.surface : s.surfaceContainerLow;
+    final sheet = dark ? s.surfaceContainer : s.surfaceContainerLowest;
+    final bgs = [paper, sheet];
+    final ink = ensureContrast(s.onSurface, bgs, 8);
+    final soft = ensureContrast(s.onSurfaceVariant, bgs, 5.5);
+    final faint = ensureContrast(Color.lerp(soft, paper, 0.25)!, bgs, 4.5);
+    final accent = ensureContrast(s.primary, bgs, 3);
+    final onAccent = ensureContrast(s.onPrimary, [accent], 4.5);
+    final sage = ensureContrast(s.tertiary, bgs, 3);
+    final pc = s.primaryContainer;
+    final sc = s.secondaryContainer;
+    final tc = s.tertiaryContainer;
+    return Palette(
+      paper: paper,
+      sheet: sheet,
+      ink: ink,
+      inkSoft: soft,
+      inkFaint: faint,
+      hairline: s.outlineVariant,
+      accent: accent,
+      accentSoft: pc,
+      onAccent: onAccent,
+      sage: sage,
+      accentText: ensureContrast(s.primary, bgs, 5.5),
+      sageText: ensureContrast(s.tertiary, bgs, 5.5),
+      highlight: accent.withValues(alpha: dark ? 0.25 : 0.2),
+      avatars: [
+        pc,
+        sc,
+        tc,
+        Color.lerp(pc, sc, 0.5)!,
+        Color.lerp(sc, tc, 0.5)!,
+        Color.lerp(tc, pc, 0.5)!,
+      ],
+    );
+  }
+
   @override
   Palette copyWith() => this;
 
@@ -116,7 +202,7 @@ extension PaletteX on BuildContext {
   Palette get pal => Theme.of(this).extension<Palette>()!;
 }
 
-class Type {
+class AppText {
   static bool spaced = true;
   static const sans = 'Manrope';
   static const serif = 'Instrument';
@@ -155,26 +241,28 @@ class Type {
   );
 }
 
-ThemeData buildTheme(Brightness b) {
-  final p = b == Brightness.light ? Palette.light : Palette.dark;
+ThemeData buildTheme(Brightness b, {ColorScheme? dynamicScheme}) {
+  final p = dynamicScheme != null
+      ? Palette.fromScheme(dynamicScheme)
+      : (b == Brightness.light ? Palette.light : Palette.dark);
   final base = ThemeData(
     useMaterial3: true,
     brightness: b,
-    fontFamily: Type.sans,
-    fontFamilyFallback: Type.fallback,
+    fontFamily: AppText.sans,
+    fontFamilyFallback: AppText.fallback,
   );
   final text = base.textTheme.apply(
     bodyColor: p.ink,
     displayColor: p.ink,
-    fontFamily: Type.sans,
-    fontFamilyFallback: Type.fallback,
+    fontFamily: AppText.sans,
+    fontFamilyFallback: AppText.fallback,
   );
   return base.copyWith(
     scaffoldBackgroundColor: p.paper,
     canvasColor: p.paper,
     splashFactory: InkSparkle.splashFactory,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: p.accent,
+      seedColor: dynamicScheme?.primary ?? brandSeed,
       brightness: b,
       primary: p.accent,
       onPrimary: p.onAccent,
@@ -222,25 +310,25 @@ ThemeData buildTheme(Brightness b) {
       modalBackgroundColor: p.sheet,
       showDragHandle: false,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: p.sheet,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: p.ink,
       contentTextStyle: TextStyle(
         color: p.paper,
-        fontFamily: Type.sans,
+        fontFamily: AppText.sans,
         fontWeight: FontWeight.w600,
-        fontFamilyFallback: Type.fallback,
+        fontFamilyFallback: AppText.fallback,
       ),
       actionTextColor: p.accent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
       elevation: 0,
     ),
     switchTheme: SwitchThemeData(

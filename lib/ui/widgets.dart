@@ -145,8 +145,8 @@ class Avatar extends StatelessWidget {
                 ini,
                 key: ValueKey(ini),
                 style: TextStyle(
-                  fontFamily: Type.serif,
-                  fontFamilyFallback: Type.fallback,
+                  fontFamily: AppText.serif,
+                  fontFamilyFallback: AppText.fallback,
                   fontSize: size * (ini.length > 1 ? 0.38 : 0.44),
                   color: p.ink.withValues(alpha: 0.78),
                   height: 1.1,
@@ -459,7 +459,7 @@ class SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
       child: Row(
         children: [
-          Expanded(child: Text(text.toUpperCase(), style: Type.label(p))),
+          Expanded(child: Text(text.toUpperCase(), style: AppText.label(p))),
           ?trailing,
         ],
       ),

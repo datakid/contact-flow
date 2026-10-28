@@ -49,7 +49,7 @@ Future<bool> confirmDelete(BuildContext context, ChangeSet set) async {
     builder: (c) => AlertDialog(
       title: Text(
         l.n(n, 'deleteTitleOne', 'deleteTitleN'),
-        style: Type.display(p, size: 28),
+        style: AppText.display(p, size: 28),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -202,7 +202,7 @@ class ProgressDialog extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: AlertDialog(
-        title: Text(l.t('applying'), style: Type.display(p, size: 28)),
+        title: Text(l.t('applying'), style: AppText.display(p, size: 28)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -384,12 +384,12 @@ class _ChangeReviewScreenState extends State<ChangeReviewScreen> {
         children: [
           Text(
             l.n(widget.set.affectedContacts, 'cfContactsOne', 'cfContactsN'),
-            style: Type.display(p, size: 38),
+            style: AppText.display(p, size: 38),
           ),
           const SizedBox(height: 4),
           Text(
             intentLabel(l, widget.set.intent),
-            style: Type.display(
+            style: AppText.display(
               p,
               size: 18,
               italic: true,
@@ -579,7 +579,7 @@ class DiffLine extends StatelessWidget {
           children: [
             TextSpan(
               text: '${fieldLabel(l, change.field)}  ',
-              style: Type.label(p).copyWith(fontSize: 10),
+              style: AppText.label(p).copyWith(fontSize: 10),
             ),
             TextSpan(
               text: fieldValue(l, change.field, change.before),

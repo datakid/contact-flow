@@ -51,7 +51,7 @@ class _Settings extends StatelessWidget {
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
-            child: Text(l.t('settings'), style: Type.display(p, size: 40)),
+            child: Text(l.t('settings'), style: AppText.display(p, size: 40)),
           ),
           SectionLabel(l.t('theme')),
           Padding(
@@ -75,6 +75,19 @@ class _Settings extends StatelessWidget {
               ],
             ),
           ),
+          if (defaultTargetPlatform == TargetPlatform.android)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Pill(
+                  key: const ValueKey('set-dynamic'),
+                  label: l.t('dynamicColor'),
+                  active: s.dynamicColor,
+                  onTap: () => s.setDynamicColor(!s.dynamicColor),
+                ),
+              ),
+            ),
           SectionLabel(l.t('language')),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -301,7 +314,7 @@ class _Settings extends StatelessWidget {
                       builder: (c) => AlertDialog(
                         title: Text(
                           l.t('clearLibrary'),
-                          style: Type.display(p, size: 28),
+                          style: AppText.display(p, size: 28),
                         ),
                         content: Text(
                           l.t('clearConfirm'),
@@ -342,7 +355,7 @@ class _Settings extends StatelessWidget {
               children: [
                 Text(
                   l.t('aboutBody'),
-                  style: Type.display(
+                  style: AppText.display(
                     p,
                     size: 21,
                     italic: true,
@@ -371,7 +384,7 @@ class _Settings extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Contact Flow $appVersion · MIT',
-                        style: Type.label(p),
+                        style: AppText.label(p),
                       ),
                     ),
                     Flexible(

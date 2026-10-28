@@ -211,7 +211,7 @@ class _PhoneHomeState extends State<PhoneHome> {
             ],
           ),
           const SizedBox(height: 18),
-          Text(l.t('phoneTitle'), style: Type.display(p, size: 52)),
+          Text(l.t('phoneTitle'), style: AppText.display(p, size: 52)),
           const SizedBox(height: 10),
           if (ready)
             Wrap(
@@ -246,7 +246,7 @@ class _PhoneHomeState extends State<PhoneHome> {
           else
             Text(
               l.t('phoneTagline'),
-              style: Type.display(
+              style: AppText.display(
                 p,
                 size: 22,
                 italic: true,
@@ -668,7 +668,7 @@ class _PhoneHomeState extends State<PhoneHome> {
                   l.n(list.length, 'contacts_one', 'contacts_many'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Type.label(p),
+                  style: AppText.label(p),
                 ),
               ),
               if (book.filtering && !book.searching)
@@ -744,7 +744,7 @@ class _PhoneHomeState extends State<PhoneHome> {
               book.searching
                   ? l.t('noResults', {'q': book.query.trim()})
                   : l.t('nothingMatches'),
-              style: Type.display(p, size: 30),
+              style: AppText.display(p, size: 30),
             ),
           ),
         ),

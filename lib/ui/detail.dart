@@ -66,7 +66,7 @@ class _Detail extends StatelessWidget {
             child: Text(
               person.displayName,
               textAlign: TextAlign.center,
-              style: Type.display(p, size: 34),
+              style: AppText.display(p, size: 34),
             ),
           ),
           AliasLine(aliases: person.cleanAliases),
@@ -76,7 +76,7 @@ class _Detail extends StatelessWidget {
               child: Text(
                 person.org,
                 textAlign: TextAlign.center,
-                style: Type.display(
+                style: AppText.display(
                   p,
                   size: 18,
                   italic: true,
@@ -170,7 +170,7 @@ class _Detail extends StatelessWidget {
               child: Text(
                 person.source == 'device' ? l.t('fromDevice') : person.source,
                 textAlign: TextAlign.center,
-                style: Type.label(p),
+                style: AppText.label(p),
               ),
             ),
         ],
@@ -205,7 +205,7 @@ class _Line extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label.toUpperCase(), style: Type.label(p)),
+                  Text(label.toUpperCase(), style: AppText.label(p)),
                   const SizedBox(height: 4),
                   Directionality(
                     textDirection: ltr

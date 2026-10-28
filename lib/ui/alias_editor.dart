@@ -239,7 +239,7 @@ class AliasLine extends StatelessWidget {
         l.t('akaLine', {'names': aliases.join(' · ')}),
         key: const ValueKey('akaLine'),
         textAlign: align,
-        style: Type.display(
+        style: AppText.display(
           p,
           size: 18,
           italic: true,

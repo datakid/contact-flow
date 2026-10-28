@@ -51,6 +51,7 @@ class DedupeUndo {
 class AppState extends ContactList {
   final LibraryStore _store;
   ThemeMode themeMode = ThemeMode.system;
+  bool dynamicColor = false;
   String lang = 'en';
   String country = '';
   List<String> recent = [];
@@ -72,6 +73,7 @@ class AppState extends ContactList {
   Future<void> init({bool openStore = true, bool detectRegion = false}) async {
     final prefs = await SharedPreferences.getInstance();
     themeMode = ThemeMode.values[(prefs.getInt('theme') ?? 0).clamp(0, 2)];
+    dynamicColor = prefs.getBool('dynamicColor') ?? false;
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     lang =
         prefs.getString('lang') ??
@@ -138,6 +140,12 @@ class AppState extends ContactList {
     themeMode = m;
     notifyListeners();
     (await SharedPreferences.getInstance()).setInt('theme', m.index);
+  }
+
+  Future<void> setDynamicColor(bool on) async {
+    dynamicColor = on;
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setBool('dynamicColor', on);
   }
 
   Future<void> setLang(String l) async {

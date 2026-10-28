@@ -36,7 +36,7 @@ class _StoreErrorScreenState extends State<StoreErrorScreen> {
             children: [
               Icon(Icons.error_outline_rounded, color: p.accent, size: 36),
               const SizedBox(height: 16),
-              Text(l.t('storeErrorTitle'), style: Type.display(p, size: 30)),
+              Text(l.t('storeErrorTitle'), style: AppText.display(p, size: 30)),
               const SizedBox(height: 12),
               Text(
                 l.t('storeErrorBody'),

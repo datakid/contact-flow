@@ -148,7 +148,7 @@ class _MergeScreenState extends State<MergeScreen> {
                                     'dupGroupsOne',
                                     'dupGroupsN',
                                   ),
-                            style: Type.display(p, size: 34),
+                            style: AppText.display(p, size: 34),
                           ),
                         ),
                         Padding(
@@ -243,7 +243,7 @@ class _GroupCard extends StatelessWidget {
             ),
           Padding(
             padding: const EdgeInsetsDirectional.only(start: 12, bottom: 4),
-            child: Text(l.t('chooseKeep').toUpperCase(), style: Type.label(p)),
+            child: Text(l.t('chooseKeep').toUpperCase(), style: AppText.label(p)),
           ),
           RadioGroup<String>(
             groupValue: keep.id,

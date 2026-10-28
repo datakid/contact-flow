@@ -40,7 +40,7 @@ class LetterHeader extends StatelessWidget {
               Text(
                 letter,
                 maxLines: 1,
-                style: Type.display(p, size: 26).copyWith(color: p.accent),
+                style: AppText.display(p, size: 26).copyWith(color: p.accent),
               ),
               const SizedBox(width: 14),
               Expanded(child: Container(height: 1, color: p.hairline)),

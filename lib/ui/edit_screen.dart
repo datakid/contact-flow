@@ -127,7 +127,7 @@ class _EditorState extends State<_Editor> {
                     padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
                     child: Text(
                       l.t('phone').toUpperCase(),
-                      style: Type.label(p),
+                      style: AppText.label(p),
                     ),
                   ),
                   for (var i = 0; i < _phones.length; i++)
@@ -242,7 +242,7 @@ class _EditorState extends State<_Editor> {
                     padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
                     child: Text(
                       l.t('aliases').toUpperCase(),
-                      style: Type.label(p),
+                      style: AppText.label(p),
                     ),
                   ),
                   AnimatedBuilder(
@@ -340,7 +340,7 @@ class _Field extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Text(label.toUpperCase(), style: Type.label(p)),
+            child: Text(label.toUpperCase(), style: AppText.label(p)),
           ),
           _Box(
             lines: lines,

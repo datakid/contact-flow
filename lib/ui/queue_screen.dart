@@ -53,7 +53,7 @@ class QueueScreen extends StatelessWidget {
 
   Widget _empty(L l, Palette p) => Padding(
     padding: const EdgeInsets.all(24),
-    child: Text(l.t('queueEmpty'), style: Type.display(p, size: 28)),
+    child: Text(l.t('queueEmpty'), style: AppText.display(p, size: 28)),
   );
 
   Widget _body(BuildContext context, MessageQueue q, L l, Palette p) {
@@ -71,7 +71,7 @@ class QueueScreen extends StatelessWidget {
                 child: Text(
                   l.t('progressOf', {'done': q.handled, 'total': q.total}),
                   key: const ValueKey('queueProgress'),
-                  style: Type.display(p, size: 34),
+                  style: AppText.display(p, size: 34),
                 ),
               ),
               Padding(
@@ -96,7 +96,7 @@ class QueueScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
                   child: Text(
                     q.stopped ? l.t('queueStopped') : l.t('queueDone'),
-                    style: Type.display(p, size: 28),
+                    style: AppText.display(p, size: 28),
                   ),
                 )
               else if (cur != null)
@@ -111,12 +111,12 @@ class QueueScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(l.t('nextUp').toUpperCase(), style: Type.label(p)),
+                      Text(l.t('nextUp').toUpperCase(), style: AppText.label(p)),
                       const SizedBox(height: 6),
                       Text(
                         cur.name,
                         key: const ValueKey('queueCurrent'),
-                        style: Type.display(p, size: 28),
+                        style: AppText.display(p, size: 28),
                       ),
                       Directionality(
                         textDirection: TextDirection.ltr,

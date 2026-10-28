@@ -58,7 +58,7 @@ Future<String?> askCountry(BuildContext context, {bool force = false}) async {
   final picked = await showDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(l.t('countryTitle'), style: Type.display(p, size: 28)),
+      title: Text(l.t('countryTitle'), style: AppText.display(p, size: 28)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -233,7 +233,7 @@ Future<void> copyNumbers(BuildContext context, List<Person> people) async {
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-            child: Text(l.t('copyNumbers'), style: Type.display(p, size: 30)),
+            child: Text(l.t('copyNumbers'), style: AppText.display(p, size: 30)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
