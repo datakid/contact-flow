@@ -36,7 +36,10 @@ class PhoneDetailScreen extends StatelessWidget {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(l.t('contactGone'), style: AppText.display(p, size: 28)),
+            child: Text(
+              l.t('contactGone'),
+              style: AppText.display(p, size: 28),
+            ),
           ),
         ),
       );

@@ -111,7 +111,10 @@ class QueueScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(l.t('nextUp').toUpperCase(), style: AppText.label(p)),
+                      Text(
+                        l.t('nextUp').toUpperCase(),
+                        style: AppText.label(p),
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         cur.name,

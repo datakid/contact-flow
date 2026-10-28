@@ -276,7 +276,10 @@ class _ExportScreenState extends State<ExportScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l.t('export'), style: AppText.display(p, size: 52)),
+                        Text(
+                          l.t('export'),
+                          style: AppText.display(p, size: 52),
+                        ),
                         const SizedBox(height: 6),
                         Text.rich(
                           TextSpan(

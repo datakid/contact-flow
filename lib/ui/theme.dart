@@ -316,7 +316,9 @@ ThemeData buildTheme(Brightness b, {ColorScheme? dynamicScheme}) {
     dialogTheme: DialogThemeData(
       backgroundColor: p.sheet,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
@@ -328,7 +330,9 @@ ThemeData buildTheme(Brightness b, {ColorScheme? dynamicScheme}) {
         fontFamilyFallback: AppText.fallback,
       ),
       actionTextColor: p.accent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
       elevation: 0,
     ),
     switchTheme: SwitchThemeData(

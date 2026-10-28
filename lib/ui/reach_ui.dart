@@ -233,7 +233,10 @@ Future<void> copyNumbers(BuildContext context, List<Person> people) async {
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-            child: Text(l.t('copyNumbers'), style: AppText.display(p, size: 30)),
+            child: Text(
+              l.t('copyNumbers'),
+              style: AppText.display(p, size: 30),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),

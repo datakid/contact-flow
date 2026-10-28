@@ -243,7 +243,10 @@ class _GroupCard extends StatelessWidget {
             ),
           Padding(
             padding: const EdgeInsetsDirectional.only(start: 12, bottom: 4),
-            child: Text(l.t('chooseKeep').toUpperCase(), style: AppText.label(p)),
+            child: Text(
+              l.t('chooseKeep').toUpperCase(),
+              style: AppText.label(p),
+            ),
           ),
           RadioGroup<String>(
             groupValue: keep.id,
