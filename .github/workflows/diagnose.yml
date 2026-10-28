@@ -42,38 +42,52 @@ jobs:
           git diff > /tmp/rep/format.patch
           exit 0
       - name: analyze
+        timeout-minutes: 15
         run: |
           set +e
           flutter analyze 2>&1 | tee /tmp/rep/analyze.txt
           exit 0
+      - name: publish 1
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tool/publish_report.sh
       - name: test
+        timeout-minutes: 25
         run: |
           set +e
           flutter test --exclude-tags "perf || golden" --reporter expanded 2>&1 | tee /tmp/rep/test.txt
           exit 0
-      - name: perf
-        run: |
-          set +e
-          flutter test --tags perf --reporter expanded 2>&1 | tee /tmp/rep/perf.txt
-          exit 0
+      - name: publish 2
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tool/publish_report.sh
       - name: build lite
+        timeout-minutes: 20
         run: |
           set +e
           flutter build apk --debug --flavor lite 2>&1 | tail -n 80 | tee /tmp/rep/build_lite.txt
           exit 0
       - name: build full
+        timeout-minutes: 20
         run: |
           set +e
           flutter build apk --debug --flavor full --dart-define=CALLS=true 2>&1 | tail -n 80 | tee /tmp/rep/build_full.txt
           exit 0
-      - name: publish report
+      - name: publish 3
         if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tool/publish_report.sh
+      - name: perf
+        timeout-minutes: 15
         run: |
-          git config user.name ci
-          git config user.email ci@users.noreply.github.com
-          git checkout -q --orphan report
-          git rm -rf -q . || true
-          cp -r /tmp/rep/. .
-          git add -A
-          git commit -q -m "report for ${GITHUB_SHA}"
-          git push -f origin "HEAD:refs/heads/ci-report-${GITHUB_REF_NAME//\//-}"
+          set +e
+          flutter test --tags perf --reporter expanded 2>&1 | tail -n 300 | tee /tmp/rep/perf.txt
+          exit 0
+      - name: publish 4
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tool/publish_report.sh
