@@ -17,14 +17,14 @@ void main() {
     () {
       final b = StringBuffer();
       for (var i = 0; i < 1000000; i++) {
-        b.writeln('Person $i 055${(i % 10000000).toString().padLeft(7, '0')}');
+        b.writeln('Person $i, 055${(i % 10000000).toString().padLeft(7, '0')}');
       }
       final sw = Stopwatch()..start();
       final r = Codec.decode('big.txt', text(b.toString()));
       stdout.writeln(
         '1M-line txt: ${sw.elapsedMilliseconds}ms ${r.people.length}',
       );
-      expect(r.people, isNotEmpty);
+      expect(r.people.length, 1000000);
       expect(sw.elapsed, lessThan(const Duration(seconds: 30)));
     },
     timeout: const Timeout(Duration(minutes: 3)),

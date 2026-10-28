@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../models/person.dart';
+import '../phone/phone_key.dart';
 import 'numbers.dart';
 import 'tabular.dart';
 import 'text_decode.dart';
@@ -455,8 +456,21 @@ class Codec {
     return rows;
   }
 
+  static final _txtEmail = RegExp(
+    r'[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+',
+  );
+  static final _txtPunct = RegExp(r'[\t,;:|<>\-–—=•·：，；、()（）\[\]]+');
+  static final _txtLabel = RegExp(
+    r'\b(tel|phone|mobile|cell|fax|ph|mob|hp)\b\.?',
+    caseSensitive: false,
+  );
+  static final _txtSpace = RegExp(r'\s+');
+
   static List<Person> _fromTxt(String text, String src) {
     final out = <Person>[];
+    Person? cur;
+    var byKey = <String, List<String>>{};
+    var mailKeys = <String>{};
     for (final rawLine in text.replaceAll('\r', '\n').split('\n')) {
       final line = rawLine.trim();
       if (line.isEmpty) continue;
@@ -466,41 +480,47 @@ class Codec {
       for (final n in nums) {
         rest = rest.replaceFirst(n, ' ');
       }
-      final emails = RegExp(
-        r'[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+',
-      ).allMatches(rest).map((m) => m.group(0)!).toList();
+      final emails = _txtEmail
+          .allMatches(rest)
+          .map((m) => m.group(0)!)
+          .toList();
       for (final e in emails) {
         rest = rest.replaceFirst(e, ' ');
       }
       final name = rest
-          .replaceAll(RegExp(r'[\t,;:|<>\-–—=•·：，；、()（）\[\]]+'), ' ')
-          .replaceAll(
-            RegExp(
-              r'\b(tel|phone|mobile|cell|fax|ph|mob|hp)\b\.?',
-              caseSensitive: false,
-            ),
-            ' ',
-          )
-          .replaceAll(RegExp(r'\s+'), ' ')
+          .replaceAll(_txtPunct, ' ')
+          .replaceAll(_txtLabel, ' ')
+          .replaceAll(_txtSpace, ' ')
           .trim();
-      if (out.isNotEmpty && name.isNotEmpty && out.last.name == name) {
-        out.last.absorb(
-          Person(
-            name: name,
-            phones: nums.map((n) => PhoneEntry(n)).toList(),
-            emails: emails,
-          ),
-        );
+      final open = cur;
+      if (open != null && name.isNotEmpty && open.name == name) {
+        for (final n in nums) {
+          final k = Phones.key(n);
+          if (k.isEmpty) continue;
+          final same = byKey[k] ??= [];
+          if (same.any((q) => PhoneKey.compatible(q, n))) continue;
+          same.add(n);
+          open.phones.add(PhoneEntry(n));
+        }
+        for (final e in emails) {
+          if (mailKeys.add(e.toLowerCase())) open.emails.add(e);
+        }
         continue;
       }
-      out.add(
-        Person(
-          name: name,
-          phones: nums.map((n) => PhoneEntry(n)).toList(),
-          emails: emails,
-          source: src,
-        ),
+      final person = Person(
+        name: name,
+        phones: nums.map((n) => PhoneEntry(n)).toList(),
+        emails: emails,
+        source: src,
       );
+      out.add(person);
+      cur = person;
+      byKey = <String, List<String>>{};
+      for (final n in nums) {
+        final k = Phones.key(n);
+        if (k.isNotEmpty) (byKey[k] ??= []).add(n);
+      }
+      mailKeys = {for (final e in emails) e.toLowerCase()};
     }
     return out;
   }
