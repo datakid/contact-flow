@@ -5,7 +5,6 @@ import 'package:contact_flow/state/app_state.dart';
 import 'package:contact_flow/tags/tag_book.dart';
 import 'package:contact_flow/tags/tag_store.dart';
 import 'package:contact_flow/ui/workspace.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -620,12 +620,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 size: 20,
                               ),
                               const SizedBox(width: 10),
-                              Text(
-                                l.t('export'),
-                                style: TextStyle(
-                                  color: p.onAccent,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
+                              Flexible(
+                                child: Text(
+                                  l.t('export'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: p.onAccent,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
                             ],
