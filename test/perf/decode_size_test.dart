@@ -16,8 +16,18 @@ void main() {
     'a 1M-line text file decodes in time',
     () {
       final b = StringBuffer();
+      String letters(int n) {
+        final out = StringBuffer();
+        var v = n;
+        do {
+          out.writeCharCode(97 + v % 26);
+          v ~/= 26;
+        } while (v > 0);
+        return out.toString();
+      }
+
       for (var i = 0; i < 1000000; i++) {
-        b.writeln('Person $i, 055${(i % 10000000).toString().padLeft(7, '0')}');
+        b.writeln('Person ${letters(i)}, 055${i.toString().padLeft(7, '0')}');
       }
       final sw = Stopwatch()..start();
       final r = Codec.decode('big.txt', text(b.toString()));
