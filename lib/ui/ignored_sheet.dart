@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../calls/ignore_book.dart';
 import '../l10n.dart';
 import 'theme.dart';
-import 'widgets.dart';
 
 Future<void> showIgnoredSheet(BuildContext context) =>
     showModalBottomSheet<void>(
@@ -16,8 +15,15 @@ Future<void> showIgnoredSheet(BuildContext context) =>
       ),
     );
 
-class IgnoredList extends StatelessWidget {
+class IgnoredList extends StatefulWidget {
   const IgnoredList({super.key});
+
+  @override
+  State<IgnoredList> createState() => _IgnoredListState();
+}
+
+class _IgnoredListState extends State<IgnoredList> {
+  MapEntry<String, String>? _removed;
 
   @override
   Widget build(BuildContext context) {
@@ -74,17 +80,37 @@ class IgnoredList extends StatelessWidget {
                         icon: const Icon(Icons.undo_rounded),
                         onPressed: () async {
                           await book.remove([e.key]);
-                          if (!context.mounted) return;
-                          toast(
-                            context,
-                            l.t('ignoredRemoved'),
-                            action: l.t('undo'),
-                            onAction: () => book.addKeys({e.key: e.value}),
-                          );
+                          if (!mounted) return;
+                          setState(() => _removed = e);
                         },
                       ),
                     );
                   },
+                ),
+              ),
+            if (_removed != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 4, 12, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l.t('ignoredRemoved'),
+                        style: TextStyle(color: p.inkSoft),
+                      ),
+                    ),
+                    TextButton(
+                      key: const ValueKey('ignored-undo'),
+                      onPressed: () async {
+                        final r = _removed;
+                        if (r == null) return;
+                        await book.addKeys({r.key: r.value});
+                        if (!mounted) return;
+                        setState(() => _removed = null);
+                      },
+                      child: Text(l.t('undo')),
+                    ),
+                  ],
                 ),
               ),
           ],

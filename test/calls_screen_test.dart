@@ -127,7 +127,11 @@ void main() {
     );
     await t.pump();
     await t.tap(find.byKey(const ValueKey('calls-save')));
-    await t.pumpAndSettle();
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 400));
 
     expect(rig.book.people.any((p) => p.name == 'Caller 1'), isTrue);
     expect(find.textContaining('Saved 1'), findsOneWidget);

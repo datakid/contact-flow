@@ -16,7 +16,7 @@ void main() {
 
     test('ends with', () => expect(r('*67'), [(8, 10)]));
     test('plain digits at the end', () => expect(r('67'), [(8, 10)]));
-    test('plain digits in the middle', () => expect(r('123'), [(4, 7)]));
+    test('plain digits in the middle', () => expect(r('123'), [(3, 6)]));
     test('starts with', () => expect(r('055*'), [(0, 3)]));
     test('start and end', () => expect(r('05*67'), [(0, 2), (8, 10)]));
     test('question mark counts as a position', () {

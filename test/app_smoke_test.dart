@@ -14,7 +14,7 @@ import 'harness.dart';
 Future<AppState> seeded(String lang) async {
   SharedPreferences.setMockInitialValues({'lang': lang});
   final s = AppState();
-  await s.init();
+  await s.init(openStore: false);
   await s.commit(s.plan([ImportResult(Sample.people(), Format.vcf, 'sample')]));
   return s;
 }

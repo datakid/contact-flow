@@ -94,7 +94,8 @@ void main() {
 
     await t.scrollUntilVisible(
       find.text('P449'),
-      400,
+      800,
+      maxScrolls: 200,
       scrollable: find.byType(Scrollable).first,
     );
     await t.tap(find.text('P449'));

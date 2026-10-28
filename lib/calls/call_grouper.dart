@@ -47,9 +47,11 @@ class CallGrouper {
           ..missed = g.missed
           ..lastMs = g.lastMs
           ..talkSec = g.talkSec
-          ..cachedName = g.cachedName;
+          ..cachedName = g.cachedName
+          ..calls.addAll(g.calls);
       } else {
         merged
+          ..calls.addAll(g.calls)
           ..count += g.count
           ..incoming += g.incoming
           ..outgoing += g.outgoing

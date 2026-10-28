@@ -421,7 +421,7 @@ void main() {
     test('commit keeps job title, starred and groups', () async {
       SharedPreferences.setMockInitialValues({'lang': 'en'});
       final s = AppState();
-      await s.init();
+      await s.init(openStore: false);
       final incoming = Person(
         name: 'Dana',
         phones: [const PhoneEntry('+201001234567')],
@@ -444,7 +444,7 @@ void main() {
     test('plan ignores failed files when counting formats', () async {
       SharedPreferences.setMockInitialValues({'lang': 'en'});
       final s = AppState();
-      await s.init();
+      await s.init(openStore: false);
       final plan = s.plan([
         ImportResult.failed('broken.xlsx'),
         ImportResult(
