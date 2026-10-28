@@ -219,9 +219,7 @@ abstract class ContactList extends ChangeNotifier {
     }
     final q = NumberQuery.parse(_query, mode: digitMode);
     if (q.beyondFuzzy) {
-      _setHits(
-        _pattern.search(q, _people, _index, extraTag: tagMatcher),
-      );
+      _setHits(_pattern.search(q, _people, _index, extraTag: tagMatcher));
       return;
     }
     _setHits(_index.search(_query));

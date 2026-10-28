@@ -57,7 +57,10 @@ class IgnoreBook extends ChangeNotifier {
   }
 
   Future<void> remove(Iterable<String> keys) async {
-    final gone = [for (final k in keys) if (_raw.remove(k) != null) 'ig:$k'];
+    final gone = [
+      for (final k in keys)
+        if (_raw.remove(k) != null) 'ig:$k',
+    ];
     if (gone.isNotEmpty) await _store.removeAll(gone);
     notifyListeners();
   }

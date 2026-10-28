@@ -121,15 +121,15 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.byKey(const ValueKey('calls-open-save')));
     await t.pumpAndSettle();
-    await t.enterText(find.byKey(const ValueKey('calls-template')), 'Caller {n}');
+    await t.enterText(
+      find.byKey(const ValueKey('calls-template')),
+      'Caller {n}',
+    );
     await t.pump();
     await t.tap(find.byKey(const ValueKey('calls-save')));
     await t.pumpAndSettle();
 
-    expect(
-      rig.book.people.any((p) => p.name == 'Caller 1'),
-      isTrue,
-    );
+    expect(rig.book.people.any((p) => p.name == 'Caller 1'), isTrue);
     expect(find.textContaining('Saved 1'), findsOneWidget);
   });
 

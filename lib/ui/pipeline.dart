@@ -235,7 +235,10 @@ class ProgressDialog extends StatelessWidget {
                 : () => context.read<PhoneBook>().cancelRun(),
             child: Text(
               cancelling ? l.t('stopping') : l.t('cancel'),
-              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: p.accentText,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],

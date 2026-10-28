@@ -31,13 +31,17 @@ void main() {
   });
 
   test('emails match without regard to case', () {
-    final onPhone = [Person(name: 'Bob', emails: ['bob@example.com'])];
+    final onPhone = [
+      Person(name: 'Bob', emails: ['bob@example.com']),
+    ];
     final (_, already) = PhoneDupes.split([emailOnly], onPhone);
     expect(already.length, 1);
   });
 
   test('the same national number in another country is new', () {
-    final onPhone = [Person(name: 'Ann', phones: [const PhoneEntry('+971501234567')])];
+    final onPhone = [
+      Person(name: 'Ann', phones: [const PhoneEntry('+971501234567')]),
+    ];
     final (fresh, already) = PhoneDupes.split([phoneOnly], onPhone);
     expect(fresh.length, 1);
     expect(already, isEmpty);

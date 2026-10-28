@@ -21,9 +21,8 @@ class GroupTagImport {
         (byName[name] ??= []).add(p);
       }
     }
-    return [
-      for (final e in byName.entries) GroupTagPlan(e.key, e.value),
-    ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return [for (final e in byName.entries) GroupTagPlan(e.key, e.value)]
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   static Future<int> apply(TagBook book, Iterable<GroupTagPlan> chosen) async {

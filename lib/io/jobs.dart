@@ -28,8 +28,13 @@ class DecodeJob {
   const DecodeJob(this.name, this.bytes);
 }
 
-Uint8List runEncode(EncodeJob j) =>
-    Codec.encode(j.people, j.format, j.options, headers: j.headers, tags: j.tags);
+Uint8List runEncode(EncodeJob j) => Codec.encode(
+  j.people,
+  j.format,
+  j.options,
+  headers: j.headers,
+  tags: j.tags,
+);
 
 ImportResult runDecode(DecodeJob j) => Codec.decode(j.name, j.bytes);
 

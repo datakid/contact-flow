@@ -69,10 +69,7 @@ class AppState extends ContactList {
 
   List<Person> get _people => people;
 
-  Future<void> init({
-    bool openStore = true,
-    bool detectRegion = false,
-  }) async {
+  Future<void> init({bool openStore = true, bool detectRegion = false}) async {
     final prefs = await SharedPreferences.getInstance();
     themeMode = ThemeMode.values[(prefs.getInt('theme') ?? 0).clamp(0, 2)];
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;

@@ -381,7 +381,9 @@ class _Settings extends StatelessWidget {
                           applicationName: 'Contact Flow',
                           applicationVersion: appVersion,
                         ),
-                        style: TextButton.styleFrom(foregroundColor: p.accentText),
+                        style: TextButton.styleFrom(
+                          foregroundColor: p.accentText,
+                        ),
                         child: Text(
                           l.t('licenses'),
                           maxLines: 2,
@@ -552,4 +554,3 @@ T? _maybe<T>(BuildContext context) {
     return null;
   }
 }
-

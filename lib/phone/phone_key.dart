@@ -18,7 +18,10 @@ class PhoneInfo {
 class PhoneKey {
   static IsoCode? _region;
   static final Map<String, PhoneInfo> _cache = {};
-  static final _ext = RegExp(r'\s*(?:x|ext\.?|#)\s*\d+\s*$', caseSensitive: false);
+  static final _ext = RegExp(
+    r'\s*(?:x|ext\.?|#)\s*\d+\s*$',
+    caseSensitive: false,
+  );
   static final _nonDigit = RegExp(r'[^0-9]');
 
   static IsoCode? get region => _region;
@@ -41,10 +44,13 @@ class PhoneKey {
     _cache.clear();
   }
 
-  static String callingCode(IsoCode r) => metadataByIsoCode[r]?.countryCode ?? '';
+  static String callingCode(IsoCode r) =>
+      metadataByIsoCode[r]?.countryCode ?? '';
 
   static List<IsoCode> regionsForCode(String cc) {
-    final digits = cc.replaceAll(_nonDigit, '').replaceFirst(RegExp(r'^0+'), '');
+    final digits = cc
+        .replaceAll(_nonDigit, '')
+        .replaceFirst(RegExp(r'^0+'), '');
     return countryCodeToIsoCode[digits] ?? const <IsoCode>[];
   }
 
@@ -53,7 +59,8 @@ class PhoneKey {
     return list.length == 1 ? list.first : null;
   }
 
-  static String _last9(String x) => x.length > 9 ? x.substring(x.length - 9) : x;
+  static String _last9(String x) =>
+      x.length > 9 ? x.substring(x.length - 9) : x;
 
   static PhoneInfo info(String raw) {
     final hit = _cache[raw];
@@ -69,8 +76,7 @@ class PhoneKey {
     return list.isEmpty ? null : list.first;
   }
 
-  static PhoneInfo infoIn(String raw, IsoCode region) =>
-      _compute(raw, region);
+  static PhoneInfo infoIn(String raw, IsoCode region) => _compute(raw, region);
 
   static String extension(String raw) {
     final m = _ext.firstMatch(Phones.asciiDigits(raw).trim());

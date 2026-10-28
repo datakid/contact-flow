@@ -309,9 +309,7 @@ class _SyncScreenState extends State<SyncScreen> {
           _delete.isEmpty
               ? l.t('phoneOnlyKeep')
               : l.n(_delete.length, 'willDeleteOne', 'willDeleteN'),
-          style: TextStyle(
-            color: _delete.isEmpty ? p.inkFaint : p.accentText,
-          ),
+          style: TextStyle(color: _delete.isEmpty ? p.inkFaint : p.accentText),
         ),
         trailing: Icon(
           _showPhoneOnly

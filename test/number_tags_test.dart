@@ -80,10 +80,12 @@ void main() {
     await t.pumpAndSettle();
     expect(book.tagIdsForNumber(number), {tag.id});
 
-    await t.tap(find.descendant(
-      of: find.byKey(ValueKey('numtag-$number-${tag.id}')),
-      matching: find.byIcon(Icons.cancel),
-    ));
+    await t.tap(
+      find.descendant(
+        of: find.byKey(ValueKey('numtag-$number-${tag.id}')),
+        matching: find.byIcon(Icons.cancel),
+      ),
+    );
     await t.pumpAndSettle();
     expect(book.tagIdsForNumber(number), isEmpty);
   });

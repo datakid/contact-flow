@@ -135,9 +135,9 @@ class CallsController extends ChangeNotifier {
       now(),
       hasTag: tags == null
           ? null
-          : (g, t) => tags!.tagsForNumber(g.number).any(
-              (x) => x.name.toLowerCase() == t,
-            ),
+          : (g, t) => tags!
+                .tagsForNumber(g.number)
+                .any((x) => x.name.toLowerCase() == t),
     );
   }
 

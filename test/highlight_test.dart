@@ -12,8 +12,7 @@ void main() {
   const number = '0551234567';
 
   group('digit ranges for a number', () {
-    List<(int, int)> r(String q) =>
-        NumberQuery.parse(q).highlightsFor(number);
+    List<(int, int)> r(String q) => NumberQuery.parse(q).highlightsFor(number);
 
     test('ends with', () => expect(r('*67'), [(8, 10)]));
     test('plain digits at the end', () => expect(r('67'), [(8, 10)]));
@@ -34,10 +33,7 @@ void main() {
       expect(r('+966*'), isEmpty);
     });
     test('Arabic digits in the stored number still map', () {
-      expect(
-        NumberQuery.parse('*67').highlightsFor('٠٥٥١٢٣٤٥٦٧'),
-        [(8, 10)],
-      );
+      expect(NumberQuery.parse('*67').highlightsFor('٠٥٥١٢٣٤٥٦٧'), [(8, 10)]);
     });
   });
 
@@ -71,7 +67,9 @@ void main() {
   group('hits carry the ranges', () {
     test('the fuzzy digit path', () {
       final idx = FuzzyIndex()
-        ..build([Person(name: 'Ann', phones: [const PhoneEntry(number)])]);
+        ..build([
+          Person(name: 'Ann', phones: [const PhoneEntry(number)]),
+        ]);
       final hit = idx.search('67').single;
       expect(hit.numberRanges, [(8, 10)]);
     });

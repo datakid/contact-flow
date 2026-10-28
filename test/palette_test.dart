@@ -37,7 +37,10 @@ void main() {
       test('tags stay readable on their own tint', () {
         for (final surface in [p.paper, p.sheet]) {
           for (final color in [p.accentText, p.sageText, p.inkSoft]) {
-            final tint = Color.alphaBlend(color.withValues(alpha: 0.1), surface);
+            final tint = Color.alphaBlend(
+              color.withValues(alpha: 0.1),
+              surface,
+            );
             expect(ratio(color, tint), greaterThanOrEqualTo(4.5));
           }
         }

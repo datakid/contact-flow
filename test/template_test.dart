@@ -105,12 +105,17 @@ void main() {
       }
     }
 
-    test('xlsx template keeps its guide on a second sheet that is not read', () {
-      final l = L('en');
-      final bytes = SheetTemplate.build(Format.xlsx, l);
-      final columns = Codec.templateColumns(headers: SheetTemplate.headers(l));
-      expect(Xlsx.read(bytes), [columns]);
-    });
+    test(
+      'xlsx template keeps its guide on a second sheet that is not read',
+      () {
+        final l = L('en');
+        final bytes = SheetTemplate.build(Format.xlsx, l);
+        final columns = Codec.templateColumns(
+          headers: SheetTemplate.headers(l),
+        );
+        expect(Xlsx.read(bytes), [columns]);
+      },
+    );
 
     test('csv template is a BOM and a single header line', () {
       final bytes = SheetTemplate.build(Format.csv, L('en'));

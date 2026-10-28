@@ -645,7 +645,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 }
 
 class _SearchHeader extends SliverPersistentHeaderDelegate {
@@ -816,7 +815,9 @@ class _ContactRow extends StatelessWidget {
                           Flexible(
                             child: Tag(
                               reason,
-                              color: h?.reason == 'alias' ? p.accentText : p.sageText,
+                              color: h?.reason == 'alias'
+                                  ? p.accentText
+                                  : p.sageText,
                             ),
                           ),
                         ],

@@ -96,7 +96,9 @@ void main() {
   test('saved contacts do not appear', () async {
     final h = Harness(
       calls,
-      phone: [Person(name: 'Ann', phones: [const PhoneEntry('0501234567')])],
+      phone: [
+        Person(name: 'Ann', phones: [const PhoneEntry('0501234567')]),
+      ],
     );
     await h.c.start();
     expect(h.c.all.map((g) => g.number), isNot(contains('+966501234567')));
@@ -171,25 +173,35 @@ void main() {
     final r = await h.c.save('Caller {n}');
     expect(r.saved, 3);
     expect(r.alreadyThere, 0);
-    expect(h.saved.map((p) => p.name).toSet(), {'Caller 1', 'Caller 2', 'Caller 3'});
+    expect(h.saved.map((p) => p.name).toSet(), {
+      'Caller 1',
+      'Caller 2',
+      'Caller 3',
+    });
     expect(h.c.all, isEmpty);
     expect(h.c.selection.included, isEmpty);
     expect(h.refreshes, 1);
   });
 
-  test('numbers saved in the meantime are dropped right before saving', () async {
-    final h = Harness(calls);
-    await h.c.start();
-    h.c.includeAllShown();
-    h.onRefresh = () => [
-      Person(name: 'Late', phones: [const PhoneEntry('+966559876543')]),
-    ];
-    final r = await h.c.save('Caller {n}');
-    expect(r.saved, 2);
-    expect(r.alreadyThere, 1);
-    expect(h.saved.length, 2);
-    expect(h.saved.map((p) => p.phones.first.number), isNot(contains('+966559876543')));
-  });
+  test(
+    'numbers saved in the meantime are dropped right before saving',
+    () async {
+      final h = Harness(calls);
+      await h.c.start();
+      h.c.includeAllShown();
+      h.onRefresh = () => [
+        Person(name: 'Late', phones: [const PhoneEntry('+966559876543')]),
+      ];
+      final r = await h.c.save('Caller {n}');
+      expect(r.saved, 2);
+      expect(r.alreadyThere, 1);
+      expect(h.saved.length, 2);
+      expect(
+        h.saved.map((p) => p.phones.first.number),
+        isNot(contains('+966559876543')),
+      );
+    },
+  );
 
   test('tag-only action tags the chosen numbers without saving', () async {
     final h = Harness(calls);
@@ -215,13 +227,16 @@ void main() {
     expect(history.first.dateMs > history.last.dateMs, isTrue);
   });
 
-  test('history does not mix the same national number of another country', () async {
-    final h = Harness([call('+966501234567'), call('+971501234567')]);
-    await h.c.start();
-    for (final g in h.c.all) {
-      expect(h.c.historyOf(g).length, 1);
-    }
-  });
+  test(
+    'history does not mix the same national number of another country',
+    () async {
+      final h = Harness([call('+966501234567'), call('+971501234567')]);
+      await h.c.start();
+      for (final g in h.c.all) {
+        expect(h.c.historyOf(g).length, 1);
+      }
+    },
+  );
 
   test('a pattern filter can use tags', () async {
     final h = Harness(calls);

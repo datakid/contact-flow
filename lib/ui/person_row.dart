@@ -205,7 +205,9 @@ class PersonRow extends StatelessWidget {
                           Flexible(
                             child: Tag(
                               reason,
-                              color: h?.reason == 'alias' ? p.accentText : p.sageText,
+                              color: h?.reason == 'alias'
+                                  ? p.accentText
+                                  : p.sageText,
                             ),
                           ),
                         ],

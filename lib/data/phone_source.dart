@@ -116,7 +116,9 @@ class PhoneSource implements ContactSource {
       starred: c.android?.isFavorite ?? false,
       groups: _groupNamesFor(
         id,
-        accounts.isEmpty ? '' : _accKey(accounts.first.type, accounts.first.name),
+        accounts.isEmpty
+            ? ''
+            : _accKey(accounts.first.type, accounts.first.name),
       ),
     );
   }
@@ -208,9 +210,8 @@ class PhoneSource implements ContactSource {
   }
 
   @override
-  Future<List<String>> groups() async => {
-    for (final m in _groupIds.values) ...m.keys,
-  }.toList()..sort();
+  Future<List<String>> groups() async =>
+      {for (final m in _groupIds.values) ...m.keys}.toList()..sort();
 
   static List<String> aliasesOf(fc.Contact c, String name) =>
       Aliases.clean(Aliases.parse(c.name?.nickname ?? ''), name: name);

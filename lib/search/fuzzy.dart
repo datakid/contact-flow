@@ -179,9 +179,7 @@ class FuzzyIndex {
     final tokens = Fold.words(fq);
     if (tokens.isEmpty) return const [];
     final qDigits = Phones.digits(q);
-    final digitsOnly = RegExp(
-      r'^[\s\d+\-\.\(\)٠-٩۰-۹０-９＋]+$',
-    ).hasMatch(q);
+    final digitsOnly = RegExp(r'^[\s\d+\-\.\(\)٠-٩۰-۹０-９＋]+$').hasMatch(q);
     final digitQuery = qDigits.length >= 2 && digitsOnly;
     final shortDigits = digitQuery && qDigits.length < 3;
     final joined = tokens.join();

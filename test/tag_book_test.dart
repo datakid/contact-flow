@@ -119,33 +119,39 @@ void main() {
   });
 
   group('delete, merge and undo', () {
-    test('delete removes the tag and its numbers, and undo restores them', () async {
-      final b = await fresh();
-      final t = await b.create('Work');
-      await b.assign([t.id], ['+966501234567', '+966559876543']);
-      final undo = await b.delete(t.id);
-      expect(b.tags, isEmpty);
-      expect(b.tagsForNumber('+966501234567'), isEmpty);
-      await b.undo(undo);
-      expect(b.tags.single.name, 'Work');
-      expect(b.count(t.id), 2);
-      expect(b.tagsForNumber('+966501234567').single.id, t.id);
-    });
+    test(
+      'delete removes the tag and its numbers, and undo restores them',
+      () async {
+        final b = await fresh();
+        final t = await b.create('Work');
+        await b.assign([t.id], ['+966501234567', '+966559876543']);
+        final undo = await b.delete(t.id);
+        expect(b.tags, isEmpty);
+        expect(b.tagsForNumber('+966501234567'), isEmpty);
+        await b.undo(undo);
+        expect(b.tags.single.name, 'Work');
+        expect(b.count(t.id), 2);
+        expect(b.tagsForNumber('+966501234567').single.id, t.id);
+      },
+    );
 
-    test('merge moves numbers without duplicating and undo reverses it', () async {
-      final b = await fresh();
-      final a = await b.create('A');
-      final c = await b.create('B');
-      await b.assign([a.id], ['+966501234567', '+966559876543']);
-      await b.assign([c.id], ['+966501234567']);
-      final undo = await b.merge(a.id, c.id);
-      expect(b.byId(a.id), isNull);
-      expect(b.count(c.id), 2);
-      await b.undo(undo);
-      expect(b.byId(a.id), isNotNull);
-      expect(b.count(a.id), 2);
-      expect(b.count(c.id), 1);
-    });
+    test(
+      'merge moves numbers without duplicating and undo reverses it',
+      () async {
+        final b = await fresh();
+        final a = await b.create('A');
+        final c = await b.create('B');
+        await b.assign([a.id], ['+966501234567', '+966559876543']);
+        await b.assign([c.id], ['+966501234567']);
+        final undo = await b.merge(a.id, c.id);
+        expect(b.byId(a.id), isNull);
+        expect(b.count(c.id), 2);
+        await b.undo(undo);
+        expect(b.byId(a.id), isNotNull);
+        expect(b.count(a.id), 2);
+        expect(b.count(c.id), 1);
+      },
+    );
 
     test('merging a tag into itself does nothing', () async {
       final b = await fresh();
@@ -162,23 +168,29 @@ void main() {
       expect(TagKey.of('+966 50 123 4567'), '+966501234567');
     });
 
-    test('a number that cannot be parsed is keyed by national number and region', () {
-      expect(TagKey.of('0501234567'), 'u:501234567@');
-      PhoneKey.useRegion('SA');
-      expect(TagKey.of('12345678901234'), 'u:678901234@SA');
-    });
+    test(
+      'a number that cannot be parsed is keyed by national number and region',
+      () {
+        expect(TagKey.of('0501234567'), 'u:501234567@');
+        PhoneKey.useRegion('SA');
+        expect(TagKey.of('12345678901234'), 'u:678901234@SA');
+      },
+    );
 
-    test('changing the region moves unparsed tags and reports how many', () async {
-      final b = await fresh();
-      final t = await b.create('Work');
-      await b.assign([t.id], ['0501234567']);
-      expect(b.numbersFor(t.id).single.key, startsWith('u:'));
-      PhoneKey.useRegion('SA');
-      expect(await b.rekeyUnparsed(), 1);
-      expect(b.numbersFor(t.id).single.key, '+966501234567');
-      expect(b.tagsForNumber('0501234567').single.id, t.id);
-      expect(b.count(t.id), 1);
-    });
+    test(
+      'changing the region moves unparsed tags and reports how many',
+      () async {
+        final b = await fresh();
+        final t = await b.create('Work');
+        await b.assign([t.id], ['0501234567']);
+        expect(b.numbersFor(t.id).single.key, startsWith('u:'));
+        PhoneKey.useRegion('SA');
+        expect(await b.rekeyUnparsed(), 1);
+        expect(b.numbersFor(t.id).single.key, '+966501234567');
+        expect(b.tagsForNumber('0501234567').single.id, t.id);
+        expect(b.count(t.id), 1);
+      },
+    );
 
     test('rekeying twice moves nothing the second time', () async {
       final b = await fresh();
@@ -189,15 +201,18 @@ void main() {
       expect(await b.rekeyUnparsed(), 0);
     });
 
-    test('an unparsed tag that already has a parsed twin is merged, not lost', () async {
-      final b = await fresh();
-      final t = await b.create('Work');
-      await b.assign([t.id], ['0501234567']);
-      PhoneKey.useRegion('SA');
-      await b.assign([t.id], ['+966501234567']);
-      await b.rekeyUnparsed();
-      expect(b.count(t.id), 1);
-    });
+    test(
+      'an unparsed tag that already has a parsed twin is merged, not lost',
+      () async {
+        final b = await fresh();
+        final t = await b.create('Work');
+        await b.assign([t.id], ['0501234567']);
+        PhoneKey.useRegion('SA');
+        await b.assign([t.id], ['+966501234567']);
+        await b.rekeyUnparsed();
+        expect(b.count(t.id), 1);
+      },
+    );
   });
 
   group('persistence', () {
@@ -244,18 +259,24 @@ void main() {
   });
 
   group('backup', () {
-    test('export then import into an empty book restores tags and numbers', () async {
-      final a = await fresh();
-      final w = await a.create('Work');
-      final h = await a.create('Home');
-      await a.assign([w.id], ['+966501234567', '+966559876543']);
-      await a.assign([h.id], ['+966501234567']);
-      final json = a.exportJson();
-      final b = await fresh();
-      expect(await b.importJson(json), 3);
-      expect(b.tags.map((t) => t.name), ['Home', 'Work']);
-      expect(b.tagsForNumber('+966501234567').map((t) => t.name), ['Home', 'Work']);
-    });
+    test(
+      'export then import into an empty book restores tags and numbers',
+      () async {
+        final a = await fresh();
+        final w = await a.create('Work');
+        final h = await a.create('Home');
+        await a.assign([w.id], ['+966501234567', '+966559876543']);
+        await a.assign([h.id], ['+966501234567']);
+        final json = a.exportJson();
+        final b = await fresh();
+        expect(await b.importJson(json), 3);
+        expect(b.tags.map((t) => t.name), ['Home', 'Work']);
+        expect(b.tagsForNumber('+966501234567').map((t) => t.name), [
+          'Home',
+          'Work',
+        ]);
+      },
+    );
 
     test('importing the same backup again adds nothing', () async {
       final a = await fresh();

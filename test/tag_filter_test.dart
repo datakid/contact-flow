@@ -46,12 +46,15 @@ void main() {
     expect(s.visible, isEmpty);
   });
 
-  test('without a matcher the filter shows nothing rather than everyone', () async {
-    final (s, _) = await setup();
-    s.tagMatcher = null;
-    s.setTagFilter('VIP');
-    expect(s.visible, isEmpty);
-  });
+  test(
+    'without a matcher the filter shows nothing rather than everyone',
+    () async {
+      final (s, _) = await setup();
+      s.tagMatcher = null;
+      s.setTagFilter('VIP');
+      expect(s.visible, isEmpty);
+    },
+  );
 
   test('the tag filter combines with a search', () async {
     final (s, _) = await setup();

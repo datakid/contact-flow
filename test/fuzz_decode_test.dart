@@ -46,36 +46,44 @@ Uint8List mutate(Random rnd, Uint8List src) {
 }
 
 void main() {
-  test('500 random byte blobs never throw', () {
-    final rnd = Random(42);
-    for (var i = 0; i < 500; i++) {
-      final bytes = Uint8List.fromList(
-        List<int>.generate(rnd.nextInt(4096), (_) => rnd.nextInt(256)),
-      );
-      final name = names[rnd.nextInt(names.length)];
-      expect(() => Codec.decode(name, bytes), returnsNormally, reason: name);
-    }
-  }, timeout: const Timeout(Duration(minutes: 3)));
+  test(
+    '500 random byte blobs never throw',
+    () {
+      final rnd = Random(42);
+      for (var i = 0; i < 500; i++) {
+        final bytes = Uint8List.fromList(
+          List<int>.generate(rnd.nextInt(4096), (_) => rnd.nextInt(256)),
+        );
+        final name = names[rnd.nextInt(names.length)];
+        expect(() => Codec.decode(name, bytes), returnsNormally, reason: name);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
 
-  test('500 corrupted real files never throw', () {
-    final rnd = Random(7);
-    final files = [
-      for (final dir in ['test/corpus', 'test/fixtures'])
-        for (final f in Directory(dir).listSync().whereType<File>())
-          if (!f.path.contains('zip_bomb')) f,
-    ];
-    expect(files, isNotEmpty);
-    for (var i = 0; i < 500; i++) {
-      final f = files[rnd.nextInt(files.length)];
-      final bytes = mutate(rnd, f.readAsBytesSync());
-      final name = rnd.nextBool()
-          ? f.uri.pathSegments.last
-          : names[rnd.nextInt(names.length)];
-      expect(
-        () => Codec.decode(name, bytes),
-        returnsNormally,
-        reason: '${f.path} as $name',
-      );
-    }
-  }, timeout: const Timeout(Duration(minutes: 3)));
+  test(
+    '500 corrupted real files never throw',
+    () {
+      final rnd = Random(7);
+      final files = [
+        for (final dir in ['test/corpus', 'test/fixtures'])
+          for (final f in Directory(dir).listSync().whereType<File>())
+            if (!f.path.contains('zip_bomb')) f,
+      ];
+      expect(files, isNotEmpty);
+      for (var i = 0; i < 500; i++) {
+        final f = files[rnd.nextInt(files.length)];
+        final bytes = mutate(rnd, f.readAsBytesSync());
+        final name = rnd.nextBool()
+            ? f.uri.pathSegments.last
+            : names[rnd.nextInt(names.length)];
+        expect(
+          () => Codec.decode(name, bytes),
+          returnsNormally,
+          reason: '${f.path} as $name',
+        );
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
 }

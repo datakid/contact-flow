@@ -62,7 +62,10 @@ void main() {
     );
     expect(text, contains('TITLE:Engineer'));
     expect(text, contains('CATEGORIES:Work,VIP'));
-    final back = Codec.decode('x.vcf', Codec.encode(people, Format.vcf, const ExportOptions()));
+    final back = Codec.decode(
+      'x.vcf',
+      Codec.encode(people, Format.vcf, const ExportOptions()),
+    );
     final ann = back.people.firstWhere((p) => p.name == 'Ann Lee');
     expect(ann.jobTitle, 'Engineer');
     expect(ann.groups, ['Work', 'VIP']);
@@ -141,7 +144,9 @@ void main() {
           withGroup,
           Format.vcf,
           const ExportOptions(),
-          tags: {withGroup[0].id: ['Work', 'VIP']},
+          tags: {
+            withGroup[0].id: ['Work', 'VIP'],
+          },
         ),
       );
       expect(text, contains('CATEGORIES:Work,VIP'));

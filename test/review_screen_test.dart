@@ -44,41 +44,47 @@ Future<Rig> rigFor(WidgetTester t, AppState app) async {
 void main() {
   final en = L('en');
 
-  testWidgets('skipped duplicates do not change the count after merge is toggled', (
-    t,
-  ) async {
-    final rig = await rigFor(t, AppState());
-    final fresh = [person('Ann', '0551111111'), person('Bob', '0552222222')];
-    final dupes = [
-      (person('Cy', '0553333333'), person('Cy', '0553333333')),
-      (person('Di', '0554444444'), person('Di', '0554444444')),
-    ];
-    await t.pumpWidget(
-      rig.wrap(
-        ContactFlowApp(home: ReviewScreen(plan: planOf(fresh, dupes: dupes))),
-      ),
-    );
-    await t.pumpAndSettle();
-    expect(find.text(en.t('addN', {'n': 2})), findsOneWidget);
+  testWidgets(
+    'skipped duplicates do not change the count after merge is toggled',
+    (t) async {
+      final rig = await rigFor(t, AppState());
+      final fresh = [person('Ann', '0551111111'), person('Bob', '0552222222')];
+      final dupes = [
+        (person('Cy', '0553333333'), person('Cy', '0553333333')),
+        (person('Di', '0554444444'), person('Di', '0554444444')),
+      ];
+      await t.pumpWidget(
+        rig.wrap(
+          ContactFlowApp(
+            home: ReviewScreen(plan: planOf(fresh, dupes: dupes)),
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(find.text(en.t('addN', {'n': 2})), findsOneWidget);
 
-    await t.tap(find.byType(SwitchListTile));
-    await t.pumpAndSettle();
-    expect(find.text(en.t('addN', {'n': 4})), findsOneWidget);
+      await t.tap(find.byType(SwitchListTile));
+      await t.pumpAndSettle();
+      expect(find.text(en.t('addN', {'n': 4})), findsOneWidget);
 
-    await t.tap(find.text('Cy'));
-    await t.pumpAndSettle();
-    expect(find.text(en.t('addN', {'n': 3})), findsOneWidget);
+      await t.tap(find.text('Cy'));
+      await t.pumpAndSettle();
+      expect(find.text(en.t('addN', {'n': 3})), findsOneWidget);
 
-    await t.tap(find.byType(SwitchListTile));
-    await t.pumpAndSettle();
-    expect(find.text(en.t('addN', {'n': 2})), findsOneWidget);
-  });
+      await t.tap(find.byType(SwitchListTile));
+      await t.pumpAndSettle();
+      expect(find.text(en.t('addN', {'n': 2})), findsOneWidget);
+    },
+  );
 
   testWidgets('a row past 400 can be skipped', (t) async {
     final rig = await rigFor(t, AppState());
     final fresh = [
       for (var i = 0; i < 450; i++)
-        person('P${i.toString().padLeft(3, '0')}', '055${i.toString().padLeft(7, '0')}'),
+        person(
+          'P${i.toString().padLeft(3, '0')}',
+          '055${i.toString().padLeft(7, '0')}',
+        ),
     ];
     await t.pumpWidget(
       rig.wrap(ContactFlowApp(home: ReviewScreen(plan: planOf(fresh)))),

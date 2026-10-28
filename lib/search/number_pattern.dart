@@ -94,7 +94,8 @@ class NumberQuery {
 
   bool get isEmpty => alternatives.isEmpty;
 
-  bool get hasNumberAtoms => alternatives.any((a) => a.any((x) => x is NumberAtom));
+  bool get hasNumberAtoms =>
+      alternatives.any((a) => a.any((x) => x is NumberAtom));
 
   bool get hasTagAtoms => alternatives.any((a) => a.any((x) => x is TagAtom));
 
@@ -117,7 +118,8 @@ class NumberQuery {
       !(alternatives.first.first as NumberAtom).wildcard;
 
   String get text => [
-    for (final a in alternatives.isEmpty ? const <QueryAtom>[] : alternatives.first)
+    for (final a
+        in alternatives.isEmpty ? const <QueryAtom>[] : alternatives.first)
       if (a is TextAtom) a.text,
   ].join(' ');
 
@@ -171,7 +173,10 @@ class NumberQuery {
         .toList();
     if (parts.isEmpty) return empty;
     if (!parts.every(_patternish.hasMatch)) {
-      final text = q.replaceAll(',', ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+      final text = q
+          .replaceAll(',', ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
       return NumberQuery._(raw, [
         [TextAtom(text)],
       ], mode);
@@ -262,10 +267,7 @@ class NumberQuery {
     return best;
   }
 
-  int? score(
-    List<PhoneForms> numbers, {
-    bool Function(String tag)? hasTag,
-  }) {
+  int? score(List<PhoneForms> numbers, {bool Function(String tag)? hasTag}) {
     int? best;
     for (final alt in alternatives) {
       final numberAtoms = alt.whereType<NumberAtom>().toList();

@@ -97,7 +97,11 @@ void main() {
 
   test('a file that is not a data export is refused', () async {
     final (s, t, i) = await world();
-    for (final bad in ['not json', '[]', jsonEncode({'kind': 'other'})]) {
+    for (final bad in [
+      'not json',
+      '[]',
+      jsonEncode({'kind': 'other'}),
+    ]) {
       await expectLater(
         DataMove.import(bad, state: s, tags: t, ignore: i),
         throwsFormatException,
@@ -106,17 +110,23 @@ void main() {
     }
   });
 
-  test('an export with no tags or ignored numbers still imports contacts', () async {
-    final (s, t, i) = await world();
-    final text = jsonEncode({
-      'kind': 'move',
-      'people': [
-        Person(name: 'Cy', phones: [const PhoneEntry('+966553333333')]).toJson(),
-      ],
-    });
-    final r = await DataMove.import(text, state: s, tags: t, ignore: i);
-    expect(r.people, 1);
-    expect(r.tags, 0);
-    expect(r.ignored, 0);
-  });
+  test(
+    'an export with no tags or ignored numbers still imports contacts',
+    () async {
+      final (s, t, i) = await world();
+      final text = jsonEncode({
+        'kind': 'move',
+        'people': [
+          Person(
+            name: 'Cy',
+            phones: [const PhoneEntry('+966553333333')],
+          ).toJson(),
+        ],
+      });
+      final r = await DataMove.import(text, state: s, tags: t, ignore: i);
+      expect(r.people, 1);
+      expect(r.tags, 0);
+      expect(r.ignored, 0);
+    },
+  );
 }

@@ -1,4 +1,12 @@
-enum CallType { incoming, outgoing, missed, rejected, voicemail, blocked, other }
+enum CallType {
+  incoming,
+  outgoing,
+  missed,
+  rejected,
+  voicemail,
+  blocked,
+  other,
+}
 
 class CallRecord {
   final String number;

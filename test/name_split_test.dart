@@ -114,7 +114,10 @@ void main() {
   group('TemplateName', () {
     test('first and last for a clear name', () {
       final p = Person(name: 'Mary Jane Watson');
-      expect(const TemplateName('{last}, {first}').render(p, 0), 'Watson, Mary');
+      expect(
+        const TemplateName('{last}, {first}').render(p, 0),
+        'Watson, Mary',
+      );
     });
 
     test('an unclear name goes whole into first and last is empty', () {

@@ -583,10 +583,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       _fresh.any((p) => p.groups.isNotEmpty) ||
       widget.plan.dupes.any((d) => d.$1.groups.isNotEmpty);
 
-  Future<void> _tagFromLabels(
-    TagBook book,
-    Iterable<Person> people,
-  ) async {
+  Future<void> _tagFromLabels(TagBook book, Iterable<Person> people) async {
     for (final p in people) {
       final numbers = [for (final e in p.phones) e.number];
       if (numbers.isEmpty) continue;
@@ -596,6 +593,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       }
     }
   }
+
   bool _busy = false;
   late final Set<String> _skip = {};
 

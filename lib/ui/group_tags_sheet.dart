@@ -14,7 +14,8 @@ Future<void> showGroupTagsSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => GroupTagsSheet(plans: GroupTagImport.plan(book.people), tags: tags),
+    builder: (_) =>
+        GroupTagsSheet(plans: GroupTagImport.plan(book.people), tags: tags),
   );
 }
 
@@ -113,9 +114,7 @@ class _GroupTagsSheetState extends State<GroupTagsSheet> {
                           nav.pop();
                           messenger.showSnackBar(
                             SnackBar(
-                              content: Text(
-                                l.t('groupTagsDone', {'n': added}),
-                              ),
+                              content: Text(l.t('groupTagsDone', {'n': added})),
                             ),
                           );
                         },

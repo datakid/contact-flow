@@ -298,7 +298,10 @@ Future<String?> pickGroup(
             ),
             child: Text(
               l.t('done'),
-              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: p.accentText,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
       ],

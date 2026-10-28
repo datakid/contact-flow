@@ -14,12 +14,23 @@ import 'harness.dart';
 final people = [
   Person(
     name: 'Ann',
-    phones: [const PhoneEntry('+966511100001'), const PhoneEntry('+966511100002')],
+    phones: [
+      const PhoneEntry('+966511100001'),
+      const PhoneEntry('+966511100002'),
+    ],
     groups: ['Family', 'Gym'],
   ),
-  Person(name: 'Bob', phones: [const PhoneEntry('+966511100003')], groups: ['Family']),
+  Person(
+    name: 'Bob',
+    phones: [const PhoneEntry('+966511100003')],
+    groups: ['Family'],
+  ),
   Person(name: 'Cy', phones: [const PhoneEntry('+966511100004')]),
-  Person(name: 'Di', phones: [const PhoneEntry('+966511100005')], groups: ['  ']),
+  Person(
+    name: 'Di',
+    phones: [const PhoneEntry('+966511100005')],
+    groups: ['  '],
+  ),
 ];
 
 void main() {
@@ -36,17 +47,20 @@ void main() {
       expect(GroupTagImport.plan([people[2], people[3]]), isEmpty);
     });
 
-    test('applying creates a tag and tags every number of the members', () async {
-      final book = TagBook(MemoryTagStore());
-      await book.load();
-      final plans = GroupTagImport.plan(people);
-      final added = await GroupTagImport.apply(book, [plans.first]);
-      expect(added, 3);
-      expect(book.tagsForNumber('+966511100001').single.name, 'Family');
-      expect(book.tagsForNumber('+966511100003').single.name, 'Family');
-      expect(book.tagsForNumber('+966511100004'), isEmpty);
-      expect(book.byName('Gym'), isNull);
-    });
+    test(
+      'applying creates a tag and tags every number of the members',
+      () async {
+        final book = TagBook(MemoryTagStore());
+        await book.load();
+        final plans = GroupTagImport.plan(people);
+        final added = await GroupTagImport.apply(book, [plans.first]);
+        expect(added, 3);
+        expect(book.tagsForNumber('+966511100001').single.name, 'Family');
+        expect(book.tagsForNumber('+966511100003').single.name, 'Family');
+        expect(book.tagsForNumber('+966511100004'), isEmpty);
+        expect(book.byName('Gym'), isNull);
+      },
+    );
 
     test('applying twice adds nothing the second time', () async {
       final book = TagBook(MemoryTagStore());
@@ -61,7 +75,10 @@ void main() {
       await book.load();
       final existing = await book.create('family');
       await GroupTagImport.apply(book, GroupTagImport.plan(people));
-      expect(book.tags.where((t) => t.name.toLowerCase() == 'family').length, 1);
+      expect(
+        book.tags.where((t) => t.name.toLowerCase() == 'family').length,
+        1,
+      );
       expect(book.count(existing.id), 3);
     });
   });
@@ -112,7 +129,9 @@ void main() {
       await t.pumpWidget(
         rig.wrap(
           ContactFlowApp(
-            home: Scaffold(body: GroupTagsSheet(plans: const [], tags: book)),
+            home: Scaffold(
+              body: GroupTagsSheet(plans: const [], tags: book),
+            ),
           ),
         ),
       );

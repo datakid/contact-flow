@@ -10,7 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'harness.dart';
 
-Future<(Widget, AppState, TagBook)> host(WidgetTester t, {bool tags = true}) async {
+Future<(Widget, AppState, TagBook)> host(
+  WidgetTester t, {
+  bool tags = true,
+}) async {
   SharedPreferences.setMockInitialValues({'lang': 'en'});
   final app = AppState();
   await t.runAsync(() => app.init(openStore: false));
@@ -38,7 +41,9 @@ Future<(Widget, AppState, TagBook)> host(WidgetTester t, {bool tags = true}) asy
 }
 
 void main() {
-  testWidgets('one pill per tag, tapping sets and clears the filter', (t) async {
+  testWidgets('one pill per tag, tapping sets and clears the filter', (
+    t,
+  ) async {
     final (w, app, _) = await host(t);
     await t.pumpWidget(w);
     await t.pumpAndSettle();

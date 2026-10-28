@@ -496,7 +496,10 @@ class _PhoneHomeState extends State<PhoneHome> {
               ),
               Text(
                 l.t('resume'),
-                style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: p.accentText,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),

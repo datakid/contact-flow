@@ -376,9 +376,7 @@ class _CallsScreenState extends State<CallsScreen> {
                 TextField(
                   key: const ValueKey('calls-template'),
                   controller: _template,
-                  decoration: InputDecoration(
-                    labelText: l.t('callsTemplate'),
-                  ),
+                  decoration: InputDecoration(labelText: l.t('callsTemplate')),
                   onChanged: (_) => setSheet(() {}),
                 ),
                 const SizedBox(height: 8),
@@ -588,7 +586,14 @@ class _CallsScreenState extends State<CallsScreen> {
         );
     }
     return Scaffold(
-      body: SafeArea(child: Column(children: [head, Expanded(child: body)])),
+      body: SafeArea(
+        child: Column(
+          children: [
+            head,
+            Expanded(child: body),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -245,8 +245,14 @@ class Tabular {
     if (h == '名') return Col.first;
     if (h == 'contact id' || h == 'contactid') return Col.contactId;
     if (_has(h, _aliasKeys) && !_has(h, _phoneKeys)) return Col.alias;
-    if (const ['job title', 'title', 'المسمى الوظيفي', '职位', 'cargo', 'poste']
-        .contains(h)) {
+    if (const [
+      'job title',
+      'title',
+      'المسمى الوظيفي',
+      '职位',
+      'cargo',
+      'poste',
+    ].contains(h)) {
       return Col.title;
     }
     if (h == 'labels' || h == 'groups' || _has(h, _tagKeys)) return Col.tags;

@@ -19,7 +19,9 @@ class EditionErrorApp extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(28),
               child: Directionality(
-                textDirection: lang == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+                textDirection: lang == 'ar'
+                    ? TextDirection.rtl
+                    : TextDirection.ltr,
                 child: Text(
                   l.t('editionMismatch', {
                     'native': native,

@@ -208,10 +208,9 @@ void main() {
     });
 
     test('filters combine', () {
-      expect(
-        numbers(const CallFilter(minCalls: 2, missedOnly: true)),
-        ['+966551111111'],
-      );
+      expect(numbers(const CallFilter(minCalls: 2, missedOnly: true)), [
+        '+966551111111',
+      ]);
     });
 
     test('a number pattern filters the groups', () {
@@ -322,13 +321,16 @@ void main() {
       );
     });
 
-    test('an empty tag leaves no double space and a blank template is blank', () {
-      expect(
-        CallNaming.render('{tag} {last4}', index: 0, number: '+966501234567'),
-        '4567',
-      );
-      expect(CallNaming.render('', index: 0, number: '1'), '');
-    });
+    test(
+      'an empty tag leaves no double space and a blank template is blank',
+      () {
+        expect(
+          CallNaming.render('{tag} {last4}', index: 0, number: '+966501234567'),
+          '4567',
+        );
+        expect(CallNaming.render('', index: 0, number: '1'), '');
+      },
+    );
 
     test('a draft is a contact with one number', () {
       final p = CallNaming.draft('Work 4567', '+966501234567');

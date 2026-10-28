@@ -221,7 +221,9 @@ class _EditorState extends State<_Editor> {
                     child: TextButton.icon(
                       onPressed: () =>
                           setState(() => _phones.add(_Row('', 'mobile'))),
-                      style: TextButton.styleFrom(foregroundColor: p.accentText),
+                      style: TextButton.styleFrom(
+                        foregroundColor: p.accentText,
+                      ),
                       icon: const Icon(Icons.add_rounded, size: 19),
                       label: Text(
                         l.t('addNumber'),

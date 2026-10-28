@@ -148,7 +148,9 @@ Future<String?> askCountry(BuildContext context, {bool force = false}) async {
 }
 
 String regionFlag(String iso) => iso.length == 2
-    ? String.fromCharCodes(iso.toUpperCase().codeUnits.map((c) => 0x1F1E6 + c - 0x41))
+    ? String.fromCharCodes(
+        iso.toUpperCase().codeUnits.map((c) => 0x1F1E6 + c - 0x41),
+      )
     : iso;
 
 Future<void> askRegion(BuildContext context, String code) async {
@@ -159,7 +161,9 @@ Future<void> askRegion(BuildContext context, String code) async {
   final picked = await showDialog<String>(
     context: context,
     builder: (ctx) => SimpleDialog(
-      title: Text(l.t('regionTitle', {'cc': InternationalNumber.countryDigits(code)})),
+      title: Text(
+        l.t('regionTitle', {'cc': InternationalNumber.countryDigits(code)}),
+      ),
       children: [
         for (final r in options)
           SimpleDialogOption(

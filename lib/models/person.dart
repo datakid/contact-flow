@@ -224,7 +224,9 @@ class Person {
       final k = Phones.key(p.number);
       if (k.isEmpty) continue;
       final known = phones.any(
-        (q) => Phones.key(q.number) == k && PhoneKey.compatible(q.number, p.number),
+        (q) =>
+            Phones.key(q.number) == k &&
+            PhoneKey.compatible(q.number, p.number),
       );
       if (!known) phones.add(p);
     }

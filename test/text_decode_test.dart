@@ -7,13 +7,10 @@ import 'package:contact_flow/io/text_decode.dart';
 import 'package:contact_flow/io/vcard.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Uint8List fixture(String name) =>
-    File('test/fixtures/$name').readAsBytesSync();
+Uint8List fixture(String name) => File('test/fixtures/$name').readAsBytesSync();
 
-List<String> namesOf(String file) => Codec.decode(
-  file,
-  fixture(file),
-).people.map((p) => p.displayName).toList();
+List<String> namesOf(String file) =>
+    Codec.decode(file, fixture(file)).people.map((p) => p.displayName).toList();
 
 void main() {
   test('a Windows-1256 file that is mostly digits decodes as Arabic', () {

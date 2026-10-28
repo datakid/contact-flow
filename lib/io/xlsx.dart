@@ -95,7 +95,8 @@ class Xlsx {
     final out = <(String, String)>[];
     for (final m in RegExp('<${_ns}sheet\\b([^>]*?)/?>').allMatches(wb)) {
       final attrs = m.group(1)!;
-      final name = RegExp(r'\bname="([^"]*)"').firstMatch(attrs)?.group(1) ?? '';
+      final name =
+          RegExp(r'\bname="([^"]*)"').firstMatch(attrs)?.group(1) ?? '';
       final rid = RegExp(r'\b\w+:id="([^"]+)"').firstMatch(attrs)?.group(1);
       if (rid == null) continue;
       final rel = RegExp(
@@ -134,7 +135,9 @@ class Xlsx {
         RegExp(r'\bnumFmtId="(\d+)"').firstMatch(m.group(1)!)?.group(1) ?? '',
       );
       final code = id == null ? null : codes[id];
-      out.add(code != null && RegExp(r'^0{2,}$').hasMatch(code) ? code.length : 0);
+      out.add(
+        code != null && RegExp(r'^0{2,}$').hasMatch(code) ? code.length : 0,
+      );
     }
     return out;
   }
@@ -183,9 +186,7 @@ class Xlsx {
               RegExp(r'\bs="(\d+)"').firstMatch(attrs)?.group(1) ?? '',
             );
             final width = si != null && si < pads.length ? pads[si] : 0;
-            if (width > 0 &&
-                v.length < width &&
-                RegExp(r'^\d+$').hasMatch(v)) {
+            if (width > 0 && v.length < width && RegExp(r'^\d+$').hasMatch(v)) {
               v = v.padLeft(width, '0');
             }
           }

@@ -93,12 +93,15 @@ void main() {
     expect(r.phones[1].number, '+1 415 555 0100');
   });
 
-  test('remove country code does not add a zero where the country has none', () {
-    final r = BatchOp.run(const RemoveCountryCode('34'), [
-      p('a', ['+34 612 34 56 78']),
-    ]).single.$2;
-    expect(r.phones.single.number, startsWith('612'));
-  });
+  test(
+    'remove country code does not add a zero where the country has none',
+    () {
+      final r = BatchOp.run(const RemoveCountryCode('34'), [
+        p('a', ['+34 612 34 56 78']),
+      ]).single.$2;
+      expect(r.phones.single.number, startsWith('612'));
+    },
+  );
 
   test('add country code drops a stray trunk zero after the code', () {
     final r = BatchOp.run(const AddCountryCode('966'), [

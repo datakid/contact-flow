@@ -21,7 +21,9 @@ String inline(String ref, String value, [String p = '']) =>
 String workbookXml(List<String> names, [String p = '']) {
   final b = StringBuffer('<${p}workbook xmlns:r="urn:r"><${p}sheets>');
   for (var i = 0; i < names.length; i++) {
-    b.write('<${p}sheet name="${names[i]}" sheetId="${i + 1}" r:id="rId${i + 1}"/>');
+    b.write(
+      '<${p}sheet name="${names[i]}" sheetId="${i + 1}" r:id="rId${i + 1}"/>',
+    );
   }
   b.write('</${p}sheets></${p}workbook>');
   return b.toString();
@@ -30,7 +32,9 @@ String workbookXml(List<String> names, [String p = '']) {
 String relsXml(int n) {
   final b = StringBuffer('<Relationships>');
   for (var i = 1; i <= n; i++) {
-    b.write('<Relationship Id="rId$i" Type="worksheet" Target="worksheets/sheet$i.xml"/>');
+    b.write(
+      '<Relationship Id="rId$i" Type="worksheet" Target="worksheets/sheet$i.xml"/>',
+    );
   }
   b.write('</Relationships>');
   return b.toString();
@@ -139,10 +143,7 @@ void main() {
         sheetXml(['<row r="1">${inline('A1', 'b')}</row>']),
       ],
     );
-    expect(Xlsx.readSheets(bytes).map((s) => s.name).toList(), [
-      'One',
-      'Two',
-    ]);
+    expect(Xlsx.readSheets(bytes).map((s) => s.name).toList(), ['One', 'Two']);
   });
 
   const styles =

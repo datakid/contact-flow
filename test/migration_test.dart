@@ -77,7 +77,9 @@ void main() {
       expect(items.single['raw'], '{not json');
       expect(items.single['key'], 'library:corrupt');
       expect(
-        (await Hive.openBox<String>(LibraryStore.boxName)).containsKey('corrupt'),
+        (await Hive.openBox<String>(
+          LibraryStore.boxName,
+        )).containsKey('corrupt'),
         isFalse,
       );
       final byId = {for (final p in people) p.id: p};
@@ -152,22 +154,25 @@ void main() {
     expect(await store.quarantineCount(), 0);
   });
 
-  test('a corrupt row in a current-schema box is quarantined after load', () async {
-    final meta = await Hive.openBox<int>(LibraryStore.metaBox);
-    await meta.put(LibraryStore.schemaKey, Person.schemaVersion);
-    final box = await Hive.openBox<String>(LibraryStore.boxName);
-    await box.put('bad', '[1, 2');
-    await box.put('notamap', '"just a string"');
-    await box.close();
+  test(
+    'a corrupt row in a current-schema box is quarantined after load',
+    () async {
+      final meta = await Hive.openBox<int>(LibraryStore.metaBox);
+      await meta.put(LibraryStore.schemaKey, Person.schemaVersion);
+      final box = await Hive.openBox<String>(LibraryStore.boxName);
+      await box.put('bad', '[1, 2');
+      await box.put('notamap', '"just a string"');
+      await box.close();
 
-    final store = LibraryStore();
-    await store.openIn();
-    expect(store.load(), isEmpty);
-    expect(await store.quarantineBad(), 2);
-    expect(await store.quarantineCount(), 2);
-    expect(store.load(), isEmpty);
-    expect(await store.quarantineBad(), 0);
-  });
+      final store = LibraryStore();
+      await store.openIn();
+      expect(store.load(), isEmpty);
+      expect(await store.quarantineBad(), 2);
+      expect(await store.quarantineCount(), 2);
+      expect(store.load(), isEmpty);
+      expect(await store.quarantineBad(), 0);
+    },
+  );
 
   test('new fields survive a save and reload', () async {
     final store = LibraryStore();

@@ -207,7 +207,10 @@ class TagBook extends ChangeNotifier {
     return changes.length;
   }
 
-  Future<int> unassign(Iterable<String> tagIds, Iterable<String> numbers) async {
+  Future<int> unassign(
+    Iterable<String> tagIds,
+    Iterable<String> numbers,
+  ) async {
     final changes = <String, NumberTag?>{};
     for (final raw in numbers) {
       final key = TagKey.of(raw);

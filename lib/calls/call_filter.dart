@@ -60,10 +60,9 @@ class CallFilter {
       if (missedOnly && g.missed != g.count) continue;
       if (outgoingOnly && g.outgoing != g.count) continue;
       if (q != null && q.isPattern) {
-        final s = q.score(
-          [PhoneForms.of(g.number)],
-          hasTag: hasTag == null ? null : (t) => hasTag(g, t),
-        );
+        final s = q.score([
+          PhoneForms.of(g.number),
+        ], hasTag: hasTag == null ? null : (t) => hasTag(g, t));
         if (s == null) continue;
       }
       out.add(g);

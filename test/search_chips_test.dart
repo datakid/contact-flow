@@ -33,7 +33,9 @@ void main() {
     t,
   ) async {
     final rig = await started(t);
-    await t.pumpWidget(rig.wrap(ContactFlowApp(home: PhoneHome(onTab: (_) {}))));
+    await t.pumpWidget(
+      rig.wrap(ContactFlowApp(home: PhoneHome(onTab: (_) {}))),
+    );
     await t.pumpAndSettle();
 
     await typeQuery(t, '055');
@@ -50,7 +52,9 @@ void main() {
 
   testWidgets('chips are hidden for a name or a pattern', (t) async {
     final rig = await started(t);
-    await t.pumpWidget(rig.wrap(ContactFlowApp(home: PhoneHome(onTab: (_) {}))));
+    await t.pumpWidget(
+      rig.wrap(ContactFlowApp(home: PhoneHome(onTab: (_) {}))),
+    );
     await t.pumpAndSettle();
 
     await typeQuery(t, 'ann');
@@ -62,7 +66,9 @@ void main() {
 
   testWidgets('the help sheet explains the syntax', (t) async {
     final rig = await started(t);
-    await t.pumpWidget(rig.wrap(ContactFlowApp(home: PhoneHome(onTab: (_) {}))));
+    await t.pumpWidget(
+      rig.wrap(ContactFlowApp(home: PhoneHome(onTab: (_) {}))),
+    );
     await t.pumpAndSettle();
 
     await t.tap(find.byKey(const ValueKey('searchHelp')));

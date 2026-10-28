@@ -127,7 +127,10 @@ class _ComposeScreenState extends State<ComposeScreen> {
             onPressed: () => Navigator.pop(c, true),
             child: Text(
               l.t('startNew'),
-              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: p.accentText,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -175,7 +178,10 @@ class _ComposeScreenState extends State<ComposeScreen> {
             onPressed: () => Navigator.pop(c, true),
             child: Text(
               l.t('openMessages'),
-              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: p.accentText,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],

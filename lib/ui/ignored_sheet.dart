@@ -6,14 +6,15 @@ import '../l10n.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
-Future<void> showIgnoredSheet(BuildContext context) => showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  builder: (_) => ChangeNotifierProvider<IgnoreBook>.value(
-    value: context.read<IgnoreBook>(),
-    child: const IgnoredList(),
-  ),
-);
+Future<void> showIgnoredSheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => ChangeNotifierProvider<IgnoreBook>.value(
+        value: context.read<IgnoreBook>(),
+        child: const IgnoredList(),
+      ),
+    );
 
 class IgnoredList extends StatelessWidget {
   const IgnoredList({super.key});

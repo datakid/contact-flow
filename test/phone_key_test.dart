@@ -84,10 +84,7 @@ void main() {
     });
 
     test('two explicit numbers of the same country match', () {
-      expect(
-        PhoneKey.compatible('+966 50 123 4567', '00966501234567'),
-        isTrue,
-      );
+      expect(PhoneKey.compatible('+966 50 123 4567', '00966501234567'), isTrue);
     });
   });
 

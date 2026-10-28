@@ -250,11 +250,7 @@ class Codec {
     return ImportIssue.noContacts;
   }
 
-  static ImportResult _fromRows(
-    List<List<String>> rows,
-    Format f,
-    String src,
-  ) {
+  static ImportResult _fromRows(List<List<String>> rows, Format f, String src) {
     final m = Tabular.detect(rows);
     final people = Tabular.toPeople(rows, m, src);
     if (people.isNotEmpty) {
@@ -262,12 +258,7 @@ class Codec {
       final skipped = dataRows > people.length ? dataRows - people.length : 0;
       return ImportResult(people, f, m.describe(), skipped: skipped);
     }
-    return ImportResult(
-      const [],
-      f,
-      m.describe(),
-      issue: _emptyIssue(rows, m),
-    );
+    return ImportResult(const [], f, m.describe(), issue: _emptyIssue(rows, m));
   }
 
   static ImportResult _fromWorkbook(Uint8List bytes, Format f, String src) {
@@ -338,12 +329,7 @@ class Codec {
           if (people.isNotEmpty) {
             return ImportResult(people, Format.numbers, '');
           }
-          return ImportResult(
-            const [],
-            f,
-            '',
-            issue: ImportIssue.unreadable,
-          );
+          return ImportResult(const [], f, '', issue: ImportIssue.unreadable);
         }
       case Format.numbers:
         try {
@@ -624,7 +610,9 @@ class Codec {
             if (jobTitle.isEmpty) jobTitle = '$v';
           case Col.tags:
             if (v is List) {
-              groups.addAll(v.map((e) => '$e'.trim()).where((e) => e.isNotEmpty));
+              groups.addAll(
+                v.map((e) => '$e'.trim()).where((e) => e.isNotEmpty),
+              );
             } else {
               groups.addAll(Tabular.splitTags('$v'));
             }
@@ -690,7 +678,8 @@ class Codec {
     final withId = o.contactId && people.any((p) => p.phoneId != null);
     final withAlias =
         o.includeAliases && people.any((p) => p.cleanAliases.isNotEmpty);
-    final withTitle = o.titleFor(format) && people.any((p) => p.jobTitle.isNotEmpty);
+    final withTitle =
+        o.titleFor(format) && people.any((p) => p.jobTitle.isNotEmpty);
     final withGroups =
         o.groupsFor(format) && people.any((p) => p.groups.isNotEmpty);
     final withTags =
