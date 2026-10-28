@@ -374,6 +374,7 @@ class _PhoneHomeState extends State<PhoneHome> {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
         onTap: _focus.requestFocus,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -510,7 +511,7 @@ class _PhoneHomeState extends State<PhoneHome> {
       height: 52,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 2),
         children: [
           Pill(
             label: l.t('sortName'),

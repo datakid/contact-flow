@@ -114,17 +114,24 @@ class PersonRow extends StatelessWidget {
           color: selected
               ? p.accentSoft.withValues(alpha: 0.55)
               : Colors.transparent,
-          padding: const EdgeInsetsDirectional.fromSTEB(24, 0, 36, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(22, 0, 36, 0),
           child: Row(
             children: [
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   HapticFeedback.selectionClick();
                   onToggle();
                 },
-                child: Avatar(person: person, selected: selected),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: Avatar(person: person, selected: selected),
+                  ),
+                ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
