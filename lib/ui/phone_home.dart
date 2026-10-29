@@ -185,7 +185,6 @@ class _PhoneHomeState extends State<PhoneHome> {
         children: [
           Row(
             children: [
-              Flexible(child: ScreenTitle(l.t('navContacts'))),
               const Spacer(),
               if (ready)
                 IconButton(

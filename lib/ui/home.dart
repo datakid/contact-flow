@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               if (widget.onTab != null)
-                Flexible(child: ScreenTitle(l.t('wsFiles')))
+                Expanded(child: ScreenTitle(l.t('wsFiles')))
               else ...[
                 Container(
                   width: 8,
@@ -182,8 +182,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   l.t('appTitle').toUpperCase(),
                   style: AppText.label(p).copyWith(color: p.inkSoft),
                 ),
+                const Spacer(),
               ],
-              const Spacer(),
               if (hasPeople)
                 IconButton(
                   onPressed: () => openBatchEditor(context, s.visible),
