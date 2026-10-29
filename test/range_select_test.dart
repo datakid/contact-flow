@@ -1,7 +1,6 @@
 import 'package:contact_flow/main.dart';
 import 'package:contact_flow/state/app_state.dart';
 import 'package:contact_flow/ui/person_row.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
