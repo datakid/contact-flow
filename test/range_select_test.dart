@@ -62,7 +62,7 @@ void main() {
     final rows = find.byType(PersonRow);
     final gesture = await t.startGesture(t.getCenter(rows.at(0)));
     await t.pump(const Duration(milliseconds: 700));
-    final ctx = t.element(rows.first);
+    final ctx = t.element(find.byType(Scaffold).first);
     final third = t.getCenter(rows.at(2));
     final thirdId = (rows.at(2).evaluate().first.widget as PersonRow).person.id;
     // ignore: avoid_print

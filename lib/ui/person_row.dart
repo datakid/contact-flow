@@ -9,23 +9,24 @@ import 'theme.dart';
 import 'widgets.dart';
 
 class RowMark {
-  final String id;
-  const RowMark(this.id);
-
-  static String? at(BuildContext context, Offset global) {
-    final result = HitTestResult();
-    WidgetsBinding.instance.hitTestInView(
-      result,
-      global,
-      View.of(context).viewId,
-    );
-    for (final entry in result.path) {
-      final target = entry.target;
-      if (target is RenderMetaData && target.metaData is RowMark) {
-        return (target.metaData as RowMark).id;
+  static String? at(BuildContext root, Offset global) {
+    String? found;
+    void visit(Element e) {
+      if (found != null) return;
+      final w = e.widget;
+      if (w is PersonRow) {
+        final box = e.renderObject;
+        if (box is RenderBox && box.attached && box.hasSize) {
+          final rect = box.localToGlobal(Offset.zero) & box.size;
+          if (rect.contains(global)) found = w.person.id;
+        }
+        return;
       }
+      e.visitChildElements(visit);
     }
-    return null;
+
+    (root as Element).visitChildElements(visit);
+    return found;
   }
 }
 
@@ -256,20 +257,14 @@ class PersonRow extends StatelessWidget {
         ),
       ),
     );
-    return MetaData(
-      metaData: RowMark(person.id),
-      behavior: HitTestBehavior.translucent,
-      child: onLongPressStart == null
-          ? row
-          : GestureDetector(
-              onLongPressStart: (_) {
-                HapticFeedback.mediumImpact();
-                onLongPressStart!();
-              },
-              onLongPressMoveUpdate: (d) =>
-                  onLongPressDrag?.call(d.globalPosition),
-              child: row,
-            ),
+    if (onLongPressStart == null) return row;
+    return GestureDetector(
+      onLongPressStart: (_) {
+        HapticFeedback.mediumImpact();
+        onLongPressStart!();
+      },
+      onLongPressMoveUpdate: (d) => onLongPressDrag?.call(d.globalPosition),
+      child: row,
     );
   }
 }
