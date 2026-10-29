@@ -47,12 +47,7 @@ void main() {
     test('anything else is rejected', () {
       expect(PhoneSource.parseMemberships(null), isNull);
       expect(PhoneSource.parseMemberships('x'), isNull);
-      expect(
-        PhoneSource.parseMemberships({
-          '5': 'not a list',
-        }),
-        isNull,
-      );
+      expect(PhoneSource.parseMemberships({'5': 'not a list'}), isNull);
     });
 
     test('ids that never meet a contact are a mismatch', () {
@@ -65,10 +60,7 @@ void main() {
 
     test('no memberships at all is not a mismatch', () {
       expect(PhoneSource.membershipMatches({}, {'1'}), isTrue);
-      expect(
-        PhoneSource.membershipMatches({'5': <String>{}}, {'1'}),
-        isTrue,
-      );
+      expect(PhoneSource.membershipMatches({'5': <String>{}}, {'1'}), isTrue);
     });
   });
 }

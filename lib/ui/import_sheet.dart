@@ -1035,9 +1035,7 @@ class _ReviewRowState extends State<_ReviewRow> {
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: p.sheet,
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.sm,
-                              ),
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
                               border: Border.all(color: p.hairline),
                             ),
                             child: SelectableText(

@@ -213,12 +213,22 @@ void main() {
     final dupes = [(person('Cy', '0553333333'), person('Cy', '0553333333'))];
     await t.pumpWidget(
       rig.wrap(
-        ContactFlowApp(home: ReviewScreen(plan: planOf(fresh, dupes: dupes))),
+        ContactFlowApp(
+          home: ReviewScreen(plan: planOf(fresh, dupes: dupes)),
+        ),
       ),
     );
     await t.pumpAndSettle();
-    expect(find.text('${en.t('newOnes')} · 2'), findsOneWidget);
-    expect(find.text('${en.t('duplicates')} · 1'), findsOneWidget);
+    Finder label(String text) => find.byWidgetPredicate(
+      (w) => w is Text && w.data?.toLowerCase() == text.toLowerCase(),
+    );
+    await t.scrollUntilVisible(
+      find.byIcon(Icons.merge_rounded),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(label('${en.t('newOnes')} · 2'), findsOneWidget);
+    expect(label('${en.t('duplicates')} · 1'), findsOneWidget);
     expect(find.byIcon(Icons.merge_rounded), findsOneWidget);
   });
 
@@ -227,10 +237,17 @@ void main() {
     final dupes = [(person('Cy', '0553333333'), person('Cy', '0553333333'))];
     await t.pumpWidget(
       rig.wrap(
-        ContactFlowApp(home: ReviewScreen(plan: planOf([], dupes: dupes))),
+        ContactFlowApp(
+          home: ReviewScreen(plan: planOf([], dupes: dupes)),
+        ),
       ),
     );
     await t.pumpAndSettle();
+    await t.scrollUntilVisible(
+      find.text('Cy'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await t.tap(find.text('Cy'));
     await t.pumpAndSettle();
     expect(find.byIcon(Icons.merge_rounded), findsOneWidget);
@@ -262,10 +279,17 @@ void main() {
     final dupes = [(incoming, person('Cyrus Stone', '0553333333'))];
     await t.pumpWidget(
       rig.wrap(
-        ContactFlowApp(home: ReviewScreen(plan: planOf([], dupes: dupes))),
+        ContactFlowApp(
+          home: ReviewScreen(plan: planOf([], dupes: dupes)),
+        ),
       ),
     );
     await t.pumpAndSettle();
+    await t.scrollUntilVisible(
+      find.byKey(ValueKey('review-expand-${incoming.id}')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await t.tap(find.byKey(ValueKey('review-expand-${incoming.id}')));
     await t.pumpAndSettle();
     expect(

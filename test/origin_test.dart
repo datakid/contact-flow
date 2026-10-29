@@ -13,10 +13,7 @@ void main() {
   });
 
   test('a csv row is kept as the original row', () {
-    final r = Codec.decode(
-      'a.csv',
-      bytes('Name,Phone\nAnn Lee,0551234567\n'),
-    );
+    final r = Codec.decode('a.csv', bytes('Name,Phone\nAnn Lee,0551234567\n'));
     expect(r.people.single.origin, 'Ann Lee | 0551234567');
   });
 

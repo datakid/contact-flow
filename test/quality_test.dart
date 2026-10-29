@@ -36,11 +36,7 @@ final setups = [
   const Setup('narrow en light x2.0', 'en', false, 2.0, Size(320, 640)),
 ];
 
-const screens = {
-  'contacts': tabContacts,
-  'files': tabFiles,
-  'tags': tabTags,
-};
+const screens = {'contacts': tabContacts, 'files': tabFiles, 'tags': tabTags};
 
 Future<void> pumpScreen(WidgetTester t, Setup s, int tab) async {
   t.view.physicalSize = s.size * 3;

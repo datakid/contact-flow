@@ -183,7 +183,9 @@ class PhoneSource implements ContactSource {
   Future<Map<String, Set<String>>?> _nativeMemberships() async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return null;
     try {
-      return parseMemberships(await _device.invokeMethod<Object?>('memberships'));
+      return parseMemberships(
+        await _device.invokeMethod<Object?>('memberships'),
+      );
     } catch (_) {
       return null;
     }
