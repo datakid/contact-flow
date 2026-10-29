@@ -274,25 +274,8 @@ class _PhoneHomeState extends State<PhoneHome> {
         );
       }
       return Padding(
-        padding: const EdgeInsets.only(top: 80),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 18),
-              Text(
-                l.t('loadingContacts'),
-                style: TextStyle(
-                  color: p.inkSoft,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+        padding: const EdgeInsets.only(top: 24),
+        child: ListSkeleton(caption: l.t('loadingContacts')),
       );
     }
     final files = GhostButton(

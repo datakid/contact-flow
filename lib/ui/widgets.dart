@@ -586,3 +586,107 @@ String friendlyError(Object e) {
   if (s.length > 120) s = '${s.substring(0, 117)}…';
   return s.isEmpty ? 'Something went wrong' : s;
 }
+
+class ListSkeleton extends StatefulWidget {
+  final int rows;
+  final String? caption;
+  const ListSkeleton({super.key, this.rows = 7, this.caption});
+
+  @override
+  State<ListSkeleton> createState() => _ListSkeletonState();
+}
+
+class _ListSkeletonState extends State<ListSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.stop();
+      _c.value = 0.5;
+    } else if (!_c.isAnimating) {
+      _c.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    Widget bar(double width, double height) => Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: p.hairline,
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
+    return Semantics(
+      container: true,
+      label: widget.caption,
+      child: ExcludeSemantics(
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (context, child) =>
+              Opacity(opacity: 0.45 + 0.55 * _c.value, child: child),
+          child: Column(
+            key: const ValueKey('list-skeleton'),
+            children: [
+              for (var i = 0; i < widget.rows; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: p.hairline,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            bar(120 + (i % 3) * 40, 14),
+                            const SizedBox(height: 10),
+                            bar(90 + (i % 4) * 25, 11),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (widget.caption != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  widget.caption!,
+                  style: TextStyle(
+                    color: p.inkSoft,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

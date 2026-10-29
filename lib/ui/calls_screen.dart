@@ -489,15 +489,9 @@ class _CallsScreenState extends State<CallsScreen> {
     switch (c.phase) {
       case CallsPhase.idle:
       case CallsPhase.loading:
-        body = Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 12),
-              Text(l.t('callsLoading', {'n': c.progress})),
-            ],
-          ),
+        body = SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: ListSkeleton(caption: l.t('callsLoading', {'n': c.progress})),
         );
       case CallsPhase.needPermission:
         body = Padding(
