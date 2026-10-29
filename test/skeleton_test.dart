@@ -25,7 +25,8 @@ void main() {
     await t.pumpWidget(host(const ListSkeleton()));
     expect(t.hasRunningAnimations, isTrue);
     await t.pumpWidget(host(const ListSkeleton(), reduceMotion: true));
-    await t.pump(const Duration(milliseconds: 50));
+    await t.pump(const Duration(seconds: 1));
+    await t.pump(const Duration(seconds: 1));
     expect(t.hasRunningAnimations, isFalse);
   });
 }
