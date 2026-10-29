@@ -23,9 +23,12 @@ if ! grep -q "READ_CALL_LOG" <<<"$full_perms"; then
   echo "full does not request READ_CALL_LOG"
   exit 1
 fi
-if grep -q "android.permission.INTERNET" <<<"$lite_perms$full_perms"; then
-  echo "an edition requests INTERNET"
-  exit 1
-fi
+for dir in main lite full; do
+  manifest="android/app/src/$dir/AndroidManifest.xml"
+  if [ -f "$manifest" ] && grep -q "android.permission.INTERNET" "$manifest"; then
+    echo "$manifest requests INTERNET"
+    exit 1
+  fi
+done
 
 echo "permissions ok"
