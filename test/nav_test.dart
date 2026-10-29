@@ -96,4 +96,48 @@ void main() {
     expect(app.tab, tabFiles);
     expect(find.text(en.t('wsFiles')), findsWidgets);
   });
+
+  testWidgets('the empty tags screen offers to create a tag', (t) async {
+    final app = (await t.runAsync(() => appWith({'tab': 3})))!;
+    final rig = (await t.runAsync(() => makeRig(app: app)))!;
+    await t.pumpWidget(
+      AppProviders(
+        state: rig.app,
+        book: rig.book,
+        queue: rig.queue,
+        launcher: rig.launcher,
+        tags: TagBook(MemoryTagStore()),
+        child: const ContactFlowApp(),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('tags-empty-create')));
+    await t.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+  });
+
+  testWidgets('a search with no results offers to clear it', (t) async {
+    final app = (await t.runAsync(() => appWith({'tab': 0})))!;
+    final rig = (await t.runAsync(() => makeRig(app: app)))!;
+    await t.runAsync(() => rig.book.checkAccess());
+    await t.pumpWidget(
+      AppProviders(
+        state: rig.app,
+        book: rig.book,
+        queue: rig.queue,
+        launcher: rig.launcher,
+        child: const ContactFlowApp(),
+      ),
+    );
+    await t.pumpAndSettle();
+    rig.book.setQuery('zzzzqqqq');
+    await t.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 300)),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('empty-reset')));
+    await t.pumpAndSettle();
+    expect(rig.book.query, '');
+    expect(find.byKey(const ValueKey('empty-reset')), findsNothing);
+  });
 }

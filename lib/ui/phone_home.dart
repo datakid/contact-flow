@@ -724,11 +724,27 @@ class _PhoneHomeState extends State<PhoneHome> {
           hasScrollBody: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 40, 24, 160),
-            child: Text(
-              book.searching
-                  ? l.t('noResults', {'q': book.query.trim()})
-                  : l.t('nothingMatches'),
-              style: AppText.display(p, size: 30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  book.searching
+                      ? l.t('noResults', {'q': book.query.trim()})
+                      : l.t('nothingMatches'),
+                  style: AppText.display(p, size: 30),
+                ),
+                const SizedBox(height: 20),
+                OutlinedButton.icon(
+                  key: const ValueKey('empty-reset'),
+                  onPressed: () {
+                    _search.clear();
+                    book.setQuery('');
+                    book.clearFilters();
+                  },
+                  icon: const Icon(Icons.filter_alt_off_rounded),
+                  label: Text(l.t('clearSearch')),
+                ),
+              ],
             ),
           ),
         ),

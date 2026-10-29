@@ -149,11 +149,23 @@ class TagsScreen extends StatelessWidget {
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(28),
-                child: Text(
-                  l.t('tagsEmpty'),
-                  key: const ValueKey('tags-empty'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: p.inkSoft),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l.t('tagsEmpty'),
+                      key: const ValueKey('tags-empty'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: p.inkSoft),
+                    ),
+                    const SizedBox(height: 20),
+                    FilledButton.icon(
+                      key: const ValueKey('tags-empty-create'),
+                      onPressed: () => _create(context, book, l),
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(l.t('tagNew')),
+                    ),
+                  ],
                 ),
               ),
             )
