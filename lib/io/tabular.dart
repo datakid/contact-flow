@@ -498,10 +498,16 @@ class Tabular {
           phoneId: contactId.isEmpty ? null : contactId,
           aliases: Aliases.clean(aliases, name: name),
           groups: groups,
+          origin: _origin(r),
         ),
       );
     }
     return out;
+  }
+
+  static String _origin(List<String> row) {
+    final text = row.map((c) => c.trim()).join(' | ');
+    return text.length > 400 ? text.substring(0, 400) : text;
   }
 
   static String joinName(String first, String middle, String last) {

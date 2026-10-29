@@ -503,6 +503,7 @@ class Codec {
         for (final e in emails) {
           if (mailKeys.add(e.toLowerCase())) open.emails.add(e);
         }
+        if (open.origin.length < 400) open.origin = '${open.origin}\n$line';
         continue;
       }
       final person = Person(
@@ -510,6 +511,7 @@ class Codec {
         phones: nums.map((n) => PhoneEntry(n)).toList(),
         emails: emails,
         source: src,
+        origin: line,
       );
       out.add(person);
       cur = person;

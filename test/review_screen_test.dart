@@ -206,4 +206,71 @@ void main() {
     await t.pumpAndSettle();
     expect(book.tags, isEmpty);
   });
+
+  testWidgets('rows are grouped into New and Existing sections', (t) async {
+    final rig = await rigFor(t, AppState());
+    final fresh = [person('Ann', '0551111111'), person('Bob', '0552222222')];
+    final dupes = [(person('Cy', '0553333333'), person('Cy', '0553333333'))];
+    await t.pumpWidget(
+      rig.wrap(
+        ContactFlowApp(home: ReviewScreen(plan: planOf(fresh, dupes: dupes))),
+      ),
+    );
+    await t.pumpAndSettle();
+    expect(find.text('${en.t('newOnes')} · 2'), findsOneWidget);
+    expect(find.text('${en.t('duplicates')} · 1'), findsOneWidget);
+    expect(find.byIcon(Icons.merge_rounded), findsOneWidget);
+  });
+
+  testWidgets('a merged duplicate cannot be skipped while merging', (t) async {
+    final rig = await rigFor(t, AppState());
+    final dupes = [(person('Cy', '0553333333'), person('Cy', '0553333333'))];
+    await t.pumpWidget(
+      rig.wrap(
+        ContactFlowApp(home: ReviewScreen(plan: planOf([], dupes: dupes))),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.text('Cy'));
+    await t.pumpAndSettle();
+    expect(find.byIcon(Icons.merge_rounded), findsOneWidget);
+  });
+
+  testWidgets('expanding a row shows the original line', (t) async {
+    final rig = await rigFor(t, AppState());
+    final ann = person('Ann', '0551111111')
+      ..origin = 'Ann Lee, 0551111111, work';
+    await t.pumpWidget(
+      rig.wrap(ContactFlowApp(home: ReviewScreen(plan: planOf([ann])))),
+    );
+    await t.pumpAndSettle();
+    expect(find.text('Ann Lee, 0551111111, work'), findsNothing);
+    await t.tap(find.byKey(ValueKey('review-expand-${ann.id}')));
+    await t.pumpAndSettle();
+    expect(find.text('Ann Lee, 0551111111, work'), findsOneWidget);
+    expect(find.text(en.t('originalLine')), findsOneWidget);
+    await t.tap(find.byKey(ValueKey('review-expand-${ann.id}')));
+    await t.pumpAndSettle();
+    expect(find.text('Ann Lee, 0551111111, work'), findsNothing);
+  });
+
+  testWidgets('expanding a duplicate names the contact it merges into', (
+    t,
+  ) async {
+    final rig = await rigFor(t, AppState());
+    final incoming = person('Cy', '0553333333');
+    final dupes = [(incoming, person('Cyrus Stone', '0553333333'))];
+    await t.pumpWidget(
+      rig.wrap(
+        ContactFlowApp(home: ReviewScreen(plan: planOf([], dupes: dupes))),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(ValueKey('review-expand-${incoming.id}')));
+    await t.pumpAndSettle();
+    expect(
+      find.text(en.t('mergesInto', {'name': 'Cyrus Stone'})),
+      findsOneWidget,
+    );
+  });
 }

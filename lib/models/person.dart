@@ -78,6 +78,7 @@ class Person {
   String jobTitle;
   String note;
   String source;
+  String origin;
   final DateTime added;
   String? phoneId;
   AccountRef? account;
@@ -94,6 +95,7 @@ class Person {
     this.jobTitle = '',
     this.note = '',
     this.source = '',
+    this.origin = '',
     DateTime? added,
     this.phoneId,
     this.account,
@@ -168,6 +170,7 @@ class Person {
         jobTitle: jobTitle,
         note: note,
         source: source,
+        origin: origin,
         added: added,
         phoneId: clearPhoneId ? null : (phoneId ?? this.phoneId),
         account: account,

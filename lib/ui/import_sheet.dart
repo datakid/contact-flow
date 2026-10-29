@@ -645,6 +645,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
       ..._fresh,
       if (!_merge) ...plan.dupes.map((d) => d.$1),
     ];
+    final entries = <_ReviewEntry>[
+      if (_fresh.isNotEmpty) ...[
+        _ReviewEntry.header(l.t('newOnes'), _fresh.length),
+        for (final f in _fresh) _ReviewEntry.row(f),
+      ],
+      if (plan.dupes.isNotEmpty) ...[
+        _ReviewEntry.header(l.t('duplicates'), plan.dupes.length),
+        for (final d in plan.dupes) _ReviewEntry.row(d.$1, existing: d.$2),
+      ],
+    ];
     final isDevice = plan.sources.contains('device');
     return Scaffold(
       appBar: AppBar(
@@ -769,9 +779,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ),
                       ),
                     ),
-                  if (previewList.isNotEmpty)
-                    SliverToBoxAdapter(child: SectionLabel(l.t('newOnes')))
-                  else
+                  if (previewList.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
@@ -805,73 +813,25 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ),
                     ),
                   SliverList.builder(
-                    itemCount: previewList.length,
+                    itemCount: entries.length,
                     itemBuilder: (c, i) {
-                      final person = previewList[i];
-                      final skip = _skip.contains(person.id);
-                      return InkWell(
-                        onTap: () => setState(
-                          () => skip
+                      final e = entries[i];
+                      final header = e.header;
+                      if (header != null) {
+                        return SectionLabel('$header · ${e.count}');
+                      }
+                      final person = e.person!;
+                      final lockedMerge = e.existing != null && _merge;
+                      return _ReviewRow(
+                        key: ValueKey('review-${person.id}'),
+                        person: person,
+                        existing: e.existing,
+                        skipped: !lockedMerge && _skip.contains(person.id),
+                        locked: lockedMerge,
+                        onToggle: () => setState(
+                          () => _skip.contains(person.id)
                               ? _skip.remove(person.id)
                               : _skip.add(person.id),
-                        ),
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 200),
-                          opacity: skip ? 0.35 : 1,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 9,
-                            ),
-                            child: Row(
-                              children: [
-                                Avatar(person: person, size: 38),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        person.displayName,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: p.ink,
-                                          decoration: skip
-                                              ? TextDecoration.lineThrough
-                                              : null,
-                                        ),
-                                      ),
-                                      Directionality(
-                                        textDirection: TextDirection.ltr,
-                                        child: Text(
-                                          person.phones
-                                              .map((e) => e.number)
-                                              .join('  ·  '),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: p.inkSoft,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  skip
-                                      ? Icons.add_circle_outline_rounded
-                                      : Icons.check_circle_rounded,
-                                  color: skip ? p.inkFaint : p.accent,
-                                  size: 22,
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       );
                     },
@@ -915,6 +875,188 @@ class _ReviewScreenState extends State<ReviewScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ReviewEntry {
+  final String? header;
+  final int count;
+  final Person? person;
+  final Person? existing;
+  const _ReviewEntry.header(String this.header, this.count)
+    : person = null,
+      existing = null;
+  const _ReviewEntry.row(Person this.person, {this.existing})
+    : header = null,
+      count = 0;
+}
+
+class _ReviewRow extends StatefulWidget {
+  final Person person;
+  final Person? existing;
+  final bool skipped;
+  final bool locked;
+  final VoidCallback onToggle;
+  const _ReviewRow({
+    super.key,
+    required this.person,
+    required this.existing,
+    required this.skipped,
+    required this.locked,
+    required this.onToggle,
+  });
+
+  @override
+  State<_ReviewRow> createState() => _ReviewRowState();
+}
+
+class _ReviewRowState extends State<_ReviewRow> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = context.pal;
+    final person = widget.person;
+    final skip = widget.skipped;
+    final detail = person.origin.trim();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: widget.locked ? null : widget.onToggle,
+          child: AnimatedOpacity(
+            duration: AppMotion.base,
+            opacity: skip ? 0.35 : 1,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: 24, end: 4),
+              child: Row(
+                children: [
+                  Avatar(person: person, size: 38),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            person.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: p.ink,
+                              decoration: skip
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                          Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Text(
+                              person.phones.map((e) => e.number).join('  ·  '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: p.inkSoft,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (!widget.locked)
+                    Icon(
+                      skip
+                          ? Icons.add_circle_outline_rounded
+                          : Icons.check_circle_rounded,
+                      color: skip ? p.inkFaint : p.accent,
+                      size: 22,
+                    )
+                  else
+                    Icon(Icons.merge_rounded, color: p.sageText, size: 22),
+                  IconButton(
+                    key: ValueKey('review-expand-${person.id}'),
+                    tooltip: _open ? l.t('detailsHide') : l.t('detailsShow'),
+                    onPressed: () => setState(() => _open = !_open),
+                    icon: Icon(
+                      _open
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: p.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: AppMotion.base,
+          curve: AppMotion.curve,
+          alignment: AlignmentDirectional.topStart,
+          child: !_open
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(76, 0, 24, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.existing != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            l.t('mergesInto', {
+                              'name': widget.existing!.displayName,
+                            }),
+                            style: TextStyle(
+                              color: p.sageText,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      if (detail.isNotEmpty) ...[
+                        Text(
+                          l.t('originalLine'),
+                          style: AppText.label(p).copyWith(color: p.inkSoft),
+                        ),
+                        const SizedBox(height: 4),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Container(
+                            key: ValueKey('review-origin-${person.id}'),
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: p.sheet,
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.sm,
+                              ),
+                              border: Border.all(color: p.hairline),
+                            ),
+                            child: SelectableText(
+                              detail,
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                                height: 1.4,
+                                color: p.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }

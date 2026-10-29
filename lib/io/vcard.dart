@@ -31,6 +31,13 @@ class VCard {
         continue;
       }
       if (cur == null) continue;
+      if (cur.raw.length < 40 &&
+          prop != 'PHOTO' &&
+          prop != 'LOGO' &&
+          prop != 'SOUND' &&
+          prop != 'KEY') {
+        cur.raw.add(line.length > 160 ? line.substring(0, 160) : line);
+      }
       final v = _decode(value, params, parts.skip(1).toList());
       switch (prop) {
         case 'FN':
@@ -339,6 +346,12 @@ class _Card {
   final phones = <PhoneEntry>[];
   final emails = <String>[];
   final groups = <String>[];
+  final raw = <String>[];
+
+  String _origin() {
+    final text = raw.join('\n');
+    return text.length > 600 ? text.substring(0, 600) : text;
+  }
 
   Person? build(String source) {
     var name = fn;
@@ -369,6 +382,7 @@ class _Card {
       jobTitle: title,
       note: note,
       source: source,
+      origin: _origin(),
       phoneId: phoneId,
       account: account,
       starred: starred,
