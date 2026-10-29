@@ -14,10 +14,33 @@ String slug(String s) =>
 
 void main() {
   setUpAll(() async {
-    final bytes = await File('test/fonts/NotoSansArabic.ttf').readAsBytes();
-    final loader = FontLoader('Noto Sans Arabic')
-      ..addFont(Future.value(ByteData.sublistView(bytes)));
-    await loader.load();
+    Future<ByteData> bytes(String path) async {
+      final b = await File(path).readAsBytes();
+      return ByteData.sublistView(b);
+    }
+
+    Future<void> load(String family, List<String> files) async {
+      final loader = FontLoader(family);
+      for (final f in files) {
+        loader.addFont(bytes(f));
+      }
+      await loader.load();
+    }
+
+    await load('Manrope', [
+      for (final w in [400, 500, 600, 700, 800]) 'assets/fonts/Manrope-$w.ttf',
+    ]);
+    await load('Instrument', [
+      'assets/fonts/InstrumentSerif-Regular.ttf',
+      'assets/fonts/InstrumentSerif-Italic.ttf',
+    ]);
+    await load('Noto Sans Arabic', ['test/fonts/NotoSansArabic.ttf']);
+    final root = Platform.environment['FLUTTER_ROOT'];
+    if (root != null) {
+      await load('MaterialIcons', [
+        '$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+      ]);
+    }
   });
 
   for (final s in setups) {
