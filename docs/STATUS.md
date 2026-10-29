@@ -9,7 +9,7 @@ Work was verified on GitHub Actions (Flutter 3.35.4, Dart 3.9.2, Ubuntu) on bran
 ## Baseline (task 0.1) and current numbers
 
 - Before fixes (first CI run): 29 analyzer errors and warnings, 445 tests passing, 35 failing.
-- Now: `flutter analyze` no issues, `dart format --set-exit-if-changed` clean, 931 tests passing (perf and golden tags excluded), `flutter build apk --debug` succeeds for `lite` and for `full --dart-define=CALLS=true`.
+- Now: `flutter analyze` no issues, `dart format --set-exit-if-changed` clean, 941 tests passing (perf and golden tags excluded), 27 golden images compared, `flutter build apk --debug` succeeds for `lite` and for `full --dart-define=CALLS=true`.
 - Perf (CI runner, not a phone): 20k call records grouped in 122 ms; search index built in 227 ms; 1M-line text file decoded in 4.2 s; 50k-row CSV in 334 ms; 50k-row XLSX in 455 ms; 5 MB of vCard photos in 249 ms.
 - Not measured: release APK sizes, cold start time, real-device scroll performance.
 
@@ -337,3 +337,46 @@ Failing test: test/highlight_test.dart (written, not run)
 Change: Hit.numberRanges holds digit positions in the number that matched; NumberQuery.highlightsFor computes them (merged and sorted, only for the saved form of the number, never for a leading plus); PersonRow maps them onto the shown text (skipping spaces, dashes and the plus) and underlines them with the same style as name matches.
 verify.sh: CI equivalent run (analyze, format, test, builds)
 Risks / follow-ups: matches that were found through the national or E.164 form of a number are not highlighted; the secondary line now always uses HighlightText, which keeps one line with an ellipsis.
+
+Task: 2.1  Status: TESTED (CI)
+Callers checked: every use of the old `Type` helper (now `AppText`); the theme builder; main.dart
+Failing test: palette tests for six seed colours in light and dark (system colours must keep 4.5:1 text on both surfaces, 3:1 for accent fills)
+Change: `AppText` rename; `AppSpace`, `AppRadius`, `AppMotion` tokens; `Palette.fromScheme` with `ensureContrast`; opt-in "Use system colours" switch (Android only, off by default, brand colour stays the default); `dynamic_color` pinned to 1.7.0 because 1.9.0 does not build with this Gradle setup; large titles stop scaling at 1.25x
+verify.sh: CI equivalent run (analyze, format, test, builds)
+Risks / follow-ups: system colours were only checked through the contrast tests, not on a phone with a real wallpaper palette
+
+Task: 2.2  Status: PARTLY DONE, TESTED (CI)
+Callers checked: root.dart, workspace.dart, all three screens that drew the old top switch, the saved tab preference
+Failing test: nav_test.dart (preference range, fallback when a tab is missing, bar contents, switching)
+Change: bottom navigation bar with Contacts, Calls (full only), Tags and Files; saved tab widened from -1..1 to -1..3 so Calls and Tags can be remembered; the bar hides while the keyboard is open
+verify.sh: CI equivalent run (analyze, format, test, builds)
+Risks / follow-ups: NOT DONE: the large title that collapses on scroll and the SearchAnchor with filter chips. The big headings are static.
+
+Task: 2.3  Status: PARTLY DONE, TESTED (CI)
+Callers checked: phone_home and calls_screen loading states; tags screen
+Failing test: skeleton_test.dart (rows and caption, pulse stops when motion is reduced)
+Change: skeleton placeholders replace the spinners for contacts and calls; tags screen header and button restyled (it had a thick black outline on the button)
+verify.sh: CI equivalent run (analyze, format, test, builds)
+Risks / follow-ups: NOT DONE: swipe actions, tag chips in rows, richer empty states
+
+Task: 2.4  Status: PARTLY DONE, TESTED (CI)
+Callers checked: ReviewScreen, ImportPlan, the three parsers (text, tabular, vCard)
+Failing test: review_screen_test.dart (sections, merged rows locked, expanding shows the original line, merge target named); origin_test.dart (original line kept, photo left out, not saved with the contact)
+Change: review list grouped into New and Existing sections; each row expands to show the original line from the file (kept in memory only, not saved); all rows reachable (from 1.19)
+verify.sh: CI equivalent run (analyze, format, test, builds)
+Risks / follow-ups: NOT DONE: separate Skipped and Problems sections. Skipped rows are still only a count and per-file problems are still shown before the review screen.
+
+Task: 2.5  Status: TESTED (CI), goldens NOT APPROVED
+Callers checked: the three destinations in the nav bar
+Failing test: quality_test.dart (overflow, 48 dp tap targets, labelled tap targets for Contacts, Files and Tags in 9 setups); first run failed 25 of 81
+Change: 48 dp hit areas for filter pills and row avatars; a search wrapper no longer shows as an unlabelled button; the export button no longer overflows at 2x text; Noto Sans Arabic test font; golden tests (27 images, generated on Linux CI, copies in docs/screens)
+verify.sh: CI equivalent run (analyze, format, test, builds)
+Risks / follow-ups: Noto Sans SC is not bundled (17.7 MB), so Chinese text in goldens uses the fallback font. The goldens still need your approval.
+
+Task: 3.x (decode speed)  Status: TESTED (CI)
+Callers checked: Codec text path, VCard unfold, jobs
+Failing test: decode_size_test.dart (1M-line text file and a 5 MB-photo vCard never finished)
+Change: text import merges consecutive lines in linear time; vCard unfolding no longer builds one growing string; regexes hoisted
+verify.sh: CI equivalent run (analyze, format, test, builds)
+Risks / follow-ups: none known
+
