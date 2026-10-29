@@ -62,8 +62,15 @@ void main() {
     final rows = find.byType(PersonRow);
     final gesture = await t.startGesture(t.getCenter(rows.at(0)));
     await t.pump(const Duration(milliseconds: 700));
-    await gesture.moveTo(t.getCenter(rows.at(2)));
+    final ctx = t.element(rows.first);
+    final third = t.getCenter(rows.at(2));
+    final thirdId = (rows.at(2).evaluate().first.widget as PersonRow).person.id;
+    // ignore: avoid_print
+    print('DIAG after hold selected=${rig.book.selected.length} mark=${RowMark.at(ctx, third)} want=$thirdId');
+    await gesture.moveTo(third);
     await t.pump();
+    // ignore: avoid_print
+    print('DIAG after move selected=${rig.book.selected.length}');
     expect(rig.book.selected.length, 3);
     await gesture.moveTo(t.getCenter(rows.at(1)));
     await t.pump();
