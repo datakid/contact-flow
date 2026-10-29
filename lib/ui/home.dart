@@ -204,6 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
               hasPeople ? l.t('library') : l.t('greeting'),
               key: ValueKey(hasPeople),
               style: AppText.display(p, size: 52),
+ textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.25),
             ),
           ),
           const SizedBox(height: 10),

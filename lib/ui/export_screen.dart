@@ -279,6 +279,7 @@ class _ExportScreenState extends State<ExportScreen> {
                         Text(
                           l.t('export'),
                           style: AppText.display(p, size: 52),
+ textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.25),
                         ),
                         const SizedBox(height: 6),
                         Text.rich(

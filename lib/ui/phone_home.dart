@@ -204,7 +204,8 @@ class _PhoneHomeState extends State<PhoneHome> {
             ],
           ),
           const SizedBox(height: 18),
-          Text(l.t('phoneTitle'), style: AppText.display(p, size: 52)),
+          Text(l.t('phoneTitle'), style: AppText.display(p, size: 52),
+ textScaler: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.25)),
           const SizedBox(height: 10),
           if (ready)
             Wrap(
