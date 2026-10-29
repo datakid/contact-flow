@@ -57,9 +57,7 @@ class SwipeActions extends StatelessWidget {
         HapticFeedback.mediumImpact();
         await reachOut(
           context,
-          direction == DismissDirection.startToEnd
-              ? Channel.call
-              : Channel.sms,
+          direction == DismissDirection.startToEnd ? Channel.call : Channel.sms,
           number,
         );
         return false;
