@@ -97,6 +97,13 @@ jobs:
           set +e
           flutter build web 2>&1 | tail -n 30 > /tmp/rep/web.txt
           exit 0
+      - name: golden compare
+        timeout-minutes: 20
+        run: |
+          set +e
+          flutter test --tags golden --reporter expanded > /tmp/rep/golden_compare.txt 2>&1
+          echo "exit $?" >> /tmp/rep/golden_compare.txt
+          exit 0
       - name: goldens
         timeout-minutes: 20
         run: |
