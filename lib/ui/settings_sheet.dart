@@ -88,6 +88,18 @@ class _Settings extends StatelessWidget {
                 ),
               ),
             ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Pill(
+                key: const ValueKey('set-swipe'),
+                label: l.t('swipeActions'),
+                active: s.swipeActions,
+                onTap: () => s.setSwipeActions(!s.swipeActions),
+              ),
+            ),
+          ),
           SectionLabel(l.t('language')),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),

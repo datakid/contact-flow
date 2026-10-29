@@ -52,6 +52,7 @@ class AppState extends ContactList {
   final LibraryStore _store;
   ThemeMode themeMode = ThemeMode.system;
   bool dynamicColor = false;
+  bool swipeActions = true;
   String lang = 'en';
   String country = '';
   List<String> recent = [];
@@ -74,6 +75,7 @@ class AppState extends ContactList {
     final prefs = await SharedPreferences.getInstance();
     themeMode = ThemeMode.values[(prefs.getInt('theme') ?? 0).clamp(0, 2)];
     dynamicColor = prefs.getBool('dynamicColor') ?? false;
+    swipeActions = prefs.getBool('swipeActions') ?? true;
     final sys = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     lang =
         prefs.getString('lang') ??
@@ -140,6 +142,12 @@ class AppState extends ContactList {
     themeMode = m;
     notifyListeners();
     (await SharedPreferences.getInstance()).setInt('theme', m.index);
+  }
+
+  Future<void> setSwipeActions(bool on) async {
+    swipeActions = on;
+    notifyListeners();
+    (await SharedPreferences.getInstance()).setBool('swipeActions', on);
   }
 
   Future<void> setDynamicColor(bool on) async {

@@ -14,6 +14,7 @@ import 'phone_actions.dart';
 import 'phone_detail.dart';
 import 'phone_edit.dart';
 import 'person_row.dart';
+import 'swipe_actions.dart';
 import 'pipeline.dart';
 import 'queue_screen.dart';
 import 'settings_sheet.dart';
@@ -772,15 +773,20 @@ class _PhoneHomeState extends State<PhoneHome> {
             );
           }
           final person = list[k];
-          return PersonRow(
-            key: ValueKey(person.id),
+          return SwipeActions(
+            key: ValueKey('sw-${person.id}'),
             person: person,
-            hit: book.hitFor(person),
-            selected: book.selected.contains(person.id),
-            selecting: selecting,
-            height: m.row,
-            onOpen: () => openPhoneDetail(context, person),
-            onToggle: () => book.toggle(person),
+            enabled: context.read<AppState>().swipeActions && !selecting,
+            child: PersonRow(
+              key: ValueKey(person.id),
+              person: person,
+              hit: book.hitFor(person),
+              selected: book.selected.contains(person.id),
+              selecting: selecting,
+              height: m.row,
+              onOpen: () => openPhoneDetail(context, person),
+              onToggle: () => book.toggle(person),
+            ),
           );
         },
       ),
