@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../l10n.dart';
@@ -6,6 +7,27 @@ import '../models/person.dart';
 import '../search/fuzzy.dart';
 import 'theme.dart';
 import 'widgets.dart';
+
+class RowMark {
+  final String id;
+  const RowMark(this.id);
+
+  static String? at(BuildContext context, Offset global) {
+    final result = HitTestResult();
+    WidgetsBinding.instance.hitTestInView(
+      result,
+      global,
+      View.of(context).viewId,
+    );
+    for (final entry in result.path) {
+      final target = entry.target;
+      if (target is RenderMetaData && target.metaData is RowMark) {
+        return (target.metaData as RowMark).id;
+      }
+    }
+    return null;
+  }
+}
 
 class RowMetrics {
   final double row;
@@ -60,6 +82,8 @@ class PersonRow extends StatelessWidget {
   final double height;
   final VoidCallback onOpen;
   final VoidCallback onToggle;
+  final VoidCallback? onLongPressStart;
+  final ValueChanged<Offset>? onLongPressDrag;
   final bool showAccount;
   const PersonRow({
     super.key,
@@ -70,6 +94,8 @@ class PersonRow extends StatelessWidget {
     required this.height,
     required this.onOpen,
     required this.onToggle,
+    this.onLongPressStart,
+    this.onLongPressDrag,
     this.showAccount = false,
   });
 
@@ -93,7 +119,7 @@ class PersonRow extends StatelessWidget {
     final secondary = number.isEmpty
         ? (person.emails.isNotEmpty ? person.emails.first : l.t('noNumberTag'))
         : '$number$extra';
-    return Material(
+    final row = Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
@@ -104,10 +130,12 @@ class PersonRow extends StatelessWidget {
             onOpen();
           }
         },
-        onLongPress: () {
-          HapticFeedback.mediumImpact();
-          onToggle();
-        },
+        onLongPress: onLongPressStart != null
+            ? null
+            : () {
+                HapticFeedback.mediumImpact();
+                onToggle();
+              },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           height: height,
@@ -227,6 +255,21 @@ class PersonRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+    return MetaData(
+      metaData: RowMark(person.id),
+      behavior: HitTestBehavior.translucent,
+      child: onLongPressStart == null
+          ? row
+          : GestureDetector(
+              onLongPressStart: (_) {
+                HapticFeedback.mediumImpact();
+                onLongPressStart!();
+              },
+              onLongPressMoveUpdate: (d) =>
+                  onLongPressDrag?.call(d.globalPosition),
+              child: row,
+            ),
     );
   }
 }

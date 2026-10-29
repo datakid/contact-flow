@@ -163,6 +163,31 @@ class _PhoneHomeState extends State<PhoneHome> {
     );
   }
 
+  int _anchor = -1;
+  Set<String> _base = {};
+
+  void _startRange(PhoneBook book, List<Person> list, Person person) {
+    _anchor = list.indexWhere((x) => x.id == person.id);
+    _base = {...book.selected};
+    book.toggle(person);
+    if (!book.selected.contains(person.id)) _anchor = -1;
+  }
+
+  void _dragRange(PhoneBook book, List<Person> list, Offset global) {
+    if (_anchor < 0) return;
+    final id = RowMark.at(context, global);
+    if (id == null) return;
+    final at = list.indexWhere((x) => x.id == id);
+    if (at < 0) return;
+    final from = at < _anchor ? at : _anchor;
+    final to = at < _anchor ? _anchor : at;
+    final next = {..._base, for (var i = from; i <= to; i++) list[i].id};
+    if (next.length == book.selected.length && next.containsAll(book.selected)) {
+      return;
+    }
+    book.setSelection(next);
+  }
+
   Widget _scroller(PhoneBook book) {
     if (book.searching || book.sort != SortMode.name || !_scrolled) {
       return const SizedBox.shrink();
@@ -802,6 +827,8 @@ class _PhoneHomeState extends State<PhoneHome> {
               height: m.row,
               onOpen: () => openPhoneDetail(context, person),
               onToggle: () => book.toggle(person),
+              onLongPressStart: () => _startRange(book, list, person),
+              onLongPressDrag: (g) => _dragRange(book, list, g),
             ),
           );
         },

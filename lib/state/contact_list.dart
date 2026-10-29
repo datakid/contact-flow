@@ -251,6 +251,13 @@ abstract class ContactList extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSelection(Set<String> ids) {
+    selected
+      ..clear()
+      ..addAll(ids);
+    notifyListeners();
+  }
+
   void selectAll(Iterable<Person> list) {
     selected.addAll(list.map((e) => e.id));
     notifyListeners();
