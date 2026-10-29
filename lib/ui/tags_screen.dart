@@ -122,10 +122,26 @@ class TagsScreen extends StatelessWidget {
     final book = context.watch<TagBook>();
     final tags = book.tags;
     return Scaffold(
-      appBar: AppBar(title: Text(l.t('tagsTitle'))),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleSpacing: 24,
+        title: Text(l.t('tagsTitle'), style: AppText.display(p, size: 32)),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         key: const ValueKey('tag-new'),
         onPressed: () => _create(context, book, l),
+        backgroundColor: p.accent,
+        foregroundColor: p.onAccent,
+        elevation: 0,
+        focusElevation: 0,
+        hoverElevation: 0,
+        highlightElevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          side: BorderSide.none,
+        ),
         icon: const Icon(Icons.add_rounded),
         label: Text(l.t('tagNew')),
       ),
