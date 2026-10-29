@@ -85,6 +85,18 @@ jobs:
           set +e
           flutter build apk --debug --flavor full --dart-define=CALLS=true 2>&1 | tail -n 80 | tee /tmp/rep/build_full.txt
           exit 0
+      - name: permissions
+        run: |
+          set +e
+          bash tool/check_permissions.sh > /tmp/rep/permissions.txt 2>&1
+          echo "exit $?" >> /tmp/rep/permissions.txt
+          exit 0
+      - name: web build
+        timeout-minutes: 15
+        run: |
+          set +e
+          flutter build web 2>&1 | tail -n 30 > /tmp/rep/web.txt
+          exit 0
       - name: goldens
         timeout-minutes: 20
         run: |
