@@ -182,7 +182,8 @@ class _PhoneHomeState extends State<PhoneHome> {
     final from = at < _anchor ? at : _anchor;
     final to = at < _anchor ? _anchor : at;
     final next = {..._base, for (var i = from; i <= to; i++) list[i].id};
-    if (next.length == book.selected.length && next.containsAll(book.selected)) {
+    if (next.length == book.selected.length &&
+        next.containsAll(book.selected)) {
       return;
     }
     book.setSelection(next);
