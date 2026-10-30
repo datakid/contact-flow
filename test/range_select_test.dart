@@ -59,7 +59,9 @@ void main() {
   testWidgets('a range adds to what was already selected', (t) async {
     final rig = await open(t);
     final rows = find.byType(PersonRow);
-    await t.longPress(rows.at(1));
+    final first = await t.startGesture(t.getCenter(rows.at(1)));
+    await t.pump(const Duration(milliseconds: 700));
+    await first.up();
     await t.pumpAndSettle();
     expect(rig.book.selected.length, 1);
     final gesture = await t.startGesture(t.getCenter(rows.at(0)));
