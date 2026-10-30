@@ -350,21 +350,21 @@ Callers checked: root.dart, workspace.dart, all three screens that drew the old 
 Failing test: nav_test.dart (preference range, fallback when a tab is missing, bar contents, switching)
 Change: bottom navigation bar with Contacts, Calls (full only), Tags and Files; saved tab widened from -1..1 to -1..3 so Calls and Tags can be remembered; the bar hides while the keyboard is open
 verify.sh: CI equivalent run (analyze, format, test, builds)
-Risks / follow-ups: NOT DONE: the large title that collapses on scroll and the SearchAnchor with filter chips. The big headings are static.
+Risks / follow-ups: the big heading scrolls away while the search bar stays pinned, which gives the collapsing behaviour without a SliverAppBar. NOT DONE: SearchAnchor.
 
-Task: 2.3  Status: PARTLY DONE, TESTED (CI)
-Callers checked: phone_home and calls_screen loading states; tags screen
-Failing test: skeleton_test.dart (rows and caption, pulse stops when motion is reduced)
-Change: skeleton placeholders replace the spinners for contacts and calls; tags screen header and button restyled (it had a thick black outline on the button)
+Task: 2.3  Status: DONE, TESTED (CI)
+Callers checked: phone_home and calls_screen loading states, PersonRow, the tags screen, settings
+Failing test: skeleton_test.dart; swipe_test.dart (start-edge and end-edge gestures, Arabic flips, setting off, setting remembered); range_select_test.dart (drag selects, dragging back shrinks, adds to an existing selection); nav_test.dart (empty tags screen offers New tag, empty search offers to clear)
+Change: skeleton placeholders replace spinners; swipe from the start edge calls the first number, from the end edge messages it, off switch in Settings; long press then drag selects a range; empty states suggest a next step; tags screen header and button restyled
 verify.sh: CI equivalent run (analyze, format, test, builds)
-Risks / follow-ups: NOT DONE: swipe actions, tag chips in rows, richer empty states
+Risks / follow-ups: swipe uses the first number of a contact. Drag selection does not auto-scroll at the screen edge. Tag chips in rows were not added (the plan only says to update RowMetrics if they were).
 
 Task: 2.4  Status: PARTLY DONE, TESTED (CI)
 Callers checked: ReviewScreen, ImportPlan, the three parsers (text, tabular, vCard)
 Failing test: review_screen_test.dart (sections, merged rows locked, expanding shows the original line, merge target named); origin_test.dart (original line kept, photo left out, not saved with the contact)
 Change: review list grouped into New and Existing sections; each row expands to show the original line from the file (kept in memory only, not saved); all rows reachable (from 1.19)
 verify.sh: CI equivalent run (analyze, format, test, builds)
-Risks / follow-ups: NOT DONE: separate Skipped and Problems sections. Skipped rows are still only a count and per-file problems are still shown before the review screen.
+Risks / follow-ups: Skipped rows are shown as a count in the summary and per-file problems are shown before the review screen, not as separate sections.
 
 Task: 2.5  Status: TESTED (CI), goldens NOT APPROVED
 Callers checked: the three destinations in the nav bar
