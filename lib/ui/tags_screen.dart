@@ -132,21 +132,21 @@ class TagsScreen extends StatelessWidget {
       floatingActionButton: tags.isEmpty
           ? null
           : FloatingActionButton.extended(
-        key: const ValueKey('tag-new'),
-        onPressed: () => _create(context, book, l),
-        backgroundColor: p.accent,
-        foregroundColor: p.onAccent,
-        elevation: 0,
-        focusElevation: 0,
-        hoverElevation: 0,
-        highlightElevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          side: BorderSide.none,
-        ),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l.t('tagNew')),
-      ),
+              key: const ValueKey('tag-new'),
+              onPressed: () => _create(context, book, l),
+              backgroundColor: p.accent,
+              foregroundColor: p.onAccent,
+              elevation: 0,
+              focusElevation: 0,
+              hoverElevation: 0,
+              highlightElevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+                side: BorderSide.none,
+              ),
+              icon: const Icon(Icons.add_rounded),
+              label: Text(l.t('tagNew')),
+            ),
       body: tags.isEmpty
           ? Center(
               child: Padding(
