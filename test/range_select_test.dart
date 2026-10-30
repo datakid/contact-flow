@@ -61,8 +61,15 @@ void main() {
     final rows = find.byType(PersonRow);
     final first = await t.startGesture(t.getCenter(rows.at(1)));
     await t.pump(const Duration(milliseconds: 700));
+    // ignore: avoid_print
+    print('DIAG held=${rig.book.selected.length}');
     await first.up();
+    await t.pump();
+    // ignore: avoid_print
+    print('DIAG up=${rig.book.selected.length}');
     await t.pumpAndSettle();
+    // ignore: avoid_print
+    print('DIAG settled=${rig.book.selected.length}');
     expect(rig.book.selected.length, 1);
     final gesture = await t.startGesture(t.getCenter(rows.at(0)));
     await t.pump(const Duration(milliseconds: 700));
