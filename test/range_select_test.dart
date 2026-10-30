@@ -1,12 +1,16 @@
 import 'package:contact_flow/main.dart';
 import 'package:contact_flow/state/app_state.dart';
 import 'package:contact_flow/ui/person_row.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'harness.dart';
 
 Future<Rig> open(WidgetTester t) async {
+  t.view.physicalSize = const Size(400, 1600);
+  t.view.devicePixelRatio = 1;
+  addTearDown(t.view.reset);
   SharedPreferences.setMockInitialValues({
     'lang': 'en',
     'tab': 0,
@@ -61,15 +65,9 @@ void main() {
     final rows = find.byType(PersonRow);
     final first = await t.startGesture(t.getCenter(rows.at(1)));
     await t.pump(const Duration(milliseconds: 700));
-    // ignore: avoid_print
-    print('DIAG held=${rig.book.selected.length}');
     await first.up();
     await t.pump();
-    // ignore: avoid_print
-    print('DIAG up=${rig.book.selected.length}');
     await t.pumpAndSettle();
-    // ignore: avoid_print
-    print('DIAG settled=${rig.book.selected.length}');
     expect(rig.book.selected.length, 1);
     final gesture = await t.startGesture(t.getCenter(rows.at(0)));
     await t.pump(const Duration(milliseconds: 700));
