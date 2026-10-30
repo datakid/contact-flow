@@ -70,7 +70,7 @@ class HistoryScreen extends StatelessWidget {
                 l.t('storageUsed', {
                   'size': formatBytes(book.journal.storageBytes),
                 }),
-                style: Type.label(p),
+                style: AppText.label(p),
               ),
             ),
             if (entries.isEmpty)
@@ -78,7 +78,7 @@ class HistoryScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 48, 24, 0),
                 child: Text(
                   l.t('historyEmpty'),
-                  style: Type.display(p, size: 28),
+                  style: AppText.display(p, size: 28),
                 ),
               ),
             for (final e in entries) _EntryTile(entry: e),

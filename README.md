@@ -12,6 +12,15 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 ---
 
+## What's new in 3.0.0
+
+- **Two builds** — Lite never asks for the call log. Full adds a Calls tab that groups the numbers you called but never saved, with filters (2+ calls, talked 30 s+, last 30 days, missed only, outgoing only), a live "selected · excluded" counter, and Save, Tag only and Never suggest actions
+- **Search by number pattern** — `*36` ends with 36, `02*` starts with 02, `*55*` contains 55, `05?1*` uses `?` for exactly one digit, a comma means either, `#family` finds a tag or group, and a name can be combined with a pattern (`ahmed *36`). Arabic and full-width digits and symbols work too. Digits-only searches get chips for anywhere, ends with, starts with and contains
+- **Tags on numbers** — put tags on any number, including numbers that are not saved contacts; manage them in Settings → Tags, filter the phone list by tag, include them in exports, and carry them to a new phone with Move my data
+- **Country-aware matching** — the same national number in two countries is no longer treated as one contact; numbers saved without a country code still match by their national part
+- **Safer imports** — Windows-1256 and Windows-1252 files, vCards with quoted-printable text, Excel files that use XML prefixes, files whose contacts are on a later sheet, zero-padded phone formats, and limits for very large or damaged files; unreadable stored rows go to a quarantine you can export
+- **Backup decision** — contacts and tags are excluded from Google Drive backup. Use Settings → Move my data to export and import contacts, tags and ignored numbers in one file
+
 ## What's new in 2.5.0
 
 - **Number checks** — new filters in the phone workspace find numbers saved without a country code, numbers that are too short, too long or contain letters, and numbers shared by more than one contact. Each filter shows a live count and says what to do next. It is a format check only; the app cannot know whether a number works
@@ -94,10 +103,15 @@ Requires Flutter 3.35 / Dart 3.9.
 ```bash
 flutter pub get
 flutter test
-flutter run                              # device
-flutter build apk --release --split-per-abi
+flutter run --flavor lite                # device, no call log access
+flutter run --flavor full --dart-define=CALLS=true
+flutter build apk --release --flavor lite --split-per-abi
+flutter build apk --release --flavor full --dart-define=CALLS=true --split-per-abi
 flutter build web --release              # preview, sample data only
+tool/check_permissions.sh                # after building both debug APKs
 ```
+
+The lite edition (`com.contactflow.contacts`) never asks for the call log. The full edition (`com.contactflow.contacts.full`) adds `READ_CALL_LOG` and the Calls tab. Both flavors must be built with matching Dart defines; a mismatch shows an error screen at startup.
 
 For a signed Android build, add `android/key.properties`:
 
@@ -128,7 +142,11 @@ fdroid/      draft F-Droid build recipe
 
 ## Permissions
 
-`READ_CONTACTS` and `WRITE_CONTACTS` (Android), requested only when you import from or save to the phone.
+`READ_CONTACTS` and `WRITE_CONTACTS` (Android), requested only when you import from or save to the phone. The full edition also asks for `READ_CALL_LOG`, only when you open the Calls tab.
+
+### Backup
+
+The Files library, the undo journal and their saved contacts are excluded from Android's automatic Google Drive backup. Reinstalling the app or restoring a backup onto a new phone starts with an empty library. Use Export to keep a copy. Device-to-device transfer during phone setup is not restricted.
 
 ## Install
 

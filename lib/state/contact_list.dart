@@ -6,6 +6,8 @@ import '../domain/number_check.dart';
 import '../models/person.dart';
 import '../search/fold.dart';
 import '../search/fuzzy.dart';
+import '../search/number_pattern.dart';
+import '../search/pattern_search.dart';
 
 enum SortMode { name, recent }
 
@@ -51,6 +53,10 @@ abstract class ContactList extends ChangeNotifier {
   List<Person> _sorted = [];
   List<Person> _filtered = [];
   List<Hit> _hits = [];
+  Map<Person, Hit> _hitBy = Map<Person, Hit>.identity();
+  final PatternSearch _pattern = PatternSearch();
+  DigitMode digitMode = DigitMode.anywhere;
+  bool Function(Person, String)? tagMatcher;
   final Set<String> selected = {};
   String _query = '';
   SortMode sort = SortMode.name;
@@ -58,7 +64,11 @@ abstract class ContactList extends ChangeNotifier {
   ListFilter filter = ListFilter.all;
   String? accountFilter;
   String? groupFilter;
+  String? tagFilter;
   bool _dirtyIndex = true;
+
+  @visibleForTesting
+  int indexBuilds = 0;
   NumberStats? _numberStats;
   Timer? _debounce;
   final Map<String, String> _keyCache = {};
@@ -71,7 +81,10 @@ abstract class ContactList extends ChangeNotifier {
   bool get selecting => selected.isNotEmpty;
   int get phoneCount => _people.fold(0, (s, p) => s + p.phones.length);
   bool get filtering =>
-      filter != ListFilter.all || accountFilter != null || groupFilter != null;
+      filter != ListFilter.all ||
+      accountFilter != null ||
+      groupFilter != null ||
+      tagFilter != null;
 
   List<Person> get visible => searching
       ? [
@@ -85,18 +98,24 @@ abstract class ContactList extends ChangeNotifier {
 
   Hit? hitFor(Person p) {
     if (!searching) return null;
-    for (final h in _hits) {
-      if (identical(h.person, p)) return h;
-    }
-    return null;
+    return _hitBy[p];
   }
 
-  @protected
+  void _setHits(List<Hit> hits) {
+    _hits = hits;
+    final by = Map<Person, Hit>.identity();
+    for (final h in hits) {
+      by.putIfAbsent(h.person, () => h);
+    }
+    _hitBy = by;
+  }
+
   void replacePeople(List<Person> next, {Iterable<String>? changedIds}) {
     _people = next;
     final ids = {for (final p in next) p.id};
     selected.retainAll(ids);
     _dirtyIndex = true;
+    _pattern.invalidate();
     _numberStats = null;
     resort();
   }
@@ -120,6 +139,8 @@ abstract class ContactList extends ChangeNotifier {
       return false;
     }
     if (groupFilter != null && !p.groups.contains(groupFilter)) return false;
+    final tag = tagFilter;
+    if (tag != null && !(tagMatcher?.call(p, tag) ?? false)) return false;
     return true;
   }
 
@@ -167,13 +188,22 @@ abstract class ContactList extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearFilters() => setFilter(ListFilter.all);
+  void setTagFilter(String? tag) {
+    tagFilter = tag;
+    resort();
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    tagFilter = null;
+    setFilter(ListFilter.all);
+  }
 
   void setQuery(String q) {
     _query = q;
     _debounce?.cancel();
     if (q.trim().isEmpty) {
-      _hits = [];
+      _setHits([]);
       notifyListeners();
       return;
     }
@@ -187,9 +217,26 @@ abstract class ContactList extends ChangeNotifier {
   void _runSearch() {
     if (_dirtyIndex) {
       _index.build(_people);
+      indexBuilds++;
       _dirtyIndex = false;
     }
-    _hits = _index.search(_query);
+    final q = NumberQuery.parse(_query, mode: digitMode);
+    if (q.beyondFuzzy) {
+      _setHits(_pattern.search(q, _people, _index, extraTag: tagMatcher));
+      return;
+    }
+    _setHits(_index.search(_query));
+  }
+
+  void invalidateNumbers() => _pattern.invalidate();
+
+  void setDigitMode(DigitMode mode) {
+    if (mode == digitMode) return;
+    digitMode = mode;
+    if (searching) {
+      _runSearch();
+    }
+    notifyListeners();
   }
 
   void warmIndex() {
@@ -201,6 +248,13 @@ abstract class ContactList extends ChangeNotifier {
 
   void toggle(Person p) {
     if (!selected.remove(p.id)) selected.add(p.id);
+    notifyListeners();
+  }
+
+  void setSelection(Set<String> ids) {
+    selected
+      ..clear()
+      ..addAll(ids);
     notifyListeners();
   }
 

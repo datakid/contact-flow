@@ -1,4 +1,8 @@
+import 'package:phone_numbers_parser/phone_numbers_parser.dart' show IsoCode;
+
+import '../domain/names.dart';
 import '../models/person.dart';
+import '../phone/phone_key.dart';
 
 Person clonePerson(Person p) => p.copy();
 
@@ -26,6 +30,10 @@ enum NumFormat { e164, digits, spaced }
 sealed class BatchOp {
   const BatchOp();
   void apply(Person p, int index);
+
+  bool skips(Person p) => false;
+
+  String? get skipKey => null;
 
   static List<(Person before, Person after)> run(
     BatchOp op,
@@ -151,12 +159,23 @@ class ClearAliases extends BatchOp {
 
 class SwapName extends BatchOp {
   const SwapName();
+
+  @override
+  String get skipKey => 'swapSkipped';
+
+  @override
+  bool skips(Person p) {
+    final t = TextOps.squash(p.name);
+    return t.contains(' ') && !NameSplit.of(t).clear;
+  }
+
   @override
   void apply(Person p, int index) {
-    final parts = TextOps.squash(p.name).split(' ');
-    if (parts.length < 2) return;
-    final last = parts.removeLast();
-    p.name = '$last ${parts.join(' ')}';
+    final t = TextOps.squash(p.name);
+    if (!t.contains(' ')) return;
+    final n = NameSplit.of(t);
+    if (!n.clear || n.first.isEmpty || n.last.isEmpty) return;
+    p.name = '${n.last} ${n.first}';
   }
 }
 
@@ -173,9 +192,11 @@ class TemplateName extends BatchOp {
   });
 
   String render(Person p, int index) {
-    final parts = TextOps.squash(p.name).split(' ');
-    final first = parts.isEmpty ? '' : parts.first;
-    final last = parts.length > 1 ? parts.last : '';
+    final name = TextOps.squash(p.name);
+    final clear = NameSplit.of(name).clear;
+    final parts = name.split(' ');
+    final first = !clear ? name : (parts.isEmpty ? '' : parts.first);
+    final last = !clear ? '' : (parts.length > 1 ? parts.last : '');
     final n = (start + index).toString().padLeft(pad, '0');
     return TextOps.squash(
       template
@@ -221,6 +242,19 @@ class ReplaceInNumbers extends BatchOp {
   }
 }
 
+bool _hasUnreadableNumber(Person p) {
+  for (final e in p.phones) {
+    final i = PhoneKey.info(e.number);
+    if (!i.isEmpty && i.parsed == null) return true;
+  }
+  return false;
+}
+
+String _withExtension(String body, String original) {
+  final ext = PhoneKey.extension(original);
+  return ext.isEmpty ? body : '$body x$ext';
+}
+
 class AddCountryCode extends BatchOp {
   final String code;
   const AddCountryCode(this.code);
@@ -229,23 +263,28 @@ class AddCountryCode extends BatchOp {
       Phones.digits(raw).replaceFirst(RegExp(r'^0+'), '');
 
   @override
+  String get skipKey => 'numbersUnread';
+
+  @override
+  bool skips(Person p) =>
+      _hasUnreadableNumber(p) &&
+      PhoneKey.mainRegionForCode(normalizeCode(code)) != null;
+
+  @override
   void apply(Person p, int index) {
-    final cc = normalizeCode(code);
-    if (cc.isEmpty) return;
+    final region = PhoneKey.mainRegionForCode(normalizeCode(code));
+    if (region == null) return;
     p.phones = [
-      for (final e in p.phones) PhoneEntry(_one(e.number, cc), e.label),
+      for (final e in p.phones) PhoneEntry(_one(e.number, region), e.label),
     ];
   }
 
-  static String _one(String n, String cc) {
-    final a = Phones.asciiDigits(n).trim();
-    if (a.startsWith('+')) return n;
-    final d = Phones.digits(a);
-    if (d.isEmpty) return n;
-    if (d.startsWith('00') && d.length > 9) return '+${d.substring(2)}';
-    if (d.startsWith(cc) && d.length > cc.length + 7) return '+$d';
-    final local = d.startsWith('0') ? d.substring(1) : d;
-    return '+$cc$local';
+  static String _one(String n, IsoCode region) {
+    if (Phones.asciiDigits(n).trim().startsWith('+')) return n;
+    final i = PhoneKey.infoIn(n, region);
+    final e164 = i.e164;
+    if (e164 == null) return n;
+    return _withExtension(e164, n);
   }
 }
 
@@ -253,6 +292,13 @@ class RemoveCountryCode extends BatchOp {
   final String code;
   final bool addTrunkZero;
   const RemoveCountryCode(this.code, {this.addTrunkZero = true});
+
+  @override
+  String get skipKey => 'numbersUnread';
+
+  @override
+  bool skips(Person p) => _hasUnreadableNumber(p);
+
   @override
   void apply(Person p, int index) {
     final cc = AddCountryCode.normalizeCode(code);
@@ -263,16 +309,24 @@ class RemoveCountryCode extends BatchOp {
   }
 
   String _one(String n, String cc) {
-    final c = Phones.clean(n);
-    if (!c.startsWith('+$cc')) return n;
-    final rest = c.substring(cc.length + 1);
-    return addTrunkZero ? '0$rest' : rest;
+    final i = PhoneKey.info(n);
+    final pn = i.parsed;
+    if (!i.explicit || pn == null || pn.countryCode != cc) return n;
+    final national = PhoneKey.national(n);
+    return national == null ? n : _withExtension(national, n);
   }
 }
 
 class FormatNumbers extends BatchOp {
   final NumFormat format;
   const FormatNumbers(this.format);
+
+  @override
+  String? get skipKey => format == NumFormat.spaced ? 'numbersUnread' : null;
+
+  @override
+  bool skips(Person p) => format == NumFormat.spaced && _hasUnreadableNumber(p);
+
   @override
   void apply(Person p, int index) {
     p.phones = [for (final e in p.phones) PhoneEntry(_one(e.number), e.label)];
@@ -287,20 +341,11 @@ class FormatNumbers extends BatchOp {
       case NumFormat.digits:
         return Phones.digits(c);
       case NumFormat.spaced:
-        final plus = c.startsWith('+');
-        final d = Phones.digits(c);
-        final groups = <String>[];
-        var i = d.length;
-        final sizes = [4, 3, 3, 3, 3, 3];
-        var k = 0;
-        while (i > 0) {
-          final size = k < sizes.length ? sizes[k] : 3;
-          final s = i - size < 0 ? 0 : i - size;
-          groups.insert(0, d.substring(s, i));
-          i = s;
-          k++;
-        }
-        return '${plus ? '+' : ''}${groups.join(' ')}';
+        final i = PhoneKey.info(n);
+        final text = i.explicit
+            ? PhoneKey.international(n)
+            : PhoneKey.national(n);
+        return text == null ? n : _withExtension(text, n);
     }
   }
 }
@@ -357,13 +402,16 @@ class SetNote extends BatchOp {
 }
 
 class TextOps {
-  static String squash(String s) => s.replaceAll(RegExp(r'\s+'), ' ').trim();
+  static final _spaces = RegExp(r'\s+');
+  static final _letter = RegExp(r'\p{L}', unicode: true);
+
+  static String squash(String s) => s.replaceAll(_spaces, ' ').trim();
 
   static String title(String s) {
     final b = StringBuffer();
     var start = true;
     for (final ch in s.characters()) {
-      final isLetter = RegExp(r'\p{L}', unicode: true).hasMatch(ch);
+      final isLetter = _letter.hasMatch(ch);
       if (isLetter) {
         b.write(start ? ch.toUpperCase() : ch.toLowerCase());
         start = false;

@@ -1,22 +1,18 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../io/codec.dart';
-import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../search/fuzzy.dart';
-import '../services/incoming.dart';
 import '../state/app_state.dart';
 import 'batch_screen.dart';
 import 'detail.dart';
 import 'export_screen.dart';
-import 'import_issues.dart';
 import 'import_sheet.dart';
 import 'settings_sheet.dart';
+import 'search_extras.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'workspace.dart';
@@ -43,56 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (s != _scrolled) setState(() => _scrolled = s);
     });
     _focus.addListener(() => setState(() {}));
-    _incoming = Incoming.stream.listen(_receive);
-    WidgetsBinding.instance.addPostFrameCallback((_) => Incoming.start());
-  }
-
-  StreamSubscription<List<IncomingFile>>? _incoming;
-
-  Future<void> _receive(List<IncomingFile> files) async {
-    if (!mounted) return;
-    final s = context.read<AppState>();
-    final l = L.of(context);
-    final nav = Navigator.of(context, rootNavigator: true);
-    final messenger = ScaffoldMessenger.of(context);
-    nav.popUntil((r) => r.isFirst);
-    final results = <ImportResult>[];
-    for (final f in files) {
-      try {
-        results.add(await decodeInBackground(DecodeJob(f.name, f.bytes)));
-      } catch (_) {
-        results.add(ImportResult.failed(f.name));
-      }
-    }
-    final total = results.fold<int>(0, (a, r) => a + r.people.length);
-    if (total == 0) {
-      final why = ImportIssues.describe(l, results);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(why.isEmpty ? l.t('nothingFound') : why),
-          duration: const Duration(seconds: 6),
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
-        ),
-      );
-      return;
-    }
-    final added = await nav.push<int>(
-      MaterialPageRoute(builder: (_) => ReviewScreen(plan: s.plan(results))),
-    );
-    if (added != null && added >= 0) {
-      messenger.hideCurrentSnackBar();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l.t('imported', {'n': added})),
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 92),
-        ),
-      );
-    }
   }
 
   @override
   void dispose() {
-    _incoming?.cancel();
     _search.dispose();
     _focus.dispose();
     _scroll.dispose();
@@ -150,6 +100,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   else ...[
                     if (!s.searching)
                       SliverToBoxAdapter(child: _sortRow(s, l, p)),
+                    SliverToBoxAdapter(child: TagFilterRow(list: s)),
+                    if (!s.searching && _focus.hasFocus)
+                      SliverToBoxAdapter(
+                        child: RecentSearchChips(
+                          onPick: (q) {
+                            _search.text = q;
+                            _search.selection = TextSelection.collapsed(
+                              offset: q.length,
+                            );
+                            s.setQuery(q);
+                          },
+                        ),
+                      ),
+                    if (s.searching)
+                      SliverToBoxAdapter(child: SaveSearchButton(list: s)),
+                    if (s.searching)
+                      SliverToBoxAdapter(child: TagResultsButton(list: s)),
+                    if (s.searching)
+                      SliverToBoxAdapter(child: DigitModeChips(list: s)),
                     if (s.searching)
                       SliverToBoxAdapter(child: _resultRow(s, l, p, list)),
                     SliverList.builder(
@@ -198,13 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             children: [
               if (widget.onTab != null)
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: AlignmentDirectional.centerStart,
-                    child: WorkspaceSwitch(tab: 1, onChanged: widget.onTab!),
-                  ),
-                )
+                Expanded(child: ScreenTitle(l.t('wsFiles')))
               else ...[
                 Container(
                   width: 8,
@@ -217,10 +180,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 10),
                 Text(
                   l.t('appTitle').toUpperCase(),
-                  style: Type.label(p).copyWith(color: p.inkSoft),
+                  style: AppText.label(p).copyWith(color: p.inkSoft),
                 ),
+                const Spacer(),
               ],
-              const Spacer(),
               if (hasPeople)
                 IconButton(
                   onPressed: () => openBatchEditor(context, s.visible),
@@ -240,7 +203,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               hasPeople ? l.t('library') : l.t('greeting'),
               key: ValueKey(hasPeople),
-              style: Type.display(p, size: 52),
+              style: AppText.display(p, size: 52),
+              textScaler: MediaQuery.textScalerOf(
+                context,
+              ).clamp(maxScaleFactor: 1.25),
             ),
           ),
           const SizedBox(height: 10),
@@ -276,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 : Text(
                     l.t('tagline'),
                     key: const ValueKey('tag'),
-                    style: Type.display(
+                    style: AppText.display(
                       p,
                       size: 22,
                       italic: true,
@@ -324,7 +290,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   enabled: enabled,
                   onChanged: s.setQuery,
                   textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _focus.unfocus(),
+                  onSubmitted: (v) {
+                    s.rememberSearch(v);
+                    _focus.unfocus();
+                  },
                   autocorrect: false,
                   enableSuggestions: false,
                   textAlignVertical: TextAlignVertical.center,
@@ -372,7 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 )
               else
-                const SizedBox(width: 12),
+                const SearchHelpButton(),
             ],
           ),
         ),
@@ -434,7 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
               l.n(list.length, 'contacts_one', 'contacts_many'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Type.label(p),
+              style: AppText.label(p),
             ),
           ),
           TextButton.icon(
@@ -467,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           letter,
-          style: Type.display(p, size: 26).copyWith(color: p.accent),
+          style: AppText.display(p, size: 26).copyWith(color: p.accent),
         ),
         const SizedBox(width: 14),
         Expanded(child: Container(height: 1, color: p.hairline)),
@@ -512,7 +481,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 28),
           FadeSlideIn(
             index: 1,
-            child: Text(l.t('emptyTitle'), style: Type.display(p, size: 34)),
+            child: Text(l.t('emptyTitle'), style: AppText.display(p, size: 34)),
           ),
           const SizedBox(height: 12),
           FadeSlideIn(
@@ -539,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           l.t('noResults', {'q': s.query.trim()}),
-          style: Type.display(p, size: 30),
+          style: AppText.display(p, size: 30),
         ),
         const SizedBox(height: 10),
         Text(
@@ -654,12 +623,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 size: 20,
                               ),
                               const SizedBox(width: 10),
-                              Text(
-                                l.t('export'),
-                                style: TextStyle(
-                                  color: p.onAccent,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
+                              Flexible(
+                                child: Text(
+                                  l.t('export'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: p.onAccent,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ),
                             ],
@@ -673,7 +646,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 }
 
 class _SearchHeader extends SliverPersistentHeaderDelegate {
@@ -844,7 +816,9 @@ class _ContactRow extends StatelessWidget {
                           Flexible(
                             child: Tag(
                               reason,
-                              color: h?.reason == 'alias' ? p.accentText : p.sageText,
+                              color: h?.reason == 'alias'
+                                  ? p.accentText
+                                  : p.sageText,
                             ),
                           ),
                         ],

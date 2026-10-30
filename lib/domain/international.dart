@@ -1,4 +1,5 @@
 import '../models/person.dart';
+import '../phone/phone_key.dart';
 
 enum InternationalStatus { ok, needsCountry, invalid }
 
@@ -23,6 +24,16 @@ class InternationalNumber {
     final a = Phones.asciiDigits(number).trim();
     final d = Phones.digits(a);
     if (d.length < 5 || d.length > 17) return invalid;
+    final info = PhoneKey.info(number);
+    final e164 = info.e164;
+    if (e164 != null) {
+      final region = PhoneKey.region;
+      final regionCode = region == null ? '' : PhoneKey.callingCode(region);
+      final cc = countryDigits(country);
+      if (info.explicit || (cc.isNotEmpty && cc == regionCode)) {
+        return InternationalNumber._(InternationalStatus.ok, e164);
+      }
+    }
     if (a.startsWith('+')) return _checked(d);
     if (d.startsWith('00') && d.length > 9) return _checked(d.substring(2));
     final cc = countryDigits(country);

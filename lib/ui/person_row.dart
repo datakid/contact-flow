@@ -7,6 +7,28 @@ import '../search/fuzzy.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
+class RowMark {
+  static String? at(BuildContext root, Offset global) {
+    String? found;
+    void visit(Element e) {
+      if (found != null) return;
+      final w = e.widget;
+      if (w is PersonRow) {
+        final box = e.renderObject;
+        if (box is RenderBox && box.attached && box.hasSize) {
+          final rect = box.localToGlobal(Offset.zero) & box.size;
+          if (rect.contains(global)) found = w.person.id;
+        }
+        return;
+      }
+      e.visitChildElements(visit);
+    }
+
+    (root as Element).visitChildElements(visit);
+    return found;
+  }
+}
+
 class RowMetrics {
   final double row;
   final double letter;
@@ -40,7 +62,7 @@ class LetterHeader extends StatelessWidget {
               Text(
                 letter,
                 maxLines: 1,
-                style: Type.display(p, size: 26).copyWith(color: p.accent),
+                style: AppText.display(p, size: 26).copyWith(color: p.accent),
               ),
               const SizedBox(width: 14),
               Expanded(child: Container(height: 1, color: p.hairline)),
@@ -60,6 +82,8 @@ class PersonRow extends StatelessWidget {
   final double height;
   final VoidCallback onOpen;
   final VoidCallback onToggle;
+  final VoidCallback? onLongPressStart;
+  final ValueChanged<Offset>? onLongPressDrag;
   final bool showAccount;
   const PersonRow({
     super.key,
@@ -70,6 +94,8 @@ class PersonRow extends StatelessWidget {
     required this.height,
     required this.onOpen,
     required this.onToggle,
+    this.onLongPressStart,
+    this.onLongPressDrag,
     this.showAccount = false,
   });
 
@@ -93,7 +119,7 @@ class PersonRow extends StatelessWidget {
     final secondary = number.isEmpty
         ? (person.emails.isNotEmpty ? person.emails.first : l.t('noNumberTag'))
         : '$number$extra';
-    return Material(
+    final row = Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
@@ -104,27 +130,36 @@ class PersonRow extends StatelessWidget {
             onOpen();
           }
         },
-        onLongPress: () {
-          HapticFeedback.mediumImpact();
-          onToggle();
-        },
+        onLongPress: onLongPressStart != null
+            ? null
+            : () {
+                HapticFeedback.mediumImpact();
+                onToggle();
+              },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           height: height,
           color: selected
               ? p.accentSoft.withValues(alpha: 0.55)
               : Colors.transparent,
-          padding: const EdgeInsetsDirectional.fromSTEB(24, 0, 36, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(22, 0, 36, 0),
           child: Row(
             children: [
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   HapticFeedback.selectionClick();
                   onToggle();
                 },
-                child: Avatar(person: person, selected: selected),
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: Avatar(person: person, selected: selected),
+                  ),
+                ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -158,10 +193,12 @@ class PersonRow extends StatelessWidget {
                             textDirection: number.isEmpty
                                 ? Directionality.of(context)
                                 : TextDirection.ltr,
-                            child: Text(
+                            child: HighlightText(
                               secondary,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              ranges: digitRangesToText(
+                                number,
+                                h?.numberRanges ?? const [],
+                              ),
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
@@ -203,7 +240,9 @@ class PersonRow extends StatelessWidget {
                           Flexible(
                             child: Tag(
                               reason,
-                              color: h?.reason == 'alias' ? p.accentText : p.sageText,
+                              color: h?.reason == 'alias'
+                                  ? p.accentText
+                                  : p.sageText,
                             ),
                           ),
                         ],
@@ -216,6 +255,15 @@ class PersonRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+    if (onLongPressStart == null) return row;
+    return GestureDetector(
+      onLongPressStart: (_) {
+        HapticFeedback.mediumImpact();
+        onLongPressStart!();
+      },
+      onLongPressMoveUpdate: (d) => onLongPressDrag?.call(d.globalPosition),
+      child: row,
     );
   }
 }
@@ -291,4 +339,25 @@ class _AlphabetScrollerState extends State<AlphabetScroller> {
       },
     );
   }
+}
+
+List<(int, int)> digitRangesToText(String display, List<(int, int)> ranges) {
+  if (ranges.isEmpty || display.isEmpty) return const [];
+  final positions = <int>[];
+  for (var i = 0; i < display.length; i++) {
+    final c = display.codeUnitAt(i);
+    final ascii = c >= 0x30 && c <= 0x39;
+    final arabic = c >= 0x0660 && c <= 0x0669;
+    final persian = c >= 0x06F0 && c <= 0x06F9;
+    final wide = c >= 0xFF10 && c <= 0xFF19;
+    if (ascii || arabic || persian || wide) positions.add(i);
+  }
+  final out = <(int, int)>[];
+  for (final (a, b) in ranges) {
+    if (a >= b || a >= positions.length) continue;
+    final from = positions[a];
+    final to = positions[(b - 1).clamp(0, positions.length - 1)] + 1;
+    out.add((from, to));
+  }
+  return out;
 }

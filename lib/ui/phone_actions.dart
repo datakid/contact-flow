@@ -71,7 +71,7 @@ Future<void> _actionSheet(
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-            child: Text(title, style: Type.display(p, size: 32)),
+            child: Text(title, style: AppText.display(p, size: 32)),
           ),
           for (final a in actions)
             ListTile(
@@ -242,7 +242,7 @@ Future<String?> pickGroup(
   return showDialog<String>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(l.t('groups'), style: Type.display(p, size: 28)),
+      title: Text(l.t('groups'), style: AppText.display(p, size: 28)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -298,7 +298,10 @@ Future<String?> pickGroup(
             ),
             child: Text(
               l.t('done'),
-              style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                color: p.accentText,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
       ],

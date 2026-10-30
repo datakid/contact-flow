@@ -14,12 +14,15 @@ import 'phone_actions.dart';
 import 'phone_detail.dart';
 import 'phone_edit.dart';
 import 'person_row.dart';
+import 'swipe_actions.dart';
 import 'pipeline.dart';
 import 'queue_screen.dart';
 import 'settings_sheet.dart';
+import 'search_extras.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'workspace.dart';
+import '../tags/tag_book.dart';
 
 class PhoneHome extends StatefulWidget {
   final ValueChanged<int> onTab;
@@ -121,6 +124,24 @@ class _PhoneHomeState extends State<PhoneHome> {
                     SliverToBoxAdapter(child: _queueBanner(l, p)),
                     if (!book.searching)
                       SliverToBoxAdapter(child: _filters(book, l, p)),
+                    if (!book.searching && _focus.hasFocus)
+                      SliverToBoxAdapter(
+                        child: RecentSearchChips(
+                          onPick: (q) {
+                            _search.text = q;
+                            _search.selection = TextSelection.collapsed(
+                              offset: q.length,
+                            );
+                            book.setQuery(q);
+                          },
+                        ),
+                      ),
+                    if (book.searching)
+                      SliverToBoxAdapter(child: SaveSearchButton(list: book)),
+                    if (book.searching)
+                      SliverToBoxAdapter(child: TagResultsButton(list: book)),
+                    if (book.searching)
+                      SliverToBoxAdapter(child: DigitModeChips(list: book)),
                     if (book.searching || book.filtering)
                       SliverToBoxAdapter(child: _resultRow(book, l, p)),
                     ..._list(book, l, p),
@@ -140,6 +161,32 @@ class _PhoneHomeState extends State<PhoneHome> {
         ),
       ),
     );
+  }
+
+  int _anchor = -1;
+  Set<String> _base = {};
+
+  void _startRange(PhoneBook book, List<Person> list, Person person) {
+    _anchor = list.indexWhere((x) => x.id == person.id);
+    _base = {...book.selected};
+    book.toggle(person);
+    if (!book.selected.contains(person.id)) _anchor = -1;
+  }
+
+  void _dragRange(PhoneBook book, List<Person> list, Offset global) {
+    if (_anchor < 0) return;
+    final id = RowMark.at(context, global);
+    if (id == null) return;
+    final at = list.indexWhere((x) => x.id == id);
+    if (at < 0) return;
+    final from = at < _anchor ? at : _anchor;
+    final to = at < _anchor ? _anchor : at;
+    final next = {..._base, for (var i = from; i <= to; i++) list[i].id};
+    if (next.length == book.selected.length &&
+        next.containsAll(book.selected)) {
+      return;
+    }
+    book.setSelection(next);
   }
 
   Widget _scroller(PhoneBook book) {
@@ -165,13 +212,6 @@ class _PhoneHomeState extends State<PhoneHome> {
         children: [
           Row(
             children: [
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: WorkspaceSwitch(tab: 0, onChanged: widget.onTab),
-                ),
-              ),
               const Spacer(),
               if (ready)
                 IconButton(
@@ -191,7 +231,13 @@ class _PhoneHomeState extends State<PhoneHome> {
             ],
           ),
           const SizedBox(height: 18),
-          Text(l.t('phoneTitle'), style: Type.display(p, size: 52)),
+          Text(
+            l.t('phoneTitle'),
+            style: AppText.display(p, size: 52),
+            textScaler: MediaQuery.textScalerOf(
+              context,
+            ).clamp(maxScaleFactor: 1.25),
+          ),
           const SizedBox(height: 10),
           if (ready)
             Wrap(
@@ -226,7 +272,7 @@ class _PhoneHomeState extends State<PhoneHome> {
           else
             Text(
               l.t('phoneTagline'),
-              style: Type.display(
+              style: AppText.display(
                 p,
                 size: 22,
                 italic: true,
@@ -255,25 +301,8 @@ class _PhoneHomeState extends State<PhoneHome> {
         );
       }
       return Padding(
-        padding: const EdgeInsets.only(top: 80),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 18),
-              Text(
-                l.t('loadingContacts'),
-                style: TextStyle(
-                  color: p.inkSoft,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+        padding: const EdgeInsets.only(top: 24),
+        child: ListSkeleton(caption: l.t('loadingContacts')),
       );
     }
     final files = GhostButton(
@@ -360,6 +389,7 @@ class _PhoneHomeState extends State<PhoneHome> {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
         onTap: _focus.requestFocus,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -388,7 +418,10 @@ class _PhoneHomeState extends State<PhoneHome> {
                   focusNode: _focus,
                   onChanged: book.setQuery,
                   textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _focus.unfocus(),
+                  onSubmitted: (v) {
+                    context.read<AppState>().rememberSearch(v);
+                    _focus.unfocus();
+                  },
                   autocorrect: false,
                   enableSuggestions: false,
                   textAlignVertical: TextAlignVertical.center,
@@ -435,7 +468,7 @@ class _PhoneHomeState extends State<PhoneHome> {
                   ),
                 )
               else
-                const SizedBox(width: 12),
+                const SearchHelpButton(),
             ],
           ),
         ),
@@ -473,7 +506,10 @@ class _PhoneHomeState extends State<PhoneHome> {
               ),
               Text(
                 l.t('resume'),
-                style: TextStyle(color: p.accentText, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: p.accentText,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -490,7 +526,7 @@ class _PhoneHomeState extends State<PhoneHome> {
       height: 52,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 2),
         children: [
           Pill(
             label: l.t('sortName'),
@@ -545,6 +581,16 @@ class _PhoneHomeState extends State<PhoneHome> {
                 ),
               ),
             ],
+          for (final t in _tagNames(context)) ...[
+            gap(),
+            Pill(
+              key: ValueKey('tagfilter-$t'),
+              label: t,
+              icon: Icons.sell_outlined,
+              active: book.tagFilter == t,
+              onTap: () => book.setTagFilter(book.tagFilter == t ? null : t),
+            ),
+          ],
           for (final g in groups) ...[
             gap(),
             Pill(
@@ -561,6 +607,14 @@ class _PhoneHomeState extends State<PhoneHome> {
         ],
       ),
     );
+  }
+
+  List<String> _tagNames(BuildContext context) {
+    try {
+      return [for (final t in context.watch<TagBook>().tags) t.name];
+    } catch (_) {
+      return const [];
+    }
   }
 
   List<Widget> _numberPills(PhoneBook book, L l) {
@@ -624,7 +678,7 @@ class _PhoneHomeState extends State<PhoneHome> {
                   l.n(list.length, 'contacts_one', 'contacts_many'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Type.label(p),
+                  style: AppText.label(p),
                 ),
               ),
               if (book.filtering && !book.searching)
@@ -696,11 +750,27 @@ class _PhoneHomeState extends State<PhoneHome> {
           hasScrollBody: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 40, 24, 160),
-            child: Text(
-              book.searching
-                  ? l.t('noResults', {'q': book.query.trim()})
-                  : l.t('nothingMatches'),
-              style: Type.display(p, size: 30),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  book.searching
+                      ? l.t('noResults', {'q': book.query.trim()})
+                      : l.t('nothingMatches'),
+                  style: AppText.display(p, size: 30),
+                ),
+                const SizedBox(height: 20),
+                OutlinedButton.icon(
+                  key: const ValueKey('empty-reset'),
+                  onPressed: () {
+                    _search.clear();
+                    book.setQuery('');
+                    book.clearFilters();
+                  },
+                  icon: const Icon(Icons.filter_alt_off_rounded),
+                  label: Text(l.t('clearSearch')),
+                ),
+              ],
             ),
           ),
         ),
@@ -745,15 +815,22 @@ class _PhoneHomeState extends State<PhoneHome> {
             );
           }
           final person = list[k];
-          return PersonRow(
-            key: ValueKey(person.id),
+          return SwipeActions(
+            key: ValueKey('sw-${person.id}'),
             person: person,
-            hit: book.hitFor(person),
-            selected: book.selected.contains(person.id),
-            selecting: selecting,
-            height: m.row,
-            onOpen: () => openPhoneDetail(context, person),
-            onToggle: () => book.toggle(person),
+            enabled: context.read<AppState>().swipeActions && !selecting,
+            child: PersonRow(
+              key: ValueKey(person.id),
+              person: person,
+              hit: book.hitFor(person),
+              selected: book.selected.contains(person.id),
+              selecting: selecting,
+              height: m.row,
+              onOpen: () => openPhoneDetail(context, person),
+              onToggle: () => book.toggle(person),
+              onLongPressStart: () => _startRange(book, list, person),
+              onLongPressDrag: (g) => _dragRange(book, list, g),
+            ),
           );
         },
       ),

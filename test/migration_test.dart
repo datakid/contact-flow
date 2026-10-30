@@ -71,6 +71,17 @@ void main() {
       await store.openIn();
       final people = store.load();
       expect(people.length, 3);
+      expect(await store.quarantineCount(), 1);
+      final quarantined = jsonDecode(await store.quarantineJson()) as Map;
+      final items = quarantined['items'] as List;
+      expect(items.single['raw'], '{not json');
+      expect(items.single['key'], 'library:corrupt');
+      expect(
+        (await Hive.openBox<String>(
+          LibraryStore.boxName,
+        )).containsKey('corrupt'),
+        isFalse,
+      );
       final byId = {for (final p in people) p.id: p};
       final a = byId['m1a2b3']!;
       expect(a.name, 'Amelia Hart');
@@ -101,6 +112,65 @@ void main() {
       final meta = await Hive.openBox<int>(LibraryStore.metaBox);
       expect(meta.get(LibraryStore.schemaKey), Person.schemaVersion);
       expect(await store.migrate(), 0);
+    },
+  );
+
+  test('a stored v2 record loads without migration', () async {
+    final box = await Hive.openBox<String>(LibraryStore.boxName);
+    final meta = await Hive.openBox<int>(LibraryStore.metaBox);
+    await meta.put(LibraryStore.schemaKey, 2);
+    await box.put(
+      'v2a',
+      jsonEncode({
+        'v': 2,
+        'id': 'v2a',
+        'name': 'Sara Noor',
+        'phones': [
+          {'number': '+971 50 123 4567', 'label': 'work'},
+        ],
+        'emails': ['sara@example.com'],
+        'org': 'Noor Co',
+        'jobTitle': 'Pharmacist',
+        'note': '',
+        'source': 'device',
+        'added': 1759000000000,
+        'phoneId': '17',
+        'starred': true,
+        'groups': ['Family'],
+        'aliases': ['Sasa'],
+      }),
+    );
+    await box.close();
+
+    final store = LibraryStore();
+    await store.openIn();
+    final p = store.load().single;
+    expect(p.name, 'Sara Noor');
+    expect(p.jobTitle, 'Pharmacist');
+    expect(p.phoneId, '17');
+    expect(p.starred, isTrue);
+    expect(p.groups, ['Family']);
+    expect(p.aliases, ['Sasa']);
+    expect(await store.quarantineCount(), 0);
+  });
+
+  test(
+    'a corrupt row in a current-schema box is quarantined after load',
+    () async {
+      final meta = await Hive.openBox<int>(LibraryStore.metaBox);
+      await meta.put(LibraryStore.schemaKey, Person.schemaVersion);
+      final box = await Hive.openBox<String>(LibraryStore.boxName);
+      await box.put('bad', '[1, 2');
+      await box.put('notamap', '"just a string"');
+      await box.close();
+
+      final store = LibraryStore();
+      await store.openIn();
+      expect(store.load(), isEmpty);
+      expect(await store.quarantineBad(), 2);
+      expect(await store.quarantineCount(), 2);
+      expect(store.load(), isEmpty);
+      expect(await store.quarantineBad(), 0);
     },
   );
 

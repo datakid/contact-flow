@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
@@ -83,7 +84,7 @@ class PhoneBook extends ContactList {
       final list = await source.readAll();
       accounts = await _safe(source.accounts(), const <AccountRef>[]);
       groupNames = await _safe(source.groups(), const <String>[]);
-      replacePeople(list);
+      if (!_sameBook(people, list)) replacePeople(list);
       load = LoadState.ready;
       error = '';
       _listen();
@@ -93,6 +94,15 @@ class PhoneBook extends ContactList {
       error = Executor.describe(e);
       notifyListeners();
     }
+  }
+
+  static bool _sameBook(List<Person> a, List<Person> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id) return false;
+      if (jsonEncode(a[i].toJson()) != jsonEncode(b[i].toJson())) return false;
+    }
+    return true;
   }
 
   static Future<T> _safe<T>(Future<T> f, T fallback) async {

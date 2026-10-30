@@ -125,6 +125,7 @@ abstract class JournalStore {
   Future<List<String>> loadAll();
   Future<void> put(String id, String json);
   Future<void> remove(String id);
+  Future<void> quarantine(String raw);
 }
 
 class MemoryJournalStore implements JournalStore {
@@ -135,6 +136,12 @@ class MemoryJournalStore implements JournalStore {
   Future<void> put(String id, String json) async => data[id] = json;
   @override
   Future<void> remove(String id) async => data.remove(id);
+  final List<String> bad = [];
+  @override
+  Future<void> quarantine(String raw) async {
+    bad.add(raw);
+    data.removeWhere((_, v) => v == raw);
+  }
 }
 
 class Journal {
@@ -158,7 +165,9 @@ class Journal {
         final e = JournalEntry.fromJson(jsonDecode(raw) as Map);
         if (e.state == EntryState.running) e.state = EntryState.cancelled;
         _entries.add(e);
-      } catch (_) {}
+      } catch (_) {
+        await store.quarantine(raw);
+      }
     }
     _entries.sort((a, b) => b.time.compareTo(a.time));
     await prune();

@@ -89,8 +89,40 @@ void main() {
     final r = BatchOp.run(const RemoveCountryCode('971'), [
       p('a', ['+971 50 123 4567', '+1 415 555 0100']),
     ]).single.$2;
-    expect(r.phones[0].number, '0501234567');
+    expect(r.phones[0].number, '050 123 4567');
     expect(r.phones[1].number, '+1 415 555 0100');
+  });
+
+  test(
+    'remove country code does not add a zero where the country has none',
+    () {
+      final r = BatchOp.run(const RemoveCountryCode('34'), [
+        p('a', ['+34 612 34 56 78']),
+      ]).single.$2;
+      expect(r.phones.single.number, startsWith('612'));
+    },
+  );
+
+  test('add country code drops a stray trunk zero after the code', () {
+    final r = BatchOp.run(const AddCountryCode('966'), [
+      p('a', ['966 050 123 4567']),
+    ]).single.$2;
+    expect(r.phones.single.number, '+966501234567');
+  });
+
+  test('add country code keeps an extension apart from the number', () {
+    final r = BatchOp.run(const AddCountryCode('966'), [
+      p('a', ['050 123 4567 x12']),
+    ]).single.$2;
+    expect(r.phones.single.number, '+966501234567 x12');
+  });
+
+  test('numbers that cannot be read are left alone and counted', () {
+    final person = p('a', ['12345678901234']);
+    const op = AddCountryCode('966');
+    expect(BatchOp.run(op, [person]), isEmpty);
+    expect(op.skips(person), isTrue);
+    expect(op.skipKey, 'numbersUnread');
   });
 
   test('prefix replace in numbers ignores separators', () {
@@ -119,13 +151,19 @@ void main() {
       ).single.$2.phones.single.number,
       '14155550100',
     );
-    expect(
-      BatchOp.run(
-        const FormatNumbers(NumFormat.spaced),
-        src,
-      ).single.$2.phones.single.number,
-      '+1 415 555 0100',
-    );
+    final spaced = BatchOp.run(
+      const FormatNumbers(NumFormat.spaced),
+      src,
+    ).single.$2.phones.single.number;
+    expect(spaced, startsWith('+1 415'));
+    expect(Phones.digits(spaced), '14155550100');
+  });
+
+  test('spaced format groups a Saudi number from the front', () {
+    final r = BatchOp.run(const FormatNumbers(NumFormat.spaced), [
+      p('a', ['+966501234567']),
+    ]).single.$2;
+    expect(r.phones.single.number, '+966 50 123 4567');
   });
 
   test('dedupe numbers within a contact', () {

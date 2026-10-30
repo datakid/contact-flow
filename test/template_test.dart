@@ -105,12 +105,17 @@ void main() {
       }
     }
 
-    test('xlsx template keeps its guide on a second sheet that is not read', () {
-      final l = L('en');
-      final bytes = SheetTemplate.build(Format.xlsx, l);
-      final columns = Codec.templateColumns(headers: SheetTemplate.headers(l));
-      expect(Xlsx.read(bytes), [columns]);
-    });
+    test(
+      'xlsx template keeps its guide on a second sheet that is not read',
+      () {
+        final l = L('en');
+        final bytes = SheetTemplate.build(Format.xlsx, l);
+        final columns = Codec.templateColumns(
+          headers: SheetTemplate.headers(l),
+        );
+        expect(Xlsx.read(bytes), [columns]);
+      },
+    );
 
     test('csv template is a BOM and a single header line', () {
       final bytes = SheetTemplate.build(Format.csv, L('en'));
@@ -416,7 +421,7 @@ void main() {
     test('commit keeps job title, starred and groups', () async {
       SharedPreferences.setMockInitialValues({'lang': 'en'});
       final s = AppState();
-      await s.init();
+      await s.init(openStore: false);
       final incoming = Person(
         name: 'Dana',
         phones: [const PhoneEntry('+201001234567')],
@@ -439,7 +444,7 @@ void main() {
     test('plan ignores failed files when counting formats', () async {
       SharedPreferences.setMockInitialValues({'lang': 'en'});
       final s = AppState();
-      await s.init();
+      await s.init(openStore: false);
       final plan = s.plan([
         ImportResult.failed('broken.xlsx'),
         ImportResult(

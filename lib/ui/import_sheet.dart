@@ -8,17 +8,20 @@ import 'package:provider/provider.dart';
 import '../data/sample.dart';
 import '../domain/sheet_template.dart';
 import '../io/codec.dart';
+import '../io/cancel_token.dart';
 import '../io/jobs.dart';
 import '../l10n.dart';
 import '../models/person.dart';
 import '../services/device_contacts.dart';
 import '../services/file_out.dart';
+import '../services/incoming_read.dart';
 import '../state/app_state.dart';
 import '../state/phone_book.dart';
 import 'import_issues.dart';
 import 'sync_screen.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import '../tags/tag_book.dart';
 
 Future<void> saveTemplate(BuildContext context, Format f) async {
   final l = L.of(context);
@@ -61,9 +64,11 @@ class _ImportSheetState extends State<_ImportSheet> {
   bool _templateHint = false;
   String? _note;
   final _paste = TextEditingController();
+  final _cancel = CancelToken();
 
   @override
   void dispose() {
+    _cancel.cancel();
     _paste.dispose();
     super.dispose();
   }
@@ -159,7 +164,7 @@ class _ImportSheetState extends State<_ImportSheet> {
     try {
       res = await FilePicker.pickFiles(
         allowMultiple: true,
-        withData: true,
+        withData: kIsWeb,
         type: FileType.any,
       );
     } catch (_) {
@@ -172,16 +177,22 @@ class _ImportSheetState extends State<_ImportSheet> {
     }
     final results = <ImportResult>[];
     for (final f in res.files) {
-      final bytes = f.bytes;
+      if (f.size > maxImportBytes) {
+        results.add(ImportResult.problem(f.name, ImportIssue.tooLarge));
+        continue;
+      }
+      var bytes = f.bytes;
+      final path = f.path;
+      if (bytes == null && path != null && !kIsWeb) {
+        bytes = await readFileBytes(path);
+      }
       if (bytes == null) {
         results.add(ImportResult.failed(f.name));
         continue;
       }
-      try {
-        results.add(await decodeInBackground(DecodeJob(f.name, bytes)));
-      } catch (_) {
-        results.add(ImportResult.failed(f.name));
-      }
+      results.add(
+        await decodeInBackground(DecodeJob(f.name, bytes), cancel: _cancel),
+      );
     }
     if (!mounted) return;
     await _review(results);
@@ -209,10 +220,14 @@ class _ImportSheetState extends State<_ImportSheet> {
                   1
               ? 'pasted.csv'
               : 'pasted.txt');
-    var r = Codec.decode(name, bytes);
+    var r = await decodeInBackground(DecodeJob(name, bytes), cancel: _cancel);
     if (r.people.isEmpty && name != 'pasted.txt') {
-      r = Codec.decode('pasted.txt', bytes);
+      r = await decodeInBackground(
+        DecodeJob('pasted.txt', bytes),
+        cancel: _cancel,
+      );
     }
+    if (!mounted) return;
     if (r.people.isEmpty) r = ImportResult(const [], r.format, '');
     await _review([r]);
   }
@@ -259,7 +274,7 @@ class _ImportSheetState extends State<_ImportSheet> {
                     Expanded(
                       child: Text(
                         l.t('import'),
-                        style: Type.display(p, size: 40),
+                        style: AppText.display(p, size: 40),
                       ),
                     ),
                     if (_busy)
@@ -554,21 +569,91 @@ class ReviewScreen extends StatefulWidget {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   bool _merge = true;
+  bool _labelsToTags = true;
+
+  TagBook? get _tagBook {
+    try {
+      return context.read<TagBook>();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get _hasLabels =>
+      _fresh.any((p) => p.groups.isNotEmpty) ||
+      widget.plan.dupes.any((d) => d.$1.groups.isNotEmpty);
+
+  Future<void> _tagFromLabels(TagBook book, Iterable<Person> people) async {
+    for (final p in people) {
+      final numbers = [for (final e in p.phones) e.number];
+      if (numbers.isEmpty) continue;
+      for (final g in p.groups) {
+        final tag = await book.create(g);
+        await book.assign([tag.id], numbers);
+      }
+    }
+  }
+
   bool _busy = false;
   late final Set<String> _skip = {};
 
   List<Person> get _fresh => widget.plan.fresh;
+
+  int get _count {
+    final fresh = _fresh.where((x) => !_skip.contains(x.id)).length;
+    if (_merge) return fresh;
+    return fresh +
+        widget.plan.dupes.where((d) => !_skip.contains(d.$1.id)).length;
+  }
+
+  Future<void> _commit() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final plan = widget.plan;
+    final s = context.read<AppState>();
+    final l = L.of(context);
+    final keep = _fresh.where((x) => !_skip.contains(x.id)).toList();
+    final dupes = _merge
+        ? plan.dupes
+        : plan.dupes.where((d) => !_skip.contains(d.$1.id)).toList();
+    try {
+      final n = await s.commit(
+        ImportPlan(plan.incoming, keep, dupes, plan.sources, plan.formats),
+        merge: _merge,
+      );
+      final book = _tagBook;
+      if (_labelsToTags && book != null) {
+        try {
+          await _tagFromLabels(book, [...keep, ...dupes.map((d) => d.$1)]);
+        } catch (_) {}
+      }
+      if (mounted) Navigator.pop(context, n);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      toast(context, l.t('importFailed'));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = context.pal;
     final plan = widget.plan;
-    final count =
-        _fresh.length - _skip.length + (_merge ? 0 : plan.dupes.length);
+    final count = _count;
     final previewList = [
       ..._fresh,
       if (!_merge) ...plan.dupes.map((d) => d.$1),
+    ];
+    final entries = <_ReviewEntry>[
+      if (_fresh.isNotEmpty) ...[
+        _ReviewEntry.header(l.t('newOnes'), _fresh.length),
+        for (final f in _fresh) _ReviewEntry.row(f),
+      ],
+      if (plan.dupes.isNotEmpty) ...[
+        _ReviewEntry.header(l.t('duplicates'), plan.dupes.length),
+        for (final d in plan.dupes) _ReviewEntry.row(d.$1, existing: d.$2),
+      ],
     ];
     final isDevice = plan.sources.contains('device');
     return Scaffold(
@@ -598,7 +683,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         children: [
                           Text(
                             '${plan.incoming.length}',
-                            style: Type.display(
+                            style: AppText.display(
                               p,
                               size: 88,
                             ).copyWith(height: 0.95),
@@ -609,7 +694,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                               'contacts_one',
                               'contacts_many',
                             ),
-                            style: Type.display(
+                            style: AppText.display(
                               p,
                               size: 24,
                               italic: true,
@@ -675,9 +760,26 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ),
                       ),
                     ),
-                  if (previewList.isNotEmpty)
-                    SliverToBoxAdapter(child: SectionLabel(l.t('newOnes')))
-                  else
+                  if (_tagBook != null && _hasLabels)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                        child: SwitchListTile(
+                          key: const ValueKey('labels-to-tags'),
+                          value: _labelsToTags,
+                          onChanged: (v) => setState(() => _labelsToTags = v),
+                          title: Text(
+                            l.t('labelsAsTags'),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: p.ink,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (previewList.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
@@ -692,7 +794,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                             const SizedBox(height: 12),
                             Text(
                               l.t('allKnown'),
-                              style: Type.display(p, size: 26),
+                              style: AppText.display(p, size: 26),
                             ),
                             const SizedBox(height: 6),
                             Text(
@@ -711,92 +813,29 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ),
                     ),
                   SliverList.builder(
-                    itemCount: previewList.length > 400
-                        ? 400
-                        : previewList.length,
+                    itemCount: entries.length,
                     itemBuilder: (c, i) {
-                      final person = previewList[i];
-                      final skip = _skip.contains(person.id);
-                      return InkWell(
-                        onTap: () => setState(
-                          () => skip
+                      final e = entries[i];
+                      final header = e.header;
+                      if (header != null) {
+                        return SectionLabel('$header · ${e.count}');
+                      }
+                      final person = e.person!;
+                      final lockedMerge = e.existing != null && _merge;
+                      return _ReviewRow(
+                        key: ValueKey('review-${person.id}'),
+                        person: person,
+                        existing: e.existing,
+                        skipped: !lockedMerge && _skip.contains(person.id),
+                        locked: lockedMerge,
+                        onToggle: () => setState(
+                          () => _skip.contains(person.id)
                               ? _skip.remove(person.id)
                               : _skip.add(person.id),
-                        ),
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 200),
-                          opacity: skip ? 0.35 : 1,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 9,
-                            ),
-                            child: Row(
-                              children: [
-                                Avatar(person: person, size: 38),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        person.displayName,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: p.ink,
-                                          decoration: skip
-                                              ? TextDecoration.lineThrough
-                                              : null,
-                                        ),
-                                      ),
-                                      Directionality(
-                                        textDirection: TextDirection.ltr,
-                                        child: Text(
-                                          person.phones
-                                              .map((e) => e.number)
-                                              .join('  ·  '),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: p.inkSoft,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  skip
-                                      ? Icons.add_circle_outline_rounded
-                                      : Icons.check_circle_rounded,
-                                  color: skip ? p.inkFaint : p.accent,
-                                  size: 22,
-                                ),
-                              ],
-                            ),
-                          ),
                         ),
                       );
                     },
                   ),
-                  if (previewList.length > 400)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          '+ ${previewList.length - 400}',
-                          style: Type.display(
-                            p,
-                            size: 26,
-                          ).copyWith(color: p.inkSoft),
-                        ),
-                      ),
-                    ),
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               ),
@@ -830,34 +869,192 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           : l.t('done')),
                 icon: Icons.check_rounded,
                 busy: _busy,
-                onTap: () async {
-                  setState(() => _busy = true);
-                  final s = context.read<AppState>();
-                  final keep = _fresh
-                      .where((x) => !_skip.contains(x.id))
-                      .toList();
-                  final dupes = _merge
-                      ? plan.dupes
-                      : plan.dupes
-                            .where((d) => !_skip.contains(d.$1.id))
-                            .toList();
-                  final n = await s.commit(
-                    ImportPlan(
-                      plan.incoming,
-                      keep,
-                      dupes,
-                      plan.sources,
-                      plan.formats,
-                    ),
-                    merge: _merge,
-                  );
-                  if (context.mounted) Navigator.pop(context, n);
-                },
+                onTap: _commit,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ReviewEntry {
+  final String? header;
+  final int count;
+  final Person? person;
+  final Person? existing;
+  const _ReviewEntry.header(String this.header, this.count)
+    : person = null,
+      existing = null;
+  const _ReviewEntry.row(Person this.person, {this.existing})
+    : header = null,
+      count = 0;
+}
+
+class _ReviewRow extends StatefulWidget {
+  final Person person;
+  final Person? existing;
+  final bool skipped;
+  final bool locked;
+  final VoidCallback onToggle;
+  const _ReviewRow({
+    super.key,
+    required this.person,
+    required this.existing,
+    required this.skipped,
+    required this.locked,
+    required this.onToggle,
+  });
+
+  @override
+  State<_ReviewRow> createState() => _ReviewRowState();
+}
+
+class _ReviewRowState extends State<_ReviewRow> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = context.pal;
+    final person = widget.person;
+    final skip = widget.skipped;
+    final detail = person.origin.trim();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: widget.locked ? null : widget.onToggle,
+          child: AnimatedOpacity(
+            duration: AppMotion.base,
+            opacity: skip ? 0.35 : 1,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: 24, end: 4),
+              child: Row(
+                children: [
+                  Avatar(person: person, size: 38),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            person.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: p.ink,
+                              decoration: skip
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                          Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Text(
+                              person.phones.map((e) => e.number).join('  ·  '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: p.inkSoft,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (!widget.locked)
+                    Icon(
+                      skip
+                          ? Icons.add_circle_outline_rounded
+                          : Icons.check_circle_rounded,
+                      color: skip ? p.inkFaint : p.accent,
+                      size: 22,
+                    )
+                  else
+                    Icon(Icons.merge_rounded, color: p.sageText, size: 22),
+                  IconButton(
+                    key: ValueKey('review-expand-${person.id}'),
+                    tooltip: _open ? l.t('detailsHide') : l.t('detailsShow'),
+                    onPressed: () => setState(() => _open = !_open),
+                    icon: Icon(
+                      _open
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: p.inkSoft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: AppMotion.base,
+          curve: AppMotion.curve,
+          alignment: AlignmentDirectional.topStart,
+          child: !_open
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(76, 0, 24, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.existing != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            l.t('mergesInto', {
+                              'name': widget.existing!.displayName,
+                            }),
+                            style: TextStyle(
+                              color: p.sageText,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      if (detail.isNotEmpty) ...[
+                        Text(
+                          l.t('originalLine'),
+                          style: AppText.label(p).copyWith(color: p.inkSoft),
+                        ),
+                        const SizedBox(height: 4),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Container(
+                            key: ValueKey('review-origin-${person.id}'),
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: p.sheet,
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              border: Border.all(color: p.hairline),
+                            ),
+                            child: SelectableText(
+                              detail,
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                                height: 1.4,
+                                color: p.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }
@@ -898,7 +1095,7 @@ class _Stat extends StatelessWidget {
                     label.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Type.label(p),
+                    style: AppText.label(p),
                   ),
                 ),
               ],
@@ -909,7 +1106,7 @@ class _Stat extends StatelessWidget {
               duration: const Duration(milliseconds: 700),
               curve: Curves.easeOutCubic,
               builder: (c, v, _) =>
-                  Text('${v.round()}', style: Type.display(p, size: 36)),
+                  Text('${v.round()}', style: AppText.display(p, size: 36)),
             ),
           ],
         ),

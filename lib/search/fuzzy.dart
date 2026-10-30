@@ -4,6 +4,7 @@ import 'package:lpinyin/lpinyin.dart';
 
 import '../models/person.dart';
 import 'fold.dart';
+import 'number_pattern.dart';
 
 class Hit {
   final Person person;
@@ -12,6 +13,7 @@ class Hit {
   final String? matchedPhone;
   final String? reason;
   final String? alias;
+  final List<(int, int)> numberRanges;
 
   const Hit(
     this.person,
@@ -20,6 +22,7 @@ class Hit {
     this.matchedPhone,
     this.reason,
     this.alias,
+    this.numberRanges = const [],
   });
 }
 
@@ -176,8 +179,9 @@ class FuzzyIndex {
     final tokens = Fold.words(fq);
     if (tokens.isEmpty) return const [];
     final qDigits = Phones.digits(q);
-    final digitQuery =
-        qDigits.length >= 3 && RegExp(r'^[\s\d+\-\.\(\)٠-٩۰-۹]+$').hasMatch(q);
+    final digitsOnly = RegExp(r'^[\s\d+\-\.\(\)٠-٩۰-۹０-９＋]+$').hasMatch(q);
+    final digitQuery = qDigits.length >= 2 && digitsOnly;
+    final shortDigits = digitQuery && qDigits.length < 3;
     final joined = tokens.join();
     final out = <Hit>[];
     final best = <Person, int>{};
@@ -192,14 +196,21 @@ class FuzzyIndex {
     }
 
     for (final e in _entries) {
-      if (digitQuery) {
-        if (e.alias != null) continue;
+      if (digitQuery && e.alias == null) {
         final m = _phone(e, qDigits);
         if (m != null) {
-          push(Hit(e.p, m.score, matchedPhone: m.phone, reason: 'phone'));
+          push(
+            Hit(
+              e.p,
+              m.score,
+              matchedPhone: m.phone,
+              reason: 'phone',
+              numberRanges: NumberQuery.parse(q).highlightsFor(m.phone ?? ''),
+            ),
+          );
         }
-        continue;
       }
+      if (digitQuery && !shortDigits) continue;
       var total = 0.0;
       final ranges = <(int, int)>[];
       String? phone;
@@ -417,7 +428,7 @@ class FuzzyIndex {
         consider(const _TokenMatch(45, [], null, 'details'));
       } else {
         final td = Phones.digits(t);
-        if (td.length >= 3 && td.length == t.length) {
+        if (td.length >= 2 && td.length == t.length) {
           final m = _phone(e, td);
           if (m != null) {
             consider(_TokenMatch(m.score * 0.7, const [], m.phone, 'phone'));

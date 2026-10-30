@@ -397,7 +397,7 @@ void main() {
         const MessageTemplate(
           'مرحبا {first}',
         ).render(Person(name: 'محمد عبد الله')),
-        'مرحبا محمد عبد',
+        'مرحبا محمد عبد الله',
       );
       expect(NameParts.of('王伟').first, '伟');
       expect(NameParts.of('王伟').last, '王');

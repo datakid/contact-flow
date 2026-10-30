@@ -152,7 +152,7 @@ class _SyncScreenState extends State<SyncScreen> {
                     padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
                     child: Text(
                       l.n(widget.rows.length, 'rowsOne', 'rowsN'),
-                      style: Type.display(p, size: 34),
+                      style: AppText.display(p, size: 34),
                     ),
                   ),
                   Padding(
@@ -309,9 +309,7 @@ class _SyncScreenState extends State<SyncScreen> {
           _delete.isEmpty
               ? l.t('phoneOnlyKeep')
               : l.n(_delete.length, 'willDeleteOne', 'willDeleteN'),
-          style: TextStyle(
-            color: _delete.isEmpty ? p.inkFaint : p.accentText,
-          ),
+          style: TextStyle(color: _delete.isEmpty ? p.inkFaint : p.accentText),
         ),
         trailing: Icon(
           _showPhoneOnly

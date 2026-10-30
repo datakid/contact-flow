@@ -129,7 +129,7 @@ void main() {
       expect(q.total, 5);
       expect(q.withoutNumber, ['No Number']);
       expect(q.steps.first.text, 'Hi Amelia!');
-      expect(q.steps[1].text, 'Hi محمد عبد!');
+      expect(q.steps[1].text, 'Hi محمد عبد الله!');
     });
 
     test('progress survives a restart and resumes at the right person', () {

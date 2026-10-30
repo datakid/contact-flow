@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'zip_guard.dart';
 
 class XlsxSheet {
   final String name;
@@ -19,8 +20,15 @@ class XlsxSheet {
 class Xlsx {
   static const _maxColumn = 16383;
 
+  static const _ns = r'(?:\w+:)?';
+
   static List<List<String>> read(Uint8List bytes) {
-    final z = ZipDecoder().decodeBytes(bytes);
+    final sheets = readSheets(bytes, firstOnly: true);
+    return sheets.isEmpty ? const [] : sheets.first.rows;
+  }
+
+  static List<XlsxSheet> readSheets(Uint8List bytes, {bool firstOnly = false}) {
+    final z = ZipGuard.decode(bytes);
     String? file(String name) {
       final f = z.findFile(name);
       if (f == null) return null;
@@ -31,76 +39,142 @@ class Xlsx {
     final ss = file('xl/sharedStrings.xml');
     if (ss != null) {
       for (final si in RegExp(
-        r'<si\b[^>]*?(?:/>|>([\s\S]*?)</si>)',
+        '<${_ns}si\\b[^>]*?(?:/>|>([\\s\\S]*?)</${_ns}si>)',
       ).allMatches(ss)) {
         shared.add(_texts(si.group(1) ?? ''));
       }
     }
-    var sheetPath = 'xl/worksheets/sheet1.xml';
+    final pads = _padWidths(file('xl/styles.xml'));
     final wb = file('xl/workbook.xml');
     final rels = file('xl/_rels/workbook.xml.rels');
-    if (wb != null && rels != null) {
-      final rid = RegExp(
-        r'<sheet\b[^>]*r:id="([^"]+)"',
-      ).firstMatch(wb)?.group(1);
-      if (rid != null) {
-        final safe = RegExp.escape(rid);
-        final rel =
-            RegExp(
-              '<Relationship\\b[^>]*Id="$safe"[^>]*/?>',
-            ).firstMatch(rels)?.group(0) ??
-            RegExp(
-              '<Relationship\\b[^>]*Target="[^"]*"[^>]*Id="$safe"',
-            ).firstMatch(rels)?.group(0);
-        final target = rel == null
-            ? null
-            : RegExp(r'Target="([^"]+)"').firstMatch(rel)?.group(1);
-        if (target != null) {
-          sheetPath = target.startsWith('/')
-              ? target.substring(1)
-              : 'xl/$target';
-        }
+    var targets = _sheetTargets(wb, rels);
+    if (targets.isEmpty) {
+      final names =
+          z.files
+              .where(
+                (f) =>
+                    f.isFile &&
+                    f.name.startsWith('xl/worksheets/') &&
+                    f.name.endsWith('.xml'),
+              )
+              .map((f) => f.name)
+              .toList()
+            ..sort(_naturalCompare);
+      final sheet1 = names.indexOf('xl/worksheets/sheet1.xml');
+      if (sheet1 > 0) {
+        names
+          ..removeAt(sheet1)
+          ..insert(0, 'xl/worksheets/sheet1.xml');
       }
+      targets = [
+        for (var i = 0; i < names.length; i++) ('Sheet${i + 1}', names[i]),
+      ];
     }
-    final sheet =
-        file(sheetPath) ??
-        z.files
-            .where(
-              (f) =>
-                  f.name.startsWith('xl/worksheets/') &&
-                  f.name.endsWith('.xml'),
-            )
-            .map(
-              (f) => utf8.decode(f.content as List<int>, allowMalformed: true),
-            )
-            .firstOrNull;
-    if (sheet == null) {
-      if (wb == null) throw const FormatException('Not an Excel workbook');
-      return const [];
+    final out = <XlsxSheet>[];
+    for (final t in targets) {
+      final xml = file(t.$2);
+      if (xml == null) continue;
+      out.add(XlsxSheet(t.$1, _rows(xml, shared, pads)));
+      if (firstOnly) break;
     }
+    if (out.isEmpty && wb == null) {
+      throw const FormatException('Not an Excel workbook');
+    }
+    return out;
+  }
+
+  static int _naturalCompare(String a, String b) {
+    int n(String x) =>
+        int.tryParse(RegExp(r'(\d+)\.xml$').firstMatch(x)?.group(1) ?? '') ?? 0;
+    final c = n(a).compareTo(n(b));
+    return c != 0 ? c : a.compareTo(b);
+  }
+
+  static List<(String, String)> _sheetTargets(String? wb, String? rels) {
+    if (wb == null || rels == null) return const [];
+    final out = <(String, String)>[];
+    for (final m in RegExp('<${_ns}sheet\\b([^>]*?)/?>').allMatches(wb)) {
+      final attrs = m.group(1)!;
+      final name =
+          RegExp(r'\bname="([^"]*)"').firstMatch(attrs)?.group(1) ?? '';
+      final rid = RegExp(r'\b\w+:id="([^"]+)"').firstMatch(attrs)?.group(1);
+      if (rid == null) continue;
+      final rel = RegExp(
+        '<${_ns}Relationship\\b[^>]*?\\bId="${RegExp.escape(rid)}"[^>]*>',
+      ).firstMatch(rels)?.group(0);
+      final target = rel == null
+          ? null
+          : RegExp(r'Target="([^"]+)"').firstMatch(rel)?.group(1);
+      if (target == null) continue;
+      out.add((
+        _unescape(name),
+        target.startsWith('/') ? target.substring(1) : 'xl/$target',
+      ));
+    }
+    return out;
+  }
+
+  static List<int> _padWidths(String? styles) {
+    if (styles == null) return const [];
+    final codes = <int, String>{};
+    for (final m in RegExp('<${_ns}numFmt\\b([^>]*?)/?>').allMatches(styles)) {
+      final a = m.group(1)!;
+      final id = int.tryParse(
+        RegExp(r'\bnumFmtId="(\d+)"').firstMatch(a)?.group(1) ?? '',
+      );
+      final code = RegExp(r'\bformatCode="([^"]*)"').firstMatch(a)?.group(1);
+      if (id != null && code != null) codes[id] = _unescape(code);
+    }
+    final block = RegExp(
+      '<${_ns}cellXfs\\b[^>]*>([\\s\\S]*?)</${_ns}cellXfs>',
+    ).firstMatch(styles)?.group(1);
+    if (block == null) return const [];
+    final out = <int>[];
+    for (final m in RegExp('<${_ns}xf\\b([^>]*?)/?>').allMatches(block)) {
+      final id = int.tryParse(
+        RegExp(r'\bnumFmtId="(\d+)"').firstMatch(m.group(1)!)?.group(1) ?? '',
+      );
+      final code = id == null ? null : codes[id];
+      out.add(
+        code != null && RegExp(r'^0{2,}$').hasMatch(code) ? code.length : 0,
+      );
+    }
+    return out;
+  }
+
+  static List<List<String>> _rows(
+    String sheet,
+    List<String> shared,
+    List<int> pads,
+  ) {
     final rows = <List<String>>[];
     for (final rm in RegExp(
-      r'<row\b[^>]*>([\s\S]*?)</row>',
+      '<${_ns}row\\b[^>]*?(?:/>|>([\\s\\S]*?)</${_ns}row>)',
     ).allMatches(sheet)) {
+      final body = rm.group(1);
+      if (body == null) continue;
       final row = <String>[];
       for (final cm in RegExp(
-        r'<c\b([^>]*?)(?:/>|>([\s\S]*?)</c>)',
-      ).allMatches(rm.group(1)!)) {
+        '<${_ns}c\\b([^>]*?)(?:/>|>([\\s\\S]*?)</${_ns}c>)',
+      ).allMatches(body)) {
         final attrs = cm.group(1) ?? '';
         final inner = cm.group(2) ?? '';
-        final ref = RegExp(r'r="([A-Z]+)\d+"').firstMatch(attrs)?.group(1);
+        final ref = RegExp(r'\br="([A-Z]+)\d+"').firstMatch(attrs)?.group(1);
         final idx = ref == null ? row.length : _colIndex(ref);
         if (idx < 0 || idx > _maxColumn) continue;
         while (row.length < idx) {
           row.add('');
         }
-        final t = RegExp(r't="([^"]+)"').firstMatch(attrs)?.group(1);
+        final t = RegExp(r'\bt="([^"]+)"').firstMatch(attrs)?.group(1);
         String v;
         if (t == 'inlineStr') {
           v = _texts(inner);
         } else {
           final raw =
-              RegExp(r'<v>([\s\S]*?)</v>').firstMatch(inner)?.group(1) ?? '';
+              RegExp(
+                '<${_ns}v>([\\s\\S]*?)</${_ns}v>',
+              ).firstMatch(inner)?.group(1) ??
+              '';
           if (t == 's') {
             final i = int.tryParse(raw) ?? -1;
             v = i >= 0 && i < shared.length ? shared[i] : '';
@@ -108,6 +182,13 @@ class Xlsx {
             v = _unescape(raw);
           } else {
             v = _number(raw);
+            final si = int.tryParse(
+              RegExp(r'\bs="(\d+)"').firstMatch(attrs)?.group(1) ?? '',
+            );
+            final width = si != null && si < pads.length ? pads[si] : 0;
+            if (width > 0 && v.length < width && RegExp(r'^\d+$').hasMatch(v)) {
+              v = v.padLeft(width, '0');
+            }
           }
         }
         if (row.length == idx) {
@@ -140,10 +221,13 @@ class Xlsx {
   }
 
   static String _texts(String xml) {
-    final clean = xml.replaceAll(RegExp(r'<rPh\b[^>]*>[\s\S]*?</rPh>'), '');
+    final clean = xml.replaceAll(
+      RegExp('<${_ns}rPh\\b[^>]*>[\\s\\S]*?</${_ns}rPh>'),
+      '',
+    );
     final b = StringBuffer();
     for (final m in RegExp(
-      r'<t(?:\s[^>]*)?>([\s\S]*?)</t>',
+      '<${_ns}t(?:\\s[^>]*)?>([\\s\\S]*?)</${_ns}t>',
     ).allMatches(clean)) {
       b.write(_unescape(m.group(1)!));
     }

@@ -1,15 +1,27 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n.dart';
+import '../services/file_out.dart';
 import '../state/app_state.dart';
 import '../state/phone_book.dart';
 import 'history_screen.dart';
 import 'reach_ui.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import '../calls/ignore_book.dart';
+import '../services/data_move.dart';
+import '../services/incoming_read.dart';
+import '../tags/tag_book.dart';
+import 'ignored_sheet.dart';
+import 'tags_screen.dart';
+import 'group_tags_sheet.dart';
 
-const appVersion = '2.5.0';
+const appVersion = '3.0.0';
 
 Future<void> showSettings(BuildContext context) {
   return showModalBottomSheet(
@@ -39,7 +51,7 @@ class _Settings extends StatelessWidget {
           const SheetHandle(),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
-            child: Text(l.t('settings'), style: Type.display(p, size: 40)),
+            child: Text(l.t('settings'), style: AppText.display(p, size: 40)),
           ),
           SectionLabel(l.t('theme')),
           Padding(
@@ -61,6 +73,31 @@ class _Settings extends StatelessWidget {
                   if (m != ThemeMode.dark) const SizedBox(width: 10),
                 ],
               ],
+            ),
+          ),
+          if (defaultTargetPlatform == TargetPlatform.android)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Pill(
+                  key: const ValueKey('set-dynamic'),
+                  label: l.t('dynamicColor'),
+                  active: s.dynamicColor,
+                  onTap: () => s.setDynamicColor(!s.dynamicColor),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Pill(
+                key: const ValueKey('set-swipe'),
+                label: l.t('swipeActions'),
+                active: s.swipeActions,
+                onTap: () => s.setSwipeActions(!s.swipeActions),
+              ),
             ),
           ),
           SectionLabel(l.t('language')),
@@ -94,8 +131,21 @@ class _Settings extends StatelessWidget {
             key: const ValueKey('set-country'),
             icon: Icons.public_rounded,
             label: l.t('defaultCountry'),
-            sub: s.country.isEmpty ? l.t('notSet') : s.country,
-            onTap: () => askCountry(context, force: true),
+            sub: s.country.isEmpty
+                ? l.t('notSet')
+                : (s.needsRegionPick
+                      ? l.t('regionPick')
+                      : '${s.country} · ${regionFlag(s.region)} ${s.region}'),
+            onTap: () async {
+              await askCountry(context, force: true);
+              if (!context.mounted) return;
+              final tagBook = _maybe<TagBook>(context);
+              if (tagBook == null) return;
+              final moved = await tagBook.rekeyUnparsed();
+              if (moved > 0 && context.mounted) {
+                toast(context, l.t('tagsMoved', {'n': moved}));
+              }
+            },
           ),
           Builder(
             builder: (context) {
@@ -109,19 +159,157 @@ class _Settings extends StatelessWidget {
             },
           ),
           SectionLabel(l.t('library')),
+          if (_maybe<IgnoreBook>(context) case final ignored?)
+            _Action(
+              key: const ValueKey('set-ignored'),
+              icon: Icons.phone_disabled_rounded,
+              label: l.t('ignoredTitle'),
+              sub: l.t('ignoredCount', {'n': ignored.keys.length}),
+              onTap: () => showIgnoredSheet(context),
+            ),
+          if (_maybe<TagBook>(context) case final tagBook?)
+            _Action(
+              key: const ValueKey('set-tags'),
+              icon: Icons.label_outline_rounded,
+              label: l.t('tagsTitle'),
+              sub: l.t('tagNumbers', {'n': tagBook.tags.length}),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const TagsScreen()),
+              ),
+            ),
+          if (_maybe<TagBook>(context) != null)
+            _Action(
+              key: const ValueKey('set-group-tags'),
+              icon: Icons.group_work_outlined,
+              label: l.t('groupTagsTitle'),
+              sub: l.t('groupTagsSub'),
+              onTap: () => showGroupTagsSheet(context),
+            ),
+          if (_maybe<TagBook>(context) case final tags?)
+            if (_maybe<IgnoreBook>(context) case final ignore?) ...[
+              _Action(
+                key: const ValueKey('set-move-export'),
+                icon: Icons.upload_file_rounded,
+                label: l.t('moveExport'),
+                sub: l.t('moveSub'),
+                onTap: () async {
+                  final json = DataMove.export(
+                    people: s.people,
+                    tags: tags,
+                    ignore: ignore,
+                  );
+                  await shareBytes(
+                    Uint8List.fromList(utf8.encode(json)),
+                    'contact-flow-data.json',
+                    'application/json',
+                  );
+                },
+              ),
+              _Action(
+                key: const ValueKey('set-move-import'),
+                icon: Icons.download_rounded,
+                label: l.t('moveImport'),
+                sub: l.t('moveSub'),
+                onTap: () async {
+                  final res = await FilePicker.pickFiles(
+                    withData: kIsWeb,
+                    type: FileType.any,
+                  );
+                  final f = res == null || res.files.isEmpty
+                      ? null
+                      : res.files.first;
+                  if (f == null) return;
+                  var bytes = f.bytes;
+                  final path = f.path;
+                  if (bytes == null && path != null && !kIsWeb) {
+                    bytes = await readFileBytes(path);
+                  }
+                  if (bytes == null) {
+                    if (context.mounted) toast(context, l.t('moveBad'));
+                    return;
+                  }
+                  try {
+                    final r = await DataMove.import(
+                      utf8.decode(bytes, allowMalformed: true),
+                      state: s,
+                      tags: tags,
+                      ignore: ignore,
+                    );
+                    if (context.mounted) {
+                      toast(
+                        context,
+                        l.t('moveDone', {
+                          'n': r.people,
+                          'm': r.tags,
+                          'k': r.ignored,
+                        }),
+                      );
+                    }
+                  } on FormatException {
+                    if (context.mounted) toast(context, l.t('moveBad'));
+                  }
+                },
+              ),
+            ],
+          if (s.quarantined > 0)
+            _Action(
+              key: const ValueKey('set-quarantine'),
+              icon: Icons.report_problem_outlined,
+              label: l.t('quarantineCount', {'n': s.quarantined}),
+              sub: l.t('quarantineExport'),
+              onTap: () async {
+                final json = await s.quarantineJson();
+                await shareBytes(
+                  Uint8List.fromList(utf8.encode(json)),
+                  'unreadable-items.json',
+                  'application/json',
+                );
+              },
+            ),
           _Action(
             icon: Icons.merge_rounded,
             label: l.t('dedupe'),
             onTap: s.people.isEmpty
                 ? null
                 : () async {
-                    final n = await s.dedupe();
+                    final plan = s.planDedupe();
+                    if (plan.isEmpty) {
+                      toast(context, l.t('dedupeNone'));
+                      return;
+                    }
+                    final ok = await showDialog<bool>(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: Text(l.t('dedupe')),
+                        content: Text(
+                          [
+                            l.t('dedupePreview', {'n': plan.removed}),
+                            ...plan.groups
+                                .take(5)
+                                .map((g) => g.keep.displayName),
+                          ].join('\n'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, false),
+                            child: Text(l.t('cancel')),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            child: Text(l.t('dedupeMerge')),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (ok != true) return;
+                    final undo = await s.applyDedupe(plan);
                     if (context.mounted) {
                       toast(
                         context,
-                        n == 0
-                            ? l.t('dedupeNone')
-                            : l.t('dedupeDone', {'n': n}),
+                        l.t('dedupeDone', {'n': plan.removed}),
+                        action: l.t('undo'),
+                        onAction: () => s.undoDedupe(undo),
+                        duration: const Duration(seconds: 8),
                       );
                     }
                   },
@@ -138,7 +326,7 @@ class _Settings extends StatelessWidget {
                       builder: (c) => AlertDialog(
                         title: Text(
                           l.t('clearLibrary'),
-                          style: Type.display(p, size: 28),
+                          style: AppText.display(p, size: 28),
                         ),
                         content: Text(
                           l.t('clearConfirm'),
@@ -179,7 +367,7 @@ class _Settings extends StatelessWidget {
               children: [
                 Text(
                   l.t('aboutBody'),
-                  style: Type.display(
+                  style: AppText.display(
                     p,
                     size: 21,
                     italic: true,
@@ -208,7 +396,7 @@ class _Settings extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Contact Flow $appVersion · MIT',
-                        style: Type.label(p),
+                        style: AppText.label(p),
                       ),
                     ),
                     Flexible(
@@ -218,7 +406,9 @@ class _Settings extends StatelessWidget {
                           applicationName: 'Contact Flow',
                           applicationVersion: appVersion,
                         ),
-                        style: TextButton.styleFrom(foregroundColor: p.accentText),
+                        style: TextButton.styleFrom(
+                          foregroundColor: p.accentText,
+                        ),
                         child: Text(
                           l.t('licenses'),
                           maxLines: 2,
@@ -379,5 +569,13 @@ class _Action extends StatelessWidget {
             : Text(sub!, style: TextStyle(color: p.inkSoft)),
       ),
     );
+  }
+}
+
+T? _maybe<T>(BuildContext context) {
+  try {
+    return context.read<T>();
+  } catch (_) {
+    return null;
   }
 }

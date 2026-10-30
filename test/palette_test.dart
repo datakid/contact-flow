@@ -1,5 +1,5 @@
 import 'package:contact_flow/ui/theme.dart';
-import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 double ratio(Color a, Color b) {
@@ -37,7 +37,10 @@ void main() {
       test('tags stay readable on their own tint', () {
         for (final surface in [p.paper, p.sheet]) {
           for (final color in [p.accentText, p.sageText, p.inkSoft]) {
-            final tint = Color.alphaBlend(color.withValues(alpha: 0.1), surface);
+            final tint = Color.alphaBlend(
+              color.withValues(alpha: 0.1),
+              surface,
+            );
             expect(ratio(color, tint), greaterThanOrEqualTo(4.5));
           }
         }
@@ -60,5 +63,68 @@ void main() {
         expect(ratio(p.accent, p.paper), greaterThanOrEqualTo(3));
       });
     });
+  });
+
+  final seeds = {
+    'brand': brandSeed,
+    'blue': const Color(0xFF1E5BD8),
+    'green': const Color(0xFF2E7D32),
+    'purple': const Color(0xFF6A1B9A),
+    'yellow': const Color(0xFFF9A825),
+    'teal': const Color(0xFF00897B),
+  };
+
+  seeds.forEach((seedName, seed) {
+    for (final b in Brightness.values) {
+      group('dynamic $seedName ${b.name}', () {
+        final p = Palette.fromScheme(
+          ColorScheme.fromSeed(seedColor: seed, brightness: b),
+        );
+
+        test('text colours reach 4.5:1 on both surfaces', () {
+          final text = {
+            'ink': p.ink,
+            'inkSoft': p.inkSoft,
+            'inkFaint': p.inkFaint,
+            'accentText': p.accentText,
+            'sageText': p.sageText,
+          };
+          for (final surface in [p.paper, p.sheet]) {
+            text.forEach((label, color) {
+              expect(
+                ratio(color, surface),
+                greaterThanOrEqualTo(4.5),
+                reason: label,
+              );
+            });
+          }
+        });
+
+        test('tags stay readable on their own tint', () {
+          for (final surface in [p.paper, p.sheet]) {
+            for (final color in [p.accentText, p.sageText, p.inkSoft]) {
+              final tint = Color.alphaBlend(
+                color.withValues(alpha: 0.1),
+                surface,
+              );
+              expect(ratio(color, tint), greaterThanOrEqualTo(4.5));
+            }
+          }
+        });
+
+        test('ink, soft and faint keep their order', () {
+          expect(ratio(p.ink, p.paper), greaterThan(ratio(p.inkSoft, p.paper)));
+          expect(
+            ratio(p.inkSoft, p.paper),
+            greaterThan(ratio(p.inkFaint, p.paper)),
+          );
+        });
+
+        test('accent fills and their labels reach 3:1', () {
+          expect(ratio(p.onAccent, p.accent), greaterThanOrEqualTo(3));
+          expect(ratio(p.accent, p.paper), greaterThanOrEqualTo(3));
+        });
+      });
+    }
   });
 }

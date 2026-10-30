@@ -145,8 +145,8 @@ class Avatar extends StatelessWidget {
                 ini,
                 key: ValueKey(ini),
                 style: TextStyle(
-                  fontFamily: Type.serif,
-                  fontFamilyFallback: Type.fallback,
+                  fontFamily: AppText.serif,
+                  fontFamilyFallback: AppText.fallback,
                   fontSize: size * (ini.length > 1 ? 0.38 : 0.44),
                   color: p.ink.withValues(alpha: 0.78),
                   height: 1.1,
@@ -360,35 +360,44 @@ class Pill extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       haptic: true,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: active ? p.ink : Colors.transparent,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: active ? p.ink : p.hairline, width: 1.2),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 15, color: active ? p.paper : p.inkSoft),
-              const SizedBox(width: 6),
-            ],
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: active ? p.paper : p.inkSoft,
-                ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+        child: Center(
+          widthFactor: 1,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: active ? p.ink : Colors.transparent,
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                color: active ? p.ink : p.hairline,
+                width: 1.2,
               ),
             ),
-          ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 15, color: active ? p.paper : p.inkSoft),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: active ? p.paper : p.inkSoft,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -459,7 +468,7 @@ class SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
       child: Row(
         children: [
-          Expanded(child: Text(text.toUpperCase(), style: Type.label(p))),
+          Expanded(child: Text(text.toUpperCase(), style: AppText.label(p))),
           ?trailing,
         ],
       ),
@@ -576,4 +585,108 @@ String friendlyError(Object e) {
   );
   if (s.length > 120) s = '${s.substring(0, 117)}…';
   return s.isEmpty ? 'Something went wrong' : s;
+}
+
+class ListSkeleton extends StatefulWidget {
+  final int rows;
+  final String? caption;
+  const ListSkeleton({super.key, this.rows = 7, this.caption});
+
+  @override
+  State<ListSkeleton> createState() => _ListSkeletonState();
+}
+
+class _ListSkeletonState extends State<ListSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.stop();
+      _c.value = 0.5;
+    } else if (!_c.isAnimating) {
+      _c.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    Widget bar(double width, double height) => Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: p.hairline,
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
+    return Semantics(
+      container: true,
+      label: widget.caption,
+      child: ExcludeSemantics(
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (context, child) =>
+              Opacity(opacity: 0.45 + 0.55 * _c.value, child: child),
+          child: Column(
+            key: const ValueKey('list-skeleton'),
+            children: [
+              for (var i = 0; i < widget.rows; i++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: p.hairline,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            bar(120 + (i % 3) * 40, 14),
+                            const SizedBox(height: 10),
+                            bar(90 + (i % 4) * 25, 11),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (widget.caption != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  widget.caption!,
+                  style: TextStyle(
+                    color: p.inkSoft,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

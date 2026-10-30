@@ -35,18 +35,22 @@ class L {
   }
 
   String n(int count, String one, String many) {
-    final form = code == 'ar' ? _arabicForm(count) : null;
-    if (form != null && _m.containsKey('${many}_$form')) {
-      return t('${many}_$form', {'n': count});
+    final form = code == 'ar' ? arabicForm(count) : null;
+    if (form != null) {
+      final k = form == 'one' ? one : '${many}_$form';
+      if (_m.containsKey(k)) return t(k, {'n': count});
     }
     return t(count == 1 ? one : many, {'n': count});
   }
 
-  static String? _arabicForm(int count) {
+  static String arabicForm(int count) {
+    if (count == 0) return 'zero';
+    if (count == 1) return 'one';
     if (count == 2) return 'two';
     final r = count % 100;
     if (r >= 3 && r <= 10) return 'few';
-    return null;
+    if (r >= 11) return 'many';
+    return 'other';
   }
 
   bool has(String k) => _m.containsKey(k) || _en.containsKey(k);
@@ -122,6 +126,7 @@ class L {
       'exported': 'Exported {n} contacts',
       'nothingToExport': 'Nothing to export yet',
       'theme': 'Appearance',
+      'dynamicColor': 'Use system colours',
       'system': 'System',
       'light': 'Light',
       'dark': 'Dark',
@@ -533,6 +538,31 @@ class L {
       'numbers_many': '{n} رقم',
       'selected_one': 'تم تحديد واحدة',
       'selected_many': 'تم تحديد {n}',
+      'contacts_many_zero': 'لا توجد جهات اتصال',
+      'contacts_many_two': 'جهتا اتصال',
+      'contacts_many_few': '{n} جهات اتصال',
+      'contacts_many_many': '{n} جهة اتصال',
+      'contacts_many_other': '{n} جهة اتصال',
+      'numbers_many_zero': 'لا توجد أرقام',
+      'numbers_many_two': 'رقمان',
+      'numbers_many_few': '{n} أرقام',
+      'numbers_many_many': '{n} رقمًا',
+      'numbers_many_other': '{n} رقم',
+      'selected_many_zero': 'لم يتم تحديد شيء',
+      'selected_many_two': 'تم تحديد اثنتين',
+      'selected_many_few': 'تم تحديد {n}',
+      'selected_many_many': 'تم تحديد {n}',
+      'selected_many_other': 'تم تحديد {n}',
+      'excluded_many_zero': 'لا مستبعد',
+      'excluded_many_two': 'مستبعدان',
+      'excluded_many_few': 'مستبعد: {n}',
+      'excluded_many_many': 'مستبعد: {n}',
+      'excluded_many_other': 'مستبعد: {n}',
+      'calls_many_zero': 'لا مكالمات',
+      'calls_many_two': 'مكالمتان',
+      'calls_many_few': '{n} مكالمات',
+      'calls_many_many': '{n} مكالمة',
+      'calls_many_other': '{n} مكالمة',
       'emptyTitle': 'صفحة هادئة وفارغة.',
       'emptyBody':
           'أحضر جهات اتصالك من هذا الهاتف أو من أي ملف — CSV أو vCard أو Excel أو Numbers أو JSON أو نص عادي.',
@@ -588,6 +618,7 @@ class L {
       'exported': 'تم تصدير {n} جهة اتصال',
       'nothingToExport': 'لا يوجد ما يُصدَّر بعد',
       'theme': 'المظهر',
+      'dynamicColor': 'استخدام ألوان النظام',
       'system': 'النظام',
       'light': 'فاتح',
       'dark': 'داكن',
@@ -1078,6 +1109,7 @@ class L {
       'exported': '已导出 {n} 位联系人',
       'nothingToExport': '暂无可导出的内容',
       'theme': '外观',
+      'dynamicColor': '使用系统颜色',
       'system': '跟随系统',
       'light': '浅色',
       'dark': '深色',
@@ -1214,6 +1246,7 @@ class L {
       'exported': '{n} contactos exportados',
       'nothingToExport': 'Aún no hay nada que exportar',
       'theme': 'Apariencia',
+      'dynamicColor': 'Usar los colores del sistema',
       'system': 'Sistema',
       'light': 'Claro',
       'dark': 'Oscuro',
@@ -1353,6 +1386,7 @@ class L {
       'exported': '{n} contacts exportés',
       'nothingToExport': 'Rien à exporter pour l\'instant',
       'theme': 'Apparence',
+      'dynamicColor': 'Utiliser les couleurs du système',
       'system': 'Système',
       'light': 'Clair',
       'dark': 'Sombre',

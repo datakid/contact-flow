@@ -3,13 +3,43 @@ import 'package:flutter/material.dart';
 import '../l10n.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import '../services/edition.dart';
 
-class WorkspaceSwitch extends StatelessWidget {
+class ScreenTitle extends StatelessWidget {
+  final String text;
+  const ScreenTitle(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.pal;
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(text, maxLines: 1, style: AppText.display(p, size: 32)),
+    );
+  }
+}
+
+const tabContacts = 0;
+const tabFiles = 1;
+const tabCalls = 2;
+const tabTags = 3;
+
+List<int> navTabs({required bool tags}) => [
+  tabContacts,
+  if (callsBuild) tabCalls,
+  if (tags) tabTags,
+  tabFiles,
+];
+
+class AppNavBar extends StatelessWidget {
   final int tab;
+  final bool tags;
   final ValueChanged<int> onChanged;
-  const WorkspaceSwitch({
+  const AppNavBar({
     super.key,
     required this.tab,
+    required this.tags,
     required this.onChanged,
   });
 
@@ -17,50 +47,58 @@ class WorkspaceSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = context.pal;
-    Widget seg(int i, String label, IconData icon) {
-      final on = tab == i;
-      return Pressable(
-        key: ValueKey('ws-$i'),
-        haptic: true,
-        onTap: () => onChanged(i),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: on ? p.ink : Colors.transparent,
-            borderRadius: BorderRadius.circular(100),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 15, color: on ? p.paper : p.inkSoft),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                maxLines: 1,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: on ? p.paper : p.inkSoft,
-                ),
-              ),
-            ],
+    final order = navTabs(tags: tags);
+    final (label, icon, selected) = (
+      <int, String>{
+        tabContacts: l.t('navContacts'),
+        tabCalls: l.t('wsCalls'),
+        tabTags: l.t('tagsTitle'),
+        tabFiles: l.t('wsFiles'),
+      },
+      <int, IconData>{
+        tabContacts: Icons.contacts_outlined,
+        tabCalls: Icons.phone_callback_outlined,
+        tabTags: Icons.label_outline_rounded,
+        tabFiles: Icons.folder_open_rounded,
+      },
+      <int, IconData>{
+        tabContacts: Icons.contacts_rounded,
+        tabCalls: Icons.phone_callback_rounded,
+        tabTags: Icons.label_rounded,
+        tabFiles: Icons.folder_rounded,
+      },
+    );
+    return NavigationBarTheme(
+      data: NavigationBarThemeData(
+        backgroundColor: p.sheet,
+        indicatorColor: p.accentSoft,
+        surfaceTintColor: Colors.transparent,
+        height: 68,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (s) => TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: s.contains(WidgetState.selected) ? p.ink : p.inkSoft,
           ),
         ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: p.hairline, width: 1.2),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (s) => IconThemeData(
+            color: s.contains(WidgetState.selected) ? p.accentText : p.inkSoft,
+          ),
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          seg(0, l.t('wsPhone'), Icons.smartphone_rounded),
-          seg(1, l.t('wsFiles'), Icons.folder_open_rounded),
+      child: NavigationBar(
+        key: const ValueKey('nav-bar'),
+        selectedIndex: order.indexOf(tab).clamp(0, order.length - 1),
+        onDestinationSelected: (i) => onChanged(order[i]),
+        destinations: [
+          for (final t in order)
+            NavigationDestination(
+              key: ValueKey('nav-$t'),
+              icon: Icon(icon[t]),
+              selectedIcon: Icon(selected[t]),
+              label: label[t]!,
+            ),
         ],
       ),
     );
@@ -139,7 +177,7 @@ class StateView extends StatelessWidget {
             child: Icon(icon, color: p.accent, size: 30),
           ),
           const SizedBox(height: 24),
-          Text(title, style: Type.display(p, size: 34)),
+          Text(title, style: AppText.display(p, size: 34)),
           const SizedBox(height: 12),
           Text(
             body,

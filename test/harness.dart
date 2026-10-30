@@ -1,6 +1,7 @@
 import 'package:contact_flow/data/contact_source.dart';
 import 'package:contact_flow/data/journal.dart';
 import 'package:contact_flow/data/sample.dart';
+import 'package:contact_flow/io/jobs.dart';
 import 'package:contact_flow/main.dart';
 import 'package:contact_flow/models/person.dart';
 import 'package:contact_flow/services/launcher.dart';
@@ -33,6 +34,7 @@ Future<Rig> makeRig({
   List<Person>? seed,
   MemoryKeyValue? kv,
 }) async {
+  decodeInIsolate = false;
   final source = FakeSource(
     seed: seed ?? Sample.phoneBook(),
     accounts: const [AccountRef.device, Sample.google],

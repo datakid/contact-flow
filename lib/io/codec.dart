@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../models/person.dart';
+import '../phone/phone_key.dart';
 import 'numbers.dart';
 import 'tabular.dart';
 import 'text_decode.dart';
 import 'vcard.dart';
 import 'xlsx.dart';
+import 'zip_guard.dart';
 
 enum Format { csv, vcf, xlsx, txt, json, numbers }
 
@@ -56,6 +58,9 @@ class ExportOptions {
   final bool rtl;
   final bool contactId;
   final bool includeAliases;
+  final bool? includeTitle;
+  final bool? includeGroups;
+  final bool? includeTags;
 
   const ExportOptions({
     this.header = true,
@@ -68,7 +73,16 @@ class ExportOptions {
     this.rtl = false,
     this.contactId = false,
     this.includeAliases = true,
+    this.includeTitle,
+    this.includeGroups,
+    this.includeTags,
   });
+
+  bool titleFor(Format f) => includeTitle ?? f != Format.csv;
+
+  bool groupsFor(Format f) => includeGroups ?? f != Format.csv;
+
+  bool tagsFor(Format f) => includeTags ?? f != Format.csv;
 
   ExportOptions copyWith({
     bool? header,
@@ -81,6 +95,9 @@ class ExportOptions {
     bool? rtl,
     bool? contactId,
     bool? includeAliases,
+    bool? includeTitle,
+    bool? includeGroups,
+    bool? includeTags,
   }) => ExportOptions(
     header: header ?? this.header,
     includeEmail: includeEmail ?? this.includeEmail,
@@ -92,6 +109,9 @@ class ExportOptions {
     rtl: rtl ?? this.rtl,
     contactId: contactId ?? this.contactId,
     includeAliases: includeAliases ?? this.includeAliases,
+    includeTitle: includeTitle ?? this.includeTitle,
+    includeGroups: includeGroups ?? this.includeGroups,
+    includeTags: includeTags ?? this.includeTags,
   );
 }
 
@@ -103,6 +123,10 @@ enum ImportIssue {
   headerOnly,
   noColumns,
   noContacts,
+  tooLarge,
+  timedOut,
+  cancelled,
+  unsupportedCharset,
 }
 
 class ImportResult {
@@ -126,6 +150,12 @@ class ImportResult {
       format = Format.txt,
       detail = '',
       issue = ImportIssue.unreadable,
+      skipped = 0;
+
+  const ImportResult.problem(this.fileName, this.issue)
+    : people = const [],
+      format = Format.txt,
+      detail = '',
       skipped = 0;
 }
 
@@ -196,6 +226,8 @@ class Codec {
     ImportResult r;
     try {
       r = _decode(fileName, bytes);
+    } on ZipTooLarge {
+      r = ImportResult.problem(fileName, ImportIssue.tooLarge);
     } catch (_) {
       r = ImportResult.failed(fileName);
     }
@@ -219,11 +251,7 @@ class Codec {
     return ImportIssue.noContacts;
   }
 
-  static ImportResult _fromRows(
-    List<List<String>> rows,
-    Format f,
-    String src,
-  ) {
+  static ImportResult _fromRows(List<List<String>> rows, Format f, String src) {
     final m = Tabular.detect(rows);
     final people = Tabular.toPeople(rows, m, src);
     if (people.isNotEmpty) {
@@ -231,12 +259,30 @@ class Codec {
       final skipped = dataRows > people.length ? dataRows - people.length : 0;
       return ImportResult(people, f, m.describe(), skipped: skipped);
     }
-    return ImportResult(
-      const [],
-      f,
-      m.describe(),
-      issue: _emptyIssue(rows, m),
-    );
+    return ImportResult(const [], f, m.describe(), issue: _emptyIssue(rows, m));
+  }
+
+  static ImportResult _fromWorkbook(Uint8List bytes, Format f, String src) {
+    final sheets = Xlsx.readSheets(bytes);
+    if (sheets.isEmpty) return _fromRows(const [], f, src);
+    final first = _fromRows(sheets.first.rows, f, src);
+    if (first.people.isNotEmpty || sheets.length == 1) return first;
+    final usable = Tabular.detect(
+      sheets.first.rows,
+    ).columns.any((c) => c == Col.phone || c == Col.email);
+    if (usable) return first;
+    for (final sheet in sheets.skip(1)) {
+      final r = _fromRows(sheet.rows, f, src);
+      if (r.people.isNotEmpty) {
+        return ImportResult(
+          r.people,
+          f,
+          '${r.detail} · ${sheet.name}',
+          skipped: r.skipped,
+        );
+      }
+    }
+    return first;
   }
 
   static ImportResult _decode(String fileName, Uint8List bytes) {
@@ -263,11 +309,17 @@ class Codec {
     final src = fileName;
     switch (f) {
       case Format.vcf:
-        final people = VCard.parse(TextDecode.bytes(bytes), src);
+        final vtext = TextDecode.bytes(bytes);
+        if (VCard.undecodableCharset(vtext) != null) {
+          return ImportResult.problem(src, ImportIssue.unsupportedCharset);
+        }
+        final people = VCard.parse(vtext, src);
         return ImportResult(people, f, '');
       case Format.xlsx:
         try {
-          return _fromRows(Xlsx.read(bytes), f, src);
+          return _fromWorkbook(bytes, f, src);
+        } on ZipTooLarge {
+          rethrow;
         } catch (_) {
           var people = <Person>[];
           try {
@@ -278,12 +330,7 @@ class Codec {
           if (people.isNotEmpty) {
             return ImportResult(people, Format.numbers, '');
           }
-          return ImportResult(
-            const [],
-            f,
-            '',
-            issue: ImportIssue.unreadable,
-          );
+          return ImportResult(const [], f, '', issue: ImportIssue.unreadable);
         }
       case Format.numbers:
         try {
@@ -293,6 +340,8 @@ class Codec {
             final p = Tabular.toPeople(rows, m, src);
             if (p.isNotEmpty) return ImportResult(p, f, m.describe());
           }
+        } on ZipTooLarge {
+          rethrow;
         } catch (_) {}
         return ImportResult(NumbersFile.read(bytes, src), f, '');
       case Format.json:
@@ -309,6 +358,9 @@ class Codec {
       case Format.txt:
         final text = TextDecode.bytes(bytes);
         if (text.trimLeft().toUpperCase().startsWith('BEGIN:VCARD')) {
+          if (VCard.undecodableCharset(text) != null) {
+            return ImportResult.problem(src, ImportIssue.unsupportedCharset);
+          }
           return ImportResult(VCard.parse(text, src), Format.vcf, '');
         }
         return ImportResult(_fromTxt(text, src), f, '');
@@ -316,7 +368,12 @@ class Codec {
   }
 
   static String sniffDelimiter(String text) {
-    final sample = text.split('\n').take(20).join('\n');
+    final sample = text
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .split('\n')
+        .take(20)
+        .join('\n');
     const cands = [',', ';', '\t', '|'];
     var best = ',';
     var bestScore = -1.0;
@@ -356,6 +413,7 @@ class Codec {
     var row = <String>[];
     final cell = StringBuffer();
     var q = false;
+    var leading = true;
     var i = 0;
     final s = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
     while (i < s.length) {
@@ -372,18 +430,23 @@ class Codec {
           cell.write(c);
         }
       } else {
-        if (c == '"' && cell.isEmpty) {
+        if (c == '"' && leading) {
           q = true;
+          leading = false;
+          cell.clear();
         } else if (c == d) {
           row.add(cell.toString());
           cell.clear();
+          leading = true;
         } else if (c == '\n') {
           row.add(cell.toString());
           cell.clear();
+          leading = true;
           if (row.any((e) => e.trim().isNotEmpty)) rows.add(row);
           row = <String>[];
         } else {
           cell.write(c);
+          if (c != ' ' && c != '\t') leading = false;
         }
       }
       i++;
@@ -393,8 +456,19 @@ class Codec {
     return rows;
   }
 
+  static final _txtEmail = RegExp(r'[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+');
+  static final _txtPunct = RegExp(r'[\t,;:|<>\-–—=•·：，；、()（）\[\]]+');
+  static final _txtLabel = RegExp(
+    r'\b(tel|phone|mobile|cell|fax|ph|mob|hp)\b\.?',
+    caseSensitive: false,
+  );
+  static final _txtSpace = RegExp(r'\s+');
+
   static List<Person> _fromTxt(String text, String src) {
     final out = <Person>[];
+    Person? cur;
+    var byKey = <String, List<String>>{};
+    var mailKeys = <String>{};
     for (final rawLine in text.replaceAll('\r', '\n').split('\n')) {
       final line = rawLine.trim();
       if (line.isEmpty) continue;
@@ -404,41 +478,49 @@ class Codec {
       for (final n in nums) {
         rest = rest.replaceFirst(n, ' ');
       }
-      final emails = RegExp(
-        r'[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+',
-      ).allMatches(rest).map((m) => m.group(0)!).toList();
+      final emails = _txtEmail
+          .allMatches(rest)
+          .map((m) => m.group(0)!)
+          .toList();
       for (final e in emails) {
         rest = rest.replaceFirst(e, ' ');
       }
       final name = rest
-          .replaceAll(RegExp(r'[\t,;:|<>\-–—=•·：，；、()（）\[\]]+'), ' ')
-          .replaceAll(
-            RegExp(
-              r'\b(tel|phone|mobile|cell|fax|ph|mob|hp)\b\.?',
-              caseSensitive: false,
-            ),
-            ' ',
-          )
-          .replaceAll(RegExp(r'\s+'), ' ')
+          .replaceAll(_txtPunct, ' ')
+          .replaceAll(_txtLabel, ' ')
+          .replaceAll(_txtSpace, ' ')
           .trim();
-      if (out.isNotEmpty && name.isNotEmpty && out.last.name == name) {
-        out.last.absorb(
-          Person(
-            name: name,
-            phones: nums.map((n) => PhoneEntry(n)).toList(),
-            emails: emails,
-          ),
-        );
+      final open = cur;
+      if (open != null && name.isNotEmpty && open.name == name) {
+        for (final n in nums) {
+          final k = Phones.key(n);
+          if (k.isEmpty) continue;
+          final same = byKey[k] ??= [];
+          if (same.any((q) => PhoneKey.compatible(q, n))) continue;
+          same.add(n);
+          open.phones.add(PhoneEntry(n));
+        }
+        for (final e in emails) {
+          if (mailKeys.add(e.toLowerCase())) open.emails.add(e);
+        }
+        if (open.origin.length < 400) open.origin = '${open.origin}\n$line';
         continue;
       }
-      out.add(
-        Person(
-          name: name,
-          phones: nums.map((n) => PhoneEntry(n)).toList(),
-          emails: emails,
-          source: src,
-        ),
+      final person = Person(
+        name: name,
+        phones: nums.map((n) => PhoneEntry(n)).toList(),
+        emails: emails,
+        source: src,
+        origin: line,
       );
+      out.add(person);
+      cur = person;
+      byKey = <String, List<String>>{};
+      for (final n in nums) {
+        final k = Phones.key(n);
+        if (k.isNotEmpty) (byKey[k] ??= []).add(n);
+      }
+      mailKeys = {for (final e in emails) e.toLowerCase()};
     }
     return out;
   }
@@ -491,6 +573,8 @@ class Codec {
 
       flatten(m, '');
       var name = '', first = '', last = '', org = '', note = '';
+      var jobTitle = '';
+      final groups = <String>[];
       final phones = <PhoneEntry>[];
       final emails = <String>[];
       final aliases = <String>[];
@@ -542,6 +626,16 @@ class Codec {
             last = '$v';
           case Col.org:
             org = '$v';
+          case Col.title:
+            if (jobTitle.isEmpty) jobTitle = '$v';
+          case Col.tags:
+            if (v is List) {
+              groups.addAll(
+                v.map((e) => '$e'.trim()).where((e) => e.isNotEmpty),
+              );
+            } else {
+              groups.addAll(Tabular.splitTags('$v'));
+            }
           case Col.note:
             note = '$v';
           case Col.alias:
@@ -564,6 +658,8 @@ class Codec {
           phones: phones,
           emails: emails,
           org: org,
+          jobTitle: jobTitle,
+          groups: groups,
           note: note,
           source: src,
           aliases: Aliases.clean(aliases, name: name),
@@ -585,6 +681,8 @@ class Codec {
     List<Person> people,
     ExportOptions o, {
     List<String>? headers,
+    Format format = Format.xlsx,
+    Map<String, List<String>>? tags,
   }) {
     final maxPhones = o.allNumbers
         ? people.fold<int>(
@@ -600,6 +698,13 @@ class Codec {
     final withId = o.contactId && people.any((p) => p.phoneId != null);
     final withAlias =
         o.includeAliases && people.any((p) => p.cleanAliases.isNotEmpty);
+    final withTitle =
+        o.titleFor(format) && people.any((p) => p.jobTitle.isNotEmpty);
+    final withGroups =
+        o.groupsFor(format) && people.any((p) => p.groups.isNotEmpty);
+    final withTags =
+        o.tagsFor(format) &&
+        people.any((p) => (tags?[p.id] ?? const <String>[]).isNotEmpty);
     final h = <String>[
       headers?[0] ?? 'Name',
       for (var i = 0; i < maxPhones; i++)
@@ -611,9 +716,15 @@ class Codec {
             ? (headers?[2] ?? 'Email')
             : '${headers?[2] ?? 'Email'} ${i + 1}',
       if (o.includeOrg) headers?[3] ?? 'Company',
+      if (withTitle)
+        (headers != null && headers.length > 6 ? headers[6] : 'Job Title'),
       if (o.includeNote) headers?[4] ?? 'Note',
       if (withAlias)
         (headers != null && headers.length > 5 ? headers[5] : 'Alias'),
+      if (withGroups)
+        (headers != null && headers.length > 7 ? headers[7] : 'Groups'),
+      if (withTags)
+        (headers != null && headers.length > 8 ? headers[8] : 'Tags'),
       if (withId) 'contact_id',
     ];
     final rows = <List<String>>[if (o.header) h];
@@ -629,8 +740,11 @@ class Codec {
         for (var i = 0; i < maxEmails; i++)
           i < p.emails.length ? p.emails[i] : '',
         if (o.includeOrg) p.org,
+        if (withTitle) p.jobTitle,
         if (o.includeNote) p.note,
         if (withAlias) Aliases.join(p.cleanAliases),
+        if (withGroups) p.groups.join(' ::: '),
+        if (withTags) (tags?[p.id] ?? const <String>[]).join(' ::: '),
         if (withId) p.phoneId ?? '',
       ]);
     }
@@ -710,10 +824,11 @@ class Codec {
     Format f,
     ExportOptions o, {
     List<String>? headers,
+    Map<String, List<String>>? tags,
   }) {
     switch (f) {
       case Format.csv:
-        final rows = table(people, o, headers: headers);
+        final rows = table(people, o, headers: headers, format: f, tags: tags);
         final s = rows.map((r) => r.map(_csvCell).join(',')).join('\r\n');
         return Uint8List.fromList([0xEF, 0xBB, 0xBF, ...utf8.encode('$s\r\n')]);
       case Format.vcf:
@@ -725,6 +840,13 @@ class Codec {
                 phones: o.allNumbers ? p.phones : p.phones.take(1).toList(),
                 emails: o.includeEmail ? p.emails : [],
                 org: o.includeOrg ? p.org : '',
+                jobTitle: p.jobTitle,
+                groups: [
+                  if (o.groupsFor(Format.vcf)) ...p.groups,
+                  if (o.tagsFor(Format.vcf))
+                    for (final t in tags?[p.id] ?? const <String>[])
+                      if (!p.groups.contains(t)) t,
+                ],
                 note: o.includeNote ? p.note : '',
                 aliases: o.includeAliases ? p.cleanAliases : [],
               ),
@@ -737,7 +859,10 @@ class Codec {
         );
       case Format.xlsx:
       case Format.numbers:
-        return Xlsx.write(table(people, o, headers: headers), rtl: o.rtl);
+        return Xlsx.write(
+          table(people, o, headers: headers, format: f, tags: tags),
+          rtl: o.rtl,
+        );
       case Format.txt:
         final b = StringBuffer();
         for (final p in people) {
@@ -770,6 +895,13 @@ class Codec {
                     .toList(),
                 if (o.includeEmail) 'emails': p.emails,
                 if (o.includeOrg && p.org.isNotEmpty) 'company': p.org,
+                if (o.titleFor(Format.json) && p.jobTitle.isNotEmpty)
+                  'job_title': p.jobTitle,
+                if (o.groupsFor(Format.json) && p.groups.isNotEmpty)
+                  'groups': p.groups,
+                if (o.tagsFor(Format.json) &&
+                    (tags?[p.id] ?? const <String>[]).isNotEmpty)
+                  'tags': tags![p.id],
                 if (o.includeNote && p.note.isNotEmpty) 'note': p.note,
                 if (o.includeAliases && p.cleanAliases.isNotEmpty)
                   'aliases': p.cleanAliases,

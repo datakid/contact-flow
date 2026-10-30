@@ -14,6 +14,7 @@ enum Col {
   label,
   contactId,
   alias,
+  tags,
   ignore,
 }
 
@@ -165,6 +166,20 @@ class Tabular {
     'фамилия',
   ];
   static const _middleKeys = ['middle', 'الاوسط'];
+  static const _tagKeys = [
+    'group membership',
+    'categories',
+    'tags',
+    'تصنيف',
+    '标签',
+    'etiquettes',
+    'etiquetas',
+    'المجموعات',
+    '群组',
+    'grupos',
+    'groupes',
+  ];
+  static const _departmentKeys = ['department', 'dept'];
   static const _aliasKeys = [
     'alias',
     'nick',
@@ -230,9 +245,19 @@ class Tabular {
     if (h == '名') return Col.first;
     if (h == 'contact id' || h == 'contactid') return Col.contactId;
     if (_has(h, _aliasKeys) && !_has(h, _phoneKeys)) return Col.alias;
-    if (h == 'job title' || h == 'title' || h == 'المسمى الوظيفي') {
+    if (const [
+      'job title',
+      'title',
+      'المسمى الوظيفي',
+      '职位',
+      'cargo',
+      'poste',
+    ].contains(h)) {
       return Col.title;
     }
+    if (h == 'labels' || h == 'groups' || _has(h, _tagKeys)) return Col.tags;
+    if (_has(h, _orgKeys) && h.contains('title')) return Col.title;
+    if (_has(h, _orgKeys) && _has(h, _departmentKeys)) return Col.ignore;
     if (_has(h, _labelKeys)) return Col.label;
     if (_has(h, _ignoreKeys) && !_has(h, _phoneKeys)) return Col.ignore;
     if (_has(h, _emailKeys)) return Col.email;
@@ -244,6 +269,19 @@ class Tabular {
     if (_has(h, _middleKeys)) return Col.middle;
     if (_has(h, _nameKeys)) return Col.name;
     return Col.ignore;
+  }
+
+  static bool _plainTitle(String raw) =>
+      Fold.basic(raw).replaceAll(RegExp(r'[_\.]+'), ' ').trim() == 'title';
+
+  static List<String> splitTags(String v) {
+    final out = <String>[];
+    for (final t in v.split(RegExp(r'\s*(?::::|;)\s*'))) {
+      final x = t.trim();
+      if (x.isEmpty || x.startsWith('*')) continue;
+      if (!out.contains(x)) out.add(x);
+    }
+    return out;
   }
 
   static bool isHeaderWord(String s) {
@@ -305,6 +343,15 @@ class Tabular {
             (i + 1 >= width ||
                 (cls[i + 1] != Col.phone && cls[i + 1] != Col.email))) {
           cls[i] = Col.ignore;
+        }
+      }
+      final titleCols = [
+        for (var i = 0; i < width; i++)
+          if (cls[i] == Col.title) i,
+      ];
+      if (titleCols.length > 1) {
+        for (final i in titleCols) {
+          if (i < first.length && _plainTitle(first[i])) cls[i] = Col.ignore;
         }
       }
       if (!cls.contains(Col.phone)) {
@@ -386,6 +433,7 @@ class Tabular {
       var name = '', first = '', middle = '', last = '', org = '', note = '';
       var title = '', contactId = '';
       final aliases = <String>[];
+      final groups = <String>[];
       final phones = <PhoneEntry>[];
       final emails = <String>[];
       for (var i = 0; i < m.columns.length; i++) {
@@ -408,6 +456,10 @@ class Tabular {
             contactId = v;
           case Col.alias:
             aliases.addAll(Aliases.parse(v));
+          case Col.tags:
+            for (final g in splitTags(v)) {
+              if (!groups.contains(g)) groups.add(g);
+            }
           case Col.note:
             note = note.isEmpty ? v : '$note\n$v';
           case Col.email:
@@ -445,10 +497,17 @@ class Tabular {
           source: source,
           phoneId: contactId.isEmpty ? null : contactId,
           aliases: Aliases.clean(aliases, name: name),
+          groups: groups,
+          origin: _origin(r),
         ),
       );
     }
     return out;
+  }
+
+  static String _origin(List<String> row) {
+    final text = row.map((c) => c.trim()).join(' | ');
+    return text.length > 400 ? text.substring(0, 400) : text;
   }
 
   static String joinName(String first, String middle, String last) {

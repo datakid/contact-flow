@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import '../models/person.dart';
 import '../search/fold.dart';
+import '../domain/names.dart';
+import 'text_decode.dart';
 
 class VCard {
   static List<Person> parse(String text, String source) {
@@ -29,6 +31,13 @@ class VCard {
         continue;
       }
       if (cur == null) continue;
+      if (cur.raw.length < 40 &&
+          prop != 'PHOTO' &&
+          prop != 'LOGO' &&
+          prop != 'SOUND' &&
+          prop != 'KEY') {
+        cur.raw.add(line.length > 160 ? line.substring(0, 160) : line);
+      }
       final v = _decode(value, params, parts.skip(1).toList());
       switch (prop) {
         case 'FN':
@@ -93,20 +102,31 @@ class VCard {
         .replaceAll('\r', '\n')
         .split('\n');
     final out = <String>[];
-    var qpContinue = false;
-    for (final l in raw) {
-      if (out.isNotEmpty && qpContinue) {
-        final last = out.removeLast();
-        out.add(last.substring(0, last.length - 1) + l);
-      } else if (out.isNotEmpty && (l.startsWith(' ') || l.startsWith('\t'))) {
-        out[out.length - 1] = out.last + l.substring(1);
-      } else {
-        out.add(l);
-      }
-      final cur = out.last;
-      qpContinue =
-          cur.toUpperCase().contains('QUOTED-PRINTABLE') && cur.endsWith('=');
+    var parts = <String>[];
+    var qpLine = false;
+    var lastEq = false;
+    void flush() {
+      if (parts.isEmpty) return;
+      out.add(parts.length == 1 ? parts.first : parts.join());
+      parts = <String>[];
     }
+
+    for (final l in raw) {
+      if (parts.isNotEmpty && qpLine && lastEq) {
+        final last = parts.removeLast();
+        parts.add(last.substring(0, last.length - 1));
+        parts.add(l);
+      } else if (parts.isNotEmpty &&
+          (l.startsWith(' ') || l.startsWith('\t'))) {
+        parts.add(l.substring(1));
+      } else {
+        flush();
+        parts.add(l);
+        qpLine = l.toUpperCase().contains('QUOTED-PRINTABLE');
+      }
+      lastEq = l.endsWith('=');
+    }
+    flush();
     return out;
   }
 
@@ -145,9 +165,9 @@ class VCard {
       } catch (_) {}
     }
     if (bytes == null) return value;
-    if (charset != null &&
-        (charset.contains('8859') || charset.contains('latin'))) {
-      return latin1.decode(bytes, allowInvalid: true);
+    if (charset != null) {
+      final text = TextDecode.charset(bytes, charset);
+      if (text != null) return text;
     }
     return utf8.decode(bytes, allowMalformed: true);
   }
@@ -244,20 +264,21 @@ class VCard {
     return out.toString();
   }
 
-  static (String, String) splitName(String full) {
-    final t = full.trim();
-    if (t.isEmpty) return ('', '');
-    if (Fold.hasCjk(t) && !t.contains(' ')) {
-      final runes = t.runes.toList();
-      if (runes.length <= 1) return ('', t);
-      return (
-        String.fromCharCode(runes.first),
-        String.fromCharCodes(runes.skip(1)),
-      );
+  static String? undecodableCharset(String text) {
+    final charset = RegExp(r'CHARSET=([^;:]+)', caseSensitive: false);
+    final highByte = RegExp(r'=[89A-Fa-f][0-9A-Fa-f]');
+    for (final line in text.split(RegExp(r'\r\n|\n|\r'))) {
+      final m = charset.firstMatch(line);
+      if (m == null || !highByte.hasMatch(line)) continue;
+      final name = m.group(1)!.trim();
+      if (TextDecode.charset(const [], name) == null) return name;
     }
-    final parts = t.split(RegExp(r'\s+'));
-    if (parts.length == 1) return ('', t);
-    return (parts.last, parts.sublist(0, parts.length - 1).join(' '));
+    return null;
+  }
+
+  static (String, String) splitName(String full) {
+    final n = NameSplit.of(full);
+    return (n.last, n.first);
   }
 
   static String write(
@@ -280,16 +301,15 @@ class VCard {
         if (p.note.isNotEmpty) 'NOTE:${_esc(p.note)}',
         if (p.cleanAliases.isNotEmpty)
           'NICKNAME:${p.cleanAliases.map(_esc).join(',')}',
+        if (p.jobTitle.isNotEmpty) 'TITLE:${_esc(p.jobTitle)}',
+        if (p.groups.isNotEmpty) 'CATEGORIES:${p.groups.map(_esc).join(',')}',
         if (lossless) ...[
           if (p.name.isEmpty) 'X-CONTACTFLOW-NONAME:1',
-          if (p.jobTitle.isNotEmpty) 'TITLE:${_esc(p.jobTitle)}',
-          if (p.groups.isNotEmpty) 'CATEGORIES:${p.groups.map(_esc).join(',')}',
           if (p.phoneId != null) 'X-CONTACTFLOW-ID:${_esc(p.phoneId!)}',
           if (p.starred) 'X-CONTACTFLOW-STARRED:1',
           if (p.account != null)
             'X-CONTACTFLOW-ACCOUNT:${_esc(p.account!.name)};${_esc(p.account!.type)}',
-        ] else if (p.jobTitle.isNotEmpty)
-          'TITLE:${_esc(p.jobTitle)}',
+        ],
         'END:VCARD',
       ];
       for (final l in lines) {
@@ -326,6 +346,12 @@ class _Card {
   final phones = <PhoneEntry>[];
   final emails = <String>[];
   final groups = <String>[];
+  final raw = <String>[];
+
+  String _origin() {
+    final text = raw.join('\n');
+    return text.length > 600 ? text.substring(0, 600) : text;
+  }
 
   Person? build(String source) {
     var name = fn;
@@ -356,6 +382,7 @@ class _Card {
       jobTitle: title,
       note: note,
       source: source,
+      origin: _origin(),
       phoneId: phoneId,
       account: account,
       starred: starred,

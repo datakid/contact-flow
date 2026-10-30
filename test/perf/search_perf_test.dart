@@ -1,3 +1,7 @@
+@Tags(['perf'])
+library;
+
+import 'dart:io';
 import 'dart:math';
 
 import 'package:contact_flow/models/person.dart';
@@ -68,7 +72,6 @@ void main() {
       idx.search(q);
       times[q] = sw.elapsedMilliseconds;
     }
-    // ignore: avoid_print
-    print('build ${build}ms $times');
+    stdout.writeln('build ${build}ms $times');
   });
 }

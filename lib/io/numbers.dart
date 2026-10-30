@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 
 import '../models/person.dart';
 import 'tabular.dart';
+import 'zip_guard.dart';
 
 class _Field {
   final int number;
@@ -137,7 +138,7 @@ class _Obj {
 
 class NumbersFile {
   static List<Person> read(Uint8List bytes, String source) {
-    final z = ZipDecoder().decodeBytes(bytes);
+    final z = ZipGuard.decode(bytes);
     final iwa = z.files
         .where((f) => f.isFile && f.name.endsWith('.iwa'))
         .toList();

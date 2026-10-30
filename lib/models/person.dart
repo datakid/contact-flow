@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../phone/phone_key.dart';
 
 class PhoneEntry {
   final String number;
@@ -77,6 +78,7 @@ class Person {
   String jobTitle;
   String note;
   String source;
+  String origin;
   final DateTime added;
   String? phoneId;
   AccountRef? account;
@@ -93,6 +95,7 @@ class Person {
     this.jobTitle = '',
     this.note = '',
     this.source = '',
+    this.origin = '',
     DateTime? added,
     this.phoneId,
     this.account,
@@ -130,6 +133,33 @@ class Person {
       .where((k) => k.isNotEmpty)
       .toSet();
 
+  bool sharesIdentity(Person other) {
+    final mine = {
+      for (final e in emails)
+        if (e.trim().isNotEmpty) e.trim().toLowerCase(),
+    };
+    for (final e in other.emails) {
+      if (mine.contains(e.trim().toLowerCase())) return true;
+    }
+    for (final a in phones) {
+      final k = Phones.key(a.number);
+      if (k.isEmpty) continue;
+      for (final b in other.phones) {
+        if (Phones.key(b.number) == k &&
+            PhoneKey.compatible(a.number, b.number)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  Set<String> get matchKeys => {
+    ...phoneKeys,
+    for (final e in emails)
+      if (e.trim().isNotEmpty) '@${e.trim().toLowerCase()}',
+  };
+
   Person copy({String? id, String? phoneId, bool clearPhoneId = false}) =>
       Person(
         id: id ?? this.id,
@@ -140,6 +170,7 @@ class Person {
         jobTitle: jobTitle,
         note: note,
         source: source,
+        origin: origin,
         added: added,
         phoneId: clearPhoneId ? null : (phoneId ?? this.phoneId),
         account: account,
@@ -192,13 +223,15 @@ class Person {
 
   void absorb(Person other) {
     if (!hasName && other.hasName) name = other.name;
-    final keys = phoneKeys;
     for (final p in other.phones) {
       final k = Phones.key(p.number);
-      if (k.isNotEmpty && !keys.contains(k)) {
-        phones.add(p);
-        keys.add(k);
-      }
+      if (k.isEmpty) continue;
+      final known = phones.any(
+        (q) =>
+            Phones.key(q.number) == k &&
+            PhoneKey.compatible(q.number, p.number),
+      );
+      if (!known) phones.add(p);
     }
     final mails = emails.map((e) => e.toLowerCase()).toSet();
     for (final e in other.emails) {
@@ -282,11 +315,7 @@ class Phones {
     return d;
   }
 
-  static String key(String s) {
-    final d = digits(s);
-    if (d.length < 5) return '';
-    return d.length > 9 ? d.substring(d.length - 9) : d;
-  }
+  static String key(String s) => PhoneKey.key(s);
 
   static bool looksLikePhone(String s) {
     final t = asciiDigits(s).trim();

@@ -1,0 +1,4 @@
+First Name,Middle Name,Last Name,Phonetic First Name,Name Prefix,Nickname,File As,Organization Name,Organization Title,Organization Department,Birthday,Notes,Photo,Labels,E-mail 1 - Label,E-mail 1 - Value,Phone 1 - Label,Phone 1 - Value
+Jane,,Doe,,Dr.,JD,,Acme,Engineer,Sales,,note,,* myContacts ::: Family,Home,jane@example.com,Mobile,+966551234567
+Sam,,Lee,,,,,Globex,Pharmacist,Ops,,,,* myContacts,Work,sam@example.com,Mobile,0551234567
+NoNumber,,Person,,,,,,,,,,,,,,,

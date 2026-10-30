@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_contacts/flutter_contacts.dart' as fc;
 
 import '../models/person.dart';
-import '../search/fold.dart';
 
 enum DeviceAccess { granted, denied, blocked, unsupported }
 
@@ -41,16 +40,6 @@ class DeviceContacts {
     _ => 'mobile',
   };
 
-  static fc.PhoneLabel _toLabel(String l) => switch (l) {
-    'home' => fc.PhoneLabel.home,
-    'work' => fc.PhoneLabel.work,
-    'fax' => fc.PhoneLabel.workFax,
-    'main' => fc.PhoneLabel.main,
-    'pager' => fc.PhoneLabel.pager,
-    'other' => fc.PhoneLabel.other,
-    _ => fc.PhoneLabel.mobile,
-  };
-
   static Future<List<Person>> readAll() async {
     final list = await fc.FlutterContacts.getAll(
       properties: {
@@ -80,67 +69,5 @@ class DeviceContacts {
       );
     }
     return out;
-  }
-
-  static Future<(int, int)> writeAll(
-    List<Person> all, {
-    void Function(double)? progress,
-  }) async {
-    final existing = <String>{};
-    try {
-      for (final p in await readAll()) {
-        existing.addAll(p.phoneKeys);
-      }
-    } catch (_) {}
-    final people = <Person>[];
-    for (final p in all) {
-      final keys = p.phoneKeys;
-      if (keys.isNotEmpty && keys.any(existing.contains)) continue;
-      people.add(p);
-      existing.addAll(keys);
-    }
-    final skipped = all.length - people.length;
-    if (people.isEmpty) return (0, skipped);
-    var done = 0;
-    const chunk = 100;
-    for (var i = 0; i < people.length; i += chunk) {
-      final part = people.sublist(
-        i,
-        i + chunk > people.length ? people.length : i + chunk,
-      );
-      final contacts = part.map((p) {
-        final full = p.name.trim();
-        String first = full, last = '';
-        if (!Fold.hasCjk(full)) {
-          final parts = full.split(RegExp(r'\s+'));
-          if (parts.length > 1) {
-            last = parts.removeLast();
-            first = parts.join(' ');
-          }
-        }
-        return fc.Contact(
-          name: fc.Name(
-            first: first.isEmpty ? null : first,
-            last: last.isEmpty ? null : last,
-          ),
-          phones: p.phones
-              .map(
-                (x) => fc.Phone(
-                  number: x.number,
-                  label: fc.Label(_toLabel(x.label)),
-                ),
-              )
-              .toList(),
-          emails: p.emails.map((e) => fc.Email(address: e)).toList(),
-          organizations: p.org.isEmpty
-              ? const []
-              : [fc.Organization(name: p.org)],
-        );
-      }).toList();
-      final ids = await fc.FlutterContacts.createAll(contacts);
-      done += ids.length;
-      progress?.call(done / people.length);
-    }
-    return (done, skipped);
   }
 }

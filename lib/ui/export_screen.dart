@@ -15,6 +15,8 @@ import '../state/phone_book.dart';
 import 'pipeline.dart';
 import 'theme.dart';
 import 'widgets.dart';
+import '../domain/phone_dupes.dart';
+import '../tags/tag_book.dart';
 
 Future<void> openExport(BuildContext context, List<Person> people) {
   final l = L.of(context);
@@ -81,6 +83,26 @@ class _ExportScreenState extends State<ExportScreen> {
 
   bool get _hasIds => widget.people.any((p) => p.phoneId != null);
   bool get _hasAliases => widget.people.any((p) => p.cleanAliases.isNotEmpty);
+  TagBook? get _tagBook {
+    try {
+      return context.read<TagBook>();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Map<String, List<String>>? get _tagsById {
+    final book = _tagBook;
+    if (book == null) return null;
+    return {
+      for (final p in widget.people)
+        p.id: [for (final t in book.tagsForPerson(p)) t.name],
+    };
+  }
+
+  bool get _hasTags => (_tagsById ?? const {}).values.any((v) => v.isNotEmpty);
+  bool get _hasTitles => widget.people.any((p) => p.jobTitle.isNotEmpty);
+  bool get _hasGroups => widget.people.any((p) => p.groups.isNotEmpty);
 
   String get _fileName {
     final base = _name.text.trim().isEmpty
@@ -96,6 +118,9 @@ class _ExportScreenState extends State<ExportScreen> {
     l.t('company'),
     l.t('note'),
     l.t('alias'),
+    l.t('jobTitle'),
+    l.t('groups'),
+    l.t('tagsTitle'),
   ];
 
   String _preview(L l) {
@@ -103,12 +128,24 @@ class _ExportScreenState extends State<ExportScreen> {
     switch (_f) {
       case Format.xlsx:
       case Format.numbers:
-        final rows = Codec.table(sample, _o, headers: _headers(l));
+        final rows = Codec.table(
+          sample,
+          _o,
+          headers: _headers(l),
+          format: _f,
+          tags: _tagsById,
+        );
         return rows
             .map((r) => r.where((c) => c.isNotEmpty).join('   │   '))
             .join('\n');
       default:
-        final bytes = Codec.encode(sample, _f, _o, headers: _headers(l));
+        final bytes = Codec.encode(
+          sample,
+          _f,
+          _o,
+          headers: _headers(l),
+          tags: _tagsById,
+        );
         var s = utf8
             .decode(bytes, allowMalformed: true)
             .replaceAll('\uFEFF', '')
@@ -130,7 +167,9 @@ class _ExportScreenState extends State<ExportScreen> {
       final f = _f;
       final o = _o.copyWith(rtl: l.rtl);
       final headers = _headers(l);
-      final bytes = await encodeInBackground(EncodeJob(people, f, o, headers));
+      final bytes = await encodeInBackground(
+        EncodeJob(people, f, o, headers, _tagsById),
+      );
       final name = _fileName;
       if (share) {
         await shareBytes(bytes, name, _f.mime);
@@ -166,10 +205,34 @@ class _ExportScreenState extends State<ExportScreen> {
         return;
       }
     }
-    final set = ChangeSet(ChangeIntent.create, [
+    final candidates = [
       for (final p in widget.people)
-        if (p.phoneId == null || book.byPhoneId(p.phoneId!) == null)
-          CreateChange(p.copy(clearPhoneId: true)),
+        if (p.phoneId == null || book.byPhoneId(p.phoneId!) == null) p,
+    ];
+    final (fresh, already) = PhoneDupes.split(candidates, book.people);
+    var chosen = fresh;
+    if (already.isNotEmpty) {
+      final include = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          content: Text(l.t('nAlreadyOnPhone', {'n': already.length})),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c, false),
+              child: Text(l.t('skipThem')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(c, true),
+              child: Text(l.t('includeAnyway')),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (include == true) chosen = candidates;
+    }
+    final set = ChangeSet(ChangeIntent.create, [
+      for (final p in chosen) CreateChange(p.copy(clearPhoneId: true)),
     ]);
     if (set.isEmpty) {
       toast(context, l.t('alreadyOnPhone'));
@@ -213,7 +276,13 @@ class _ExportScreenState extends State<ExportScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l.t('export'), style: Type.display(p, size: 52)),
+                        Text(
+                          l.t('export'),
+                          style: AppText.display(p, size: 52),
+                          textScaler: MediaQuery.textScalerOf(
+                            context,
+                          ).clamp(maxScaleFactor: 1.25),
+                        ),
                         const SizedBox(height: 6),
                         Text.rich(
                           TextSpan(
@@ -385,7 +454,7 @@ class _ExportScreenState extends State<ExportScreen> {
                       duration: const Duration(milliseconds: 260),
                       child: Container(
                         key: ValueKey(
-                          '${_f.name}${_o.hashCode}${_o.header}${_o.includeEmail}${_o.includeOrg}${_o.includeNote}${_o.includeAliases}${_o.allNumbers}${_o.phoneStyle}${_o.txtWithNames}',
+                          '${_f.name}${_o.hashCode}${_o.header}${_o.includeEmail}${_o.includeOrg}${_o.includeNote}${_o.includeAliases}${_o.includeTitle}${_o.includeGroups}${_o.includeTags}${_o.allNumbers}${_o.phoneStyle}${_o.txtWithNames}',
                         ),
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -400,7 +469,7 @@ class _ExportScreenState extends State<ExportScreen> {
                             _preview(l),
                             style: TextStyle(
                               fontFamily: 'monospace',
-                              fontFamilyFallback: Type.fallback,
+                              fontFamilyFallback: AppText.fallback,
                               fontSize: 12,
                               height: 1.6,
                               color: p.inkSoft,
@@ -567,6 +636,24 @@ class _ExportScreenState extends State<ExportScreen> {
             l.t('includeAliases'),
             _o.includeAliases,
             (v) => _o = _o.copyWith(includeAliases: v),
+          ),
+        if (rich && _hasTitles)
+          sw(
+            l.t('includeTitle'),
+            _o.titleFor(_f),
+            (v) => _o = _o.copyWith(includeTitle: v),
+          ),
+        if (rich && _hasTags)
+          sw(
+            l.t('includeTags'),
+            _o.tagsFor(_f),
+            (v) => _o = _o.copyWith(includeTags: v),
+          ),
+        if (rich && _hasGroups)
+          sw(
+            l.t('includeGroups'),
+            _o.groupsFor(_f),
+            (v) => _o = _o.copyWith(includeGroups: v),
           ),
         if (_hasIds && tabular)
           sw(l.t('includeContactId'), _o.contactId, (v) {

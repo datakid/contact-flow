@@ -304,7 +304,7 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
                       padding: const EdgeInsets.only(top: 18),
                       child: Text(
                         '${l.t('savedIn')}: ${accountLabel(l, _base.account)}',
-                        style: Type.label(p),
+                        style: AppText.label(p),
                       ),
                     ),
                 ],
@@ -337,7 +337,7 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
 
   Widget _label(String text, Palette p, {double top = 20}) => Padding(
     padding: EdgeInsets.fromLTRB(4, top, 4, 10),
-    child: Text(text.toUpperCase(), style: Type.label(p)),
+    child: Text(text.toUpperCase(), style: AppText.label(p)),
   );
 
   Widget _addButton(String label, Palette p, VoidCallback onTap) => Align(
@@ -495,7 +495,7 @@ class _Field extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Text(label.toUpperCase(), style: Type.label(p)),
+            child: Text(label.toUpperCase(), style: AppText.label(p)),
           ),
           _Box(
             lines: lines,
