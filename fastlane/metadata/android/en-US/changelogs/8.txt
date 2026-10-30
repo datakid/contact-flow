@@ -1,8 +1,8 @@
 3.0.0 — calls, tags, number search
-• Lite and Full builds; Full adds a Calls tab for numbers you called but never saved
+• Bottom bar; Full adds a Calls tab for numbers you called but never saved
 • Search by pattern: *36, 02*, ?, commas, #tags
 • Tags on numbers, a tag filter, tags in exports
-• The same number in two countries no longer matches as one
-• Import: Windows-1256/1252, vCard charsets, Excel prefixes and later sheets
+• Swipe to call or message; long-press and drag to select
+• Import review shows the original line; much faster big files
 • Dedupe preview with undo; Move my data
 • Contacts and tags are left out of Google backup
