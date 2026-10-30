@@ -111,7 +111,7 @@ void main() {
       ),
     );
     await t.pumpAndSettle();
-    await t.tap(find.byKey(const ValueKey('tags-empty-create')));
+    await t.tap(find.byKey(const ValueKey('tag-new')));
     await t.pumpAndSettle();
     expect(find.byType(TextField), findsOneWidget);
   });

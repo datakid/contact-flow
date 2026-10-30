@@ -129,7 +129,9 @@ class TagsScreen extends StatelessWidget {
         titleSpacing: 24,
         title: Text(l.t('tagsTitle'), style: AppText.display(p, size: 32)),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: tags.isEmpty
+          ? null
+          : FloatingActionButton.extended(
         key: const ValueKey('tag-new'),
         onPressed: () => _create(context, book, l),
         backgroundColor: p.accent,
@@ -160,7 +162,7 @@ class TagsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     FilledButton.icon(
-                      key: const ValueKey('tags-empty-create'),
+                      key: const ValueKey('tag-new'),
                       onPressed: () => _create(context, book, l),
                       icon: const Icon(Icons.add_rounded),
                       label: Text(l.t('tagNew')),
