@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final p = context.pal;
     final list = s.visible;
     return PopScope(
-      canPop: !s.selecting && !s.searching,
+      canPop: !TickerMode.of(context) || (!s.selecting && !s.searching),
       onPopInvokedWithResult: (did, _) {
         if (did) return;
         if (s.selecting) {

@@ -85,7 +85,7 @@ class _PhoneHomeState extends State<PhoneHome> {
     final p = context.pal;
     final ready = book.granted && book.load == LoadState.ready;
     return PopScope(
-      canPop: !book.selecting && !book.searching,
+      canPop: !TickerMode.of(context) || (!book.selecting && !book.searching),
       onPopInvokedWithResult: (did, _) {
         if (did) return;
         if (book.selecting) {

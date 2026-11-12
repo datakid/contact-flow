@@ -97,6 +97,36 @@ void main() {
     expect(find.text(en.t('wsFiles')), findsWidgets);
   });
 
+  testWidgets('leaving the contacts tab and returning keeps the search', (
+    t,
+  ) async {
+    final app = (await t.runAsync(() => appWith({'tab': 0})))!;
+    final rig = (await t.runAsync(() => makeRig(app: app)))!;
+    await t.runAsync(() => rig.book.checkAccess());
+    await t.pumpWidget(
+      AppProviders(
+        state: rig.app,
+        book: rig.book,
+        queue: rig.queue,
+        launcher: rig.launcher,
+        tags: TagBook(MemoryTagStore()),
+        child: const ContactFlowApp(),
+      ),
+    );
+    await t.pumpAndSettle();
+    await t.enterText(find.byKey(const ValueKey('phoneSearch')), 'Amelia');
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const ValueKey('nav-$tabFiles')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const ValueKey('phoneSearch')), findsNothing);
+    await t.tap(find.byKey(const ValueKey('nav-$tabContacts')));
+    await t.pumpAndSettle();
+    final field = t.widget<TextField>(
+      find.byKey(const ValueKey('phoneSearch')),
+    );
+    expect(field.controller!.text, 'Amelia');
+  });
+
   testWidgets('the empty tags screen offers to create a tag', (t) async {
     final app = (await t.runAsync(() => appWith({'tab': 3})))!;
     final rig = (await t.runAsync(() => makeRig(app: app)))!;
