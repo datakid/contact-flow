@@ -133,9 +133,9 @@ class _WorkspaceRootState extends State<WorkspaceRoot>
     final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: AnimatedSwitcher(
-        duration: AppMotion.base,
-        child: switch (tab) {
+      body: TabStack(
+        tab: tab,
+        builder: (t) => switch (t) {
           tabCalls => CallsScreen(key: const ValueKey('calls'), onTab: go),
           tabTags => const TagsScreen(key: ValueKey('tags')),
           tabFiles => HomeScreen(key: const ValueKey('files'), onTab: go),
@@ -145,6 +145,64 @@ class _WorkspaceRootState extends State<WorkspaceRoot>
       bottomNavigationBar: keyboard
           ? null
           : AppNavBar(tab: tab, tags: hasTags, onChanged: go),
+    );
+  }
+}
+
+class TabStack extends StatefulWidget {
+  final int tab;
+  final Widget Function(int tab) builder;
+  const TabStack({super.key, required this.tab, required this.builder});
+
+  @override
+  State<TabStack> createState() => _TabStackState();
+}
+
+class _TabStackState extends State<TabStack>
+    with SingleTickerProviderStateMixin {
+  final Set<int> _seen = {};
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: AppMotion.base,
+    value: 1,
+  );
+  late final Animation<double> _opacity = CurvedAnimation(
+    parent: _fade,
+    curve: AppMotion.curve,
+  );
+
+  @override
+  void didUpdateWidget(TabStack old) {
+    super.didUpdateWidget(old);
+    if (old.tab != widget.tab) _fade.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _seen.add(widget.tab);
+    final order = _seen.toList()..sort();
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        for (final t in order)
+          Offstage(
+            key: ValueKey('tab-$t'),
+            offstage: t != widget.tab,
+            child: TickerMode(
+              enabled: t == widget.tab,
+              child: FadeTransition(
+                opacity: t == widget.tab ? _opacity : kAlwaysCompleteAnimation,
+                child: widget.builder(t),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
