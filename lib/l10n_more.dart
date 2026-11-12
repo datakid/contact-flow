@@ -203,6 +203,7 @@ const moreStrings = <String, Map<String, String>>{
     'groupTagsApply': 'Import {n} groups as tags',
     'groupTagsNone': 'No phone groups with contacts were found.',
     'groupTagsDone': 'Added {n} tags to numbers',
+    'discardEditBody': 'Your changes to this contact will not be saved.',
   },
   'ar': {
     'aliases': 'يُعرف أيضًا باسم',
@@ -408,6 +409,7 @@ const moreStrings = <String, Map<String, String>>{
     'groupTagsApply': 'استيراد {n} مجموعة كوسوم',
     'groupTagsNone': 'لم يتم العثور على مجموعات هاتف بها جهات اتصال.',
     'groupTagsDone': 'تمت إضافة {n} وسمًا إلى الأرقام',
+    'discardEditBody': 'لن يتم حفظ تغييراتك على جهة الاتصال هذه.',
   },
   'zh': {
     'aliases': '别名',
@@ -892,6 +894,7 @@ const moreStrings = <String, Map<String, String>>{
     'groupTagsApply': '将 {n} 个群组导入为标签',
     'groupTagsNone': '没有找到包含联系人的手机群组。',
     'groupTagsDone': '已为号码添加 {n} 个标签',
+    'discardEditBody': '对此联系人的更改将不会保存。',
   },
   'es': {
     'aliases': 'También conocido como',
@@ -1424,6 +1427,7 @@ const moreStrings = <String, Map<String, String>>{
     'groupTagsApply': 'Importar {n} grupos como etiquetas',
     'groupTagsNone': 'No se encontraron grupos del teléfono con contactos.',
     'groupTagsDone': 'Se añadieron {n} etiquetas a números',
+    'discardEditBody': 'Los cambios en este contacto no se guardarán.',
   },
   'fr': {
     'aliases': 'Aussi appelé',
@@ -1965,5 +1969,7 @@ const moreStrings = <String, Map<String, String>>{
     'groupTagsNone':
         'Aucun groupe du téléphone avec des contacts n’a été trouvé.',
     'groupTagsDone': '{n} étiquettes ajoutées à des numéros',
+    'discardEditBody':
+        'Les modifications de ce contact ne seront pas enregistrées.',
   },
 };

@@ -43,6 +43,7 @@ class _PhoneHomeState extends State<PhoneHome> {
   @override
   void initState() {
     super.initState();
+    _search.text = context.read<PhoneBook>().query;
     _scroll.addListener(() {
       final s = _scroll.hasClients && _scroll.offset > 60;
       if (s != _scrolled) setState(() => _scrolled = s);
@@ -84,7 +85,7 @@ class _PhoneHomeState extends State<PhoneHome> {
     final p = context.pal;
     final ready = book.granted && book.load == LoadState.ready;
     return PopScope(
-      canPop: !book.selecting && !book.searching,
+      canPop: !TickerMode.of(context) || (!book.selecting && !book.searching),
       onPopInvokedWithResult: (did, _) {
         if (did) return;
         if (book.selecting) {
@@ -841,84 +842,97 @@ class _PhoneHomeState extends State<PhoneHome> {
   Widget _dock(PhoneBook book, L l, Palette p) {
     final bottom = MediaQuery.of(context).padding.bottom;
     final sel = book.selected.length;
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 28, 20, 16 + bottom),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            p.paper.withValues(alpha: 0),
-            p.paper.withValues(alpha: 0.94),
-            p.paper,
-          ],
-          stops: const [0, 0.38, 1],
+    final fade = Positioned.fill(
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                p.paper.withValues(alpha: 0),
+                p.paper.withValues(alpha: 0.94),
+                p.paper,
+              ],
+              stops: const [0, 0.38, 1],
+            ),
+          ),
         ),
       ),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 280),
-        child: sel > 0
-            ? Row(
-                key: const ValueKey('sel'),
-                children: [
-                  RoundIcon(
-                    icon: Icons.close_rounded,
-                    tooltip: l.t('clearSel'),
-                    onTap: book.clearSelection,
+    );
+    return Stack(
+      children: [
+        fade,
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, 28, 20, 16 + bottom),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            child: sel > 0
+                ? Row(
+                    key: const ValueKey('sel'),
+                    children: [
+                      RoundIcon(
+                        icon: Icons.close_rounded,
+                        tooltip: l.t('clearSel'),
+                        onTap: book.clearSelection,
+                      ),
+                      const SizedBox(width: 10),
+                      RoundIcon(
+                        key: const ValueKey('bulkDelete'),
+                        icon: Icons.delete_outline_rounded,
+                        tooltip: l.t('delete'),
+                        onTap: () async {
+                          final r = await applyChanges(
+                            context,
+                            Planner.delete(book.selectedPeople),
+                            review: false,
+                          );
+                          if (r != null) book.clearSelection();
+                        },
+                      ),
+                      const SizedBox(width: 10),
+                      RoundIcon(
+                        icon: Icons.forum_outlined,
+                        tooltip: l.t('message'),
+                        onTap: () => startCompose(context, book.selectedPeople),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: PrimaryButton(
+                          key: const ValueKey('bulkMore'),
+                          label: l.t('actionsN', {'n': sel}),
+                          icon: Icons.more_horiz_rounded,
+                          onTap: () => openSelectionActions(
+                            context,
+                            book.selectedPeople,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    key: const ValueKey('dock'),
+                    children: [
+                      Expanded(
+                        child: PrimaryButton(
+                          key: const ValueKey('newContact'),
+                          label: l.t('newContact'),
+                          icon: Icons.add_rounded,
+                          onTap: () => openPhoneEditor(context),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      RoundIcon(
+                        icon: Icons.auto_awesome_rounded,
+                        tooltip: l.t('tools'),
+                        accent: true,
+                        onTap: () => openPhoneTools(context),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  RoundIcon(
-                    key: const ValueKey('bulkDelete'),
-                    icon: Icons.delete_outline_rounded,
-                    tooltip: l.t('delete'),
-                    onTap: () async {
-                      final r = await applyChanges(
-                        context,
-                        Planner.delete(book.selectedPeople),
-                        review: false,
-                      );
-                      if (r != null) book.clearSelection();
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  RoundIcon(
-                    icon: Icons.forum_outlined,
-                    tooltip: l.t('message'),
-                    onTap: () => startCompose(context, book.selectedPeople),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: PrimaryButton(
-                      key: const ValueKey('bulkMore'),
-                      label: l.t('actionsN', {'n': sel}),
-                      icon: Icons.more_horiz_rounded,
-                      onTap: () =>
-                          openSelectionActions(context, book.selectedPeople),
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                key: const ValueKey('dock'),
-                children: [
-                  Expanded(
-                    child: PrimaryButton(
-                      key: const ValueKey('newContact'),
-                      label: l.t('newContact'),
-                      icon: Icons.add_rounded,
-                      onTap: () => openPhoneEditor(context),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  RoundIcon(
-                    icon: Icons.auto_awesome_rounded,
-                    tooltip: l.t('tools'),
-                    accent: true,
-                    onTap: () => openPhoneTools(context),
-                  ),
-                ],
-              ),
-      ),
+          ),
+        ),
+      ],
     );
   }
 }

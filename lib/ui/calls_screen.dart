@@ -11,6 +11,7 @@ import '../l10n.dart';
 import '../state/phone_book.dart';
 import '../tags/tag_book.dart';
 import 'pipeline.dart';
+import 'swipe_row.dart';
 import 'theme.dart';
 import 'widgets.dart';
 import 'workspace.dart';
@@ -205,27 +206,25 @@ class _CallsScreenState extends State<CallsScreen> {
         ],
       ),
     );
-    return Dismissible(
+    return SwipeRow(
       key: ValueKey('swipe-${g.key}'),
-      confirmDismiss: (dir) async {
-        if (dir == DismissDirection.startToEnd) {
-          c.include(g);
-        } else {
-          c.exclude(g);
-        }
-        return false;
-      },
-      background: Container(
-        color: p.accent.withValues(alpha: 0.18),
-        alignment: AlignmentDirectional.centerStart,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Icon(Icons.check_circle_rounded, color: p.accent),
+      start: SwipeAction(
+        icon: Icons.check_circle_rounded,
+        label: l.t('callsInclude'),
+        fill: p.accent.withValues(alpha: 0.18),
+        iconColor: p.accent,
+        armedFill: p.accent,
+        armedIconColor: p.onAccent,
+        onCommit: () => c.include(g),
       ),
-      secondaryBackground: Container(
-        color: p.inkFaint.withValues(alpha: 0.18),
-        alignment: AlignmentDirectional.centerEnd,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Icon(Icons.block_rounded, color: p.inkSoft),
+      end: SwipeAction(
+        icon: Icons.block_rounded,
+        label: l.t('callsExclude'),
+        fill: p.inkFaint.withValues(alpha: 0.18),
+        iconColor: p.inkSoft,
+        armedFill: p.inkSoft,
+        armedIconColor: p.paper,
+        onCommit: () => c.exclude(g),
       ),
       child: tile,
     );
