@@ -128,6 +128,45 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
 
   static bool sameContentOf(Person a, Person b) => Planner.edit(a, b).isEmpty;
 
+  bool get _dirty {
+    final d = _draft();
+    if (!_creating) return !sameContentOf(widget.person!, d);
+    return d.hasName ||
+        d.phones.isNotEmpty ||
+        d.emails.isNotEmpty ||
+        d.org.isNotEmpty ||
+        d.jobTitle.isNotEmpty ||
+        d.note.isNotEmpty;
+  }
+
+  Future<bool> _confirmDiscard() async {
+    final l = L.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(l.t('discardTitle')),
+        content: Text(l.t('discardEditBody')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text(l.t('keepEditing')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(l.t('discard')),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
+  Future<void> _close() async {
+    if (_saving) return;
+    final nav = Navigator.of(context);
+    if (!_dirty || await _confirmDiscard()) nav.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -144,183 +183,192 @@ class _PhoneEditScreenState extends State<PhoneEditScreen> {
           ))
         : null;
     final allGroups = {...book.allGroups, ..._groups}.toList()..sort();
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          tooltip: l.t('cancel'),
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          _creating ? l.t('newContact') : l.t('edit'),
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: _starred ? l.t('unstar') : l.t('star'),
-            onPressed: () => setState(() => _starred = !_starred),
-            icon: Icon(
-              _starred ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: _starred ? p.accent : p.ink,
-            ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (did, _) {
+        if (!did) _close();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: l.t('cancel'),
+            icon: const Icon(Icons.close_rounded),
+            onPressed: _close,
           ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                children: [
-                  Center(
-                    child: AnimatedBuilder(
-                      animation: _name,
-                      builder: (_, _) =>
-                          Avatar(person: Person(name: _name.text), size: 76),
+          title: Text(
+            _creating ? l.t('newContact') : l.t('edit'),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              tooltip: _starred ? l.t('unstar') : l.t('star'),
+              onPressed: () => setState(() => _starred = !_starred),
+              icon: Icon(
+                _starred ? Icons.star_rounded : Icons.star_outline_rounded,
+                color: _starred ? p.accent : p.ink,
+              ),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  children: [
+                    Center(
+                      child: AnimatedBuilder(
+                        animation: _name,
+                        builder: (_, _) =>
+                            Avatar(person: Person(name: _name.text), size: 76),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _Field(
-                    key: const ValueKey('editName'),
-                    controller: _name,
-                    label: l.t('name'),
-                    big: true,
-                  ),
-                  _Field(controller: _org, label: l.t('company')),
-                  _Field(controller: _job, label: l.t('jobTitle')),
-                  _label(l.t('phone'), p),
-                  for (var i = 0; i < _phones.length; i++) _phoneRow(i, l, p),
-                  _addButton(
-                    l.t('addNumber'),
-                    p,
-                    () => setState(() => _phones.add(_PhoneRow('', 'mobile'))),
-                  ),
-                  _label(l.t('email'), p),
-                  for (var i = 0; i < _emails.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _Box(
-                              child: Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: _input(
-                                  _emails[i],
-                                  p,
-                                  keyboard: TextInputType.emailAddress,
+                    const SizedBox(height: 20),
+                    _Field(
+                      key: const ValueKey('editName'),
+                      controller: _name,
+                      label: l.t('name'),
+                      big: true,
+                    ),
+                    _Field(controller: _org, label: l.t('company')),
+                    _Field(controller: _job, label: l.t('jobTitle')),
+                    _label(l.t('phone'), p),
+                    for (var i = 0; i < _phones.length; i++) _phoneRow(i, l, p),
+                    _addButton(
+                      l.t('addNumber'),
+                      p,
+                      () =>
+                          setState(() => _phones.add(_PhoneRow('', 'mobile'))),
+                    ),
+                    _label(l.t('email'), p),
+                    for (var i = 0; i < _emails.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _Box(
+                                child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: _input(
+                                    _emails[i],
+                                    p,
+                                    keyboard: TextInputType.emailAddress,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          if (_emails.length > 1)
-                            IconButton(
-                              tooltip: l.t('remove'),
-                              onPressed: () =>
-                                  setState(() => _emails.removeAt(i).dispose()),
-                              icon: Icon(
-                                Icons.remove_circle_outline_rounded,
-                                color: p.inkFaint,
+                            if (_emails.length > 1)
+                              IconButton(
+                                tooltip: l.t('remove'),
+                                onPressed: () => setState(
+                                  () => _emails.removeAt(i).dispose(),
+                                ),
+                                icon: Icon(
+                                  Icons.remove_circle_outline_rounded,
+                                  color: p.inkFaint,
+                                ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
+                      ),
+                    _addButton(
+                      l.t('addEmail'),
+                      p,
+                      () =>
+                          setState(() => _emails.add(TextEditingController())),
+                    ),
+                    _label(l.t('aliases'), p),
+                    AnimatedBuilder(
+                      animation: _name,
+                      builder: (_, _) => AliasEditor(
+                        key: _aliasKey,
+                        aliases: _aliases,
+                        name: _name.text,
+                        onChanged: (v) => setState(() => _aliases = v),
                       ),
                     ),
-                  _addButton(
-                    l.t('addEmail'),
-                    p,
-                    () => setState(() => _emails.add(TextEditingController())),
-                  ),
-                  _label(l.t('aliases'), p),
-                  AnimatedBuilder(
-                    animation: _name,
-                    builder: (_, _) => AliasEditor(
-                      key: _aliasKey,
-                      aliases: _aliases,
-                      name: _name.text,
-                      onChanged: (v) => setState(() => _aliases = v),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _Field(controller: _note, label: l.t('note'), lines: 3),
-                  _label(l.t('groups'), p),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final g in allGroups)
-                        Pill(
-                          label: g,
-                          active: _groups.contains(g),
-                          onTap: () => setState(
-                            () => _groups.contains(g)
-                                ? _groups.remove(g)
-                                : _groups.add(g),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  _Box(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _input(
-                            _group,
-                            p,
-                            hint: l.t('newGroup'),
-                            onSubmit: _addGroup,
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: l.t('addGroup'),
-                          onPressed: () => _addGroup(_group.text),
-                          icon: Icon(Icons.add_rounded, color: p.accent),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (_creating && accounts.length > 1) ...[
-                    _label(l.t('saveTo'), p),
+                    const SizedBox(height: 20),
+                    _Field(controller: _note, label: l.t('note'), lines: 3),
+                    _label(l.t('groups'), p),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        for (final k in accounts)
+                        for (final g in allGroups)
                           Pill(
-                            label: accountLabel(l, book.accountFor(k)),
-                            icon: Icons.account_circle_outlined,
-                            active: _accountKey == k,
-                            onTap: () => setState(() => _accountKey = k),
+                            label: g,
+                            active: _groups.contains(g),
+                            onTap: () => setState(
+                              () => _groups.contains(g)
+                                  ? _groups.remove(g)
+                                  : _groups.add(g),
+                            ),
                           ),
                       ],
                     ),
-                  ],
-                  if (!_creating)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 18),
-                      child: Text(
-                        '${l.t('savedIn')}: ${accountLabel(l, _base.account)}',
-                        style: AppText.label(p),
+                    const SizedBox(height: 10),
+                    _Box(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _input(
+                              _group,
+                              p,
+                              hint: l.t('newGroup'),
+                              onSubmit: _addGroup,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: l.t('addGroup'),
+                            onPressed: () => _addGroup(_group.text),
+                            icon: Icon(Icons.add_rounded, color: p.accent),
+                          ),
+                        ],
                       ),
                     ),
-                ],
+                    if (_creating && accounts.length > 1) ...[
+                      _label(l.t('saveTo'), p),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final k in accounts)
+                            Pill(
+                              label: accountLabel(l, book.accountFor(k)),
+                              icon: Icons.account_circle_outlined,
+                              active: _accountKey == k,
+                              onTap: () => setState(() => _accountKey = k),
+                            ),
+                        ],
+                      ),
+                    ],
+                    if (!_creating)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 18),
+                        child: Text(
+                          '${l.t('savedIn')}: ${accountLabel(l, _base.account)}',
+                          style: AppText.label(p),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              child: PrimaryButton(
-                key: const ValueKey('editSave'),
-                label: _creating ? l.t('createContact') : l.t('saveChanges'),
-                icon: Icons.check_rounded,
-                busy: _saving,
-                onTap: book.busy ? null : _save,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: PrimaryButton(
+                  key: const ValueKey('editSave'),
+                  label: _creating ? l.t('createContact') : l.t('saveChanges'),
+                  icon: Icons.check_rounded,
+                  busy: _saving,
+                  onTap: book.busy ? null : _save,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

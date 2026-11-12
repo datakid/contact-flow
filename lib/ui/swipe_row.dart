@@ -241,13 +241,14 @@ class _SwipeRowState extends State<SwipeRow>
         CustomSemanticsAction(label: widget.end!.label): widget.end!.onCommit,
     };
     final body = Semantics(
-      customSemanticsActions: actions,
+      customSemanticsActions: actions.isEmpty ? null : actions,
       child: AnimatedBuilder(
         animation: _c,
         child: RepaintBoundary(child: widget.child),
         builder: (context, child) {
           final dx = _c.value.abs() < 0.5 ? 0.0 : _c.value;
           return Stack(
+            fit: StackFit.passthrough,
             children: [
               Positioned.fill(
                 child: dx == 0 ? const SizedBox.shrink() : _reveal(dx),
