@@ -6,6 +6,7 @@ import 'package:contact_flow/main.dart';
 import 'package:contact_flow/state/app_state.dart';
 import 'package:contact_flow/tags/tag_store.dart';
 import 'package:contact_flow/ui/calls_screen.dart';
+import 'package:contact_flow/ui/swipe_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -144,7 +145,7 @@ void main() {
 
     final row = find.ancestor(
       of: find.textContaining('+966511100003'),
-      matching: find.byType(Dismissible),
+      matching: find.byType(SwipeRow),
     );
     await t.drag(row, const Offset(500, 0));
     await t.pumpAndSettle();

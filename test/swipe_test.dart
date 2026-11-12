@@ -2,6 +2,7 @@ import 'package:contact_flow/main.dart';
 import 'package:contact_flow/state/app_state.dart';
 import 'package:contact_flow/tags/tag_book.dart';
 import 'package:contact_flow/tags/tag_store.dart';
+import 'package:contact_flow/ui/person_row.dart';
 import 'package:contact_flow/ui/swipe_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,9 +62,83 @@ void main() {
     expect(rig.launcher.opened.map((u) => u.scheme), ['tel', 'smsto']);
   });
 
+  testWidgets('a short drag springs back without acting', (t) async {
+    final rig = await open(t, {});
+    final start = t.getTopLeft(find.byType(PersonRow).first).dx;
+    await t.drag(find.byType(SwipeActions).first, const Offset(70, 0));
+    await t.pumpAndSettle();
+    expect(rig.launcher.opened, isEmpty);
+    expect(t.getTopLeft(find.byType(PersonRow).first).dx, start);
+  });
+
+  testWidgets('a quick flick that stops short does not act', (t) async {
+    final rig = await open(t, {});
+    await t.fling(find.byType(SwipeActions).first, const Offset(80, 0), 3000);
+    await t.pumpAndSettle();
+    await t.fling(find.byType(SwipeActions).first, const Offset(-80, 0), 3000);
+    await t.pumpAndSettle();
+    expect(rig.launcher.opened, isEmpty);
+  });
+
+  testWidgets('a mostly vertical drag never swipes the row', (t) async {
+    final rig = await open(t, {});
+    await t.drag(find.byType(SwipeActions).first, const Offset(60, 160));
+    await t.pumpAndSettle();
+    expect(rig.launcher.opened, isEmpty);
+  });
+
+  testWidgets(
+    'dragging past the distance and back before release is a cancel',
+    (t) async {
+      final rig = await open(t, {});
+      final g = await t.startGesture(
+        t.getCenter(find.byType(SwipeActions).first),
+      );
+      await g.moveBy(const Offset(220, 0));
+      await t.pump();
+      await g.moveBy(const Offset(-170, 0));
+      await t.pump();
+      await g.up();
+      await t.pumpAndSettle();
+      expect(rig.launcher.opened, isEmpty);
+    },
+  );
+
+  testWidgets('the row follows the finger and returns on release', (t) async {
+    final rig = await open(t, {});
+    final start = t.getTopLeft(find.byType(PersonRow).first).dx;
+    final g = await t.startGesture(
+      t.getCenter(find.byType(SwipeActions).first),
+    );
+    await g.moveBy(const Offset(60, 0));
+    await t.pump();
+    await g.moveBy(const Offset(40, 0));
+    await t.pump();
+    expect(
+      t.getTopLeft(find.byType(PersonRow).first).dx,
+      greaterThan(start + 40),
+    );
+    await g.up();
+    await t.pumpAndSettle();
+    expect(t.getTopLeft(find.byType(PersonRow).first).dx, start);
+    expect(rig.launcher.opened, isEmpty);
+  });
+
+  testWidgets('a drag that starts at the screen edge is left to the system', (
+    t,
+  ) async {
+    final rig = await open(t, {});
+    final y = t.getCenter(find.byType(SwipeActions).first).dy;
+    final g = await t.startGesture(Offset(6, y));
+    await g.moveBy(const Offset(300, 0));
+    await t.pump();
+    await g.up();
+    await t.pumpAndSettle();
+    expect(rig.launcher.opened, isEmpty);
+  });
+
   testWidgets('turned off, rows do not swipe', (t) async {
     final rig = await open(t, {'swipeActions': false});
-    expect(find.byType(Dismissible), findsNothing);
     await t.fling(find.text('Amelia Hart').first, const Offset(500, 0), 1500);
     await t.pumpAndSettle();
     expect(rig.launcher.opened, isEmpty);
