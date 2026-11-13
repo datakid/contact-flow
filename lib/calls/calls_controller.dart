@@ -67,6 +67,28 @@ class CallsController extends ChangeNotifier {
     }
   }
 
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  Future<void> refresh() async {
+    if (phase == CallsPhase.loading) return;
+    if (phase != CallsPhase.ready) return start();
+    try {
+      final fresh = await source.readAll();
+      if (_disposed) return;
+      _records = fresh;
+      _regroup();
+      notifyListeners();
+    } catch (_) {
+      return;
+    }
+  }
+
   Future<void> grant() async {
     try {
       if (await source.request()) {

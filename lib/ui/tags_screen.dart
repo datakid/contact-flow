@@ -56,14 +56,18 @@ class TagsScreen extends StatelessWidget {
       builder: (ctx) => SimpleDialog(
         children: [
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: 4,
+            runSpacing: 4,
             children: [
               for (final c in TagBook.palette)
                 InkWell(
                   key: ValueKey('tag-colour-$c'),
+                  customBorder: const CircleBorder(),
                   onTap: () => Navigator.pop(ctx, c),
-                  child: CircleAvatar(backgroundColor: Color(c), radius: 18),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: CircleAvatar(backgroundColor: Color(c), radius: 18),
+                  ),
                 ),
             ],
           ),
@@ -172,6 +176,7 @@ class TagsScreen extends StatelessWidget {
               ),
             )
           : ListView(
+              padding: const EdgeInsets.only(bottom: 96),
               children: [
                 for (final t in tags)
                   ListTile(

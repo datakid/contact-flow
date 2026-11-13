@@ -69,6 +69,40 @@ void main() {
     expect(h.c.shown.length, 3);
   });
 
+  test('refresh picks up new calls without a loading phase', () async {
+    final h = Harness([...calls]);
+    await h.c.start();
+    final phases = <CallsPhase>[];
+    h.c.addListener(() => phases.add(h.c.phase));
+    h.source.records.add(call('+966544444444', days: 0));
+    await h.c.refresh();
+    expect(h.c.all.length, 4);
+    expect(phases, isNotEmpty);
+    expect(phases.every((p) => p == CallsPhase.ready), isTrue);
+  });
+
+  test('refresh keeps the filter and the selection', () async {
+    final h = Harness([...calls]);
+    await h.c.start();
+    h.c.setFilter(const CallFilter(minCalls: 2));
+    final kept = h.c.shown.single.key;
+    h.c.selection.included.add(kept);
+    h.source.records.add(call('+966544444444', days: 0));
+    await h.c.refresh();
+    expect(h.c.filter.minCalls, 2);
+    expect(h.c.shown.single.key, kept);
+    expect(h.c.selection.included, contains(kept));
+  });
+
+  test('refresh re-checks permission when it was missing', () async {
+    final h = Harness(calls, granted: false);
+    await h.c.start();
+    expect(h.c.phase, CallsPhase.needPermission);
+    h.source.granted = true;
+    await h.c.refresh();
+    expect(h.c.phase, CallsPhase.ready);
+  });
+
   test('start asks for permission when it is missing', () async {
     final h = Harness(calls, granted: false);
     await h.c.start();
