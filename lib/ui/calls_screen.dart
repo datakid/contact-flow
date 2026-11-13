@@ -25,14 +25,16 @@ class CallsScreen extends StatefulWidget {
   State<CallsScreen> createState() => _CallsScreenState();
 }
 
-class _CallsScreenState extends State<CallsScreen> {
+class _CallsScreenState extends State<CallsScreen> with WidgetsBindingObserver {
   CallsController? _c;
+  bool _active = true;
   final _pattern = TextEditingController();
   final _template = TextEditingController(text: '{tag} {last4}');
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final book = context.read<PhoneBook>();
     final ignore = context.read<IgnoreBook>();
     TagBook? tags;
@@ -68,7 +70,21 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final active = TickerMode.of(context);
+    if (active && !_active) _c?.refresh();
+    _active = active;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _active) _c?.refresh();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _c?.removeListener(_rebuild);
     _c?.dispose();
     _pattern.dispose();
