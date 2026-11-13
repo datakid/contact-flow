@@ -2,8 +2,6 @@ name: build-apk
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ci/apk-on-demand]
 
 jobs:
   apk:
