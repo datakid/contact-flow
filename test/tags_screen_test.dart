@@ -61,6 +61,21 @@ void main() {
     expect(book.tags.single.name, 'Work');
   });
 
+  testWidgets('the new-tag button never covers the last tag menu', (t) async {
+    final (w, book) = await host(t);
+    for (var i = 0; i < 14; i++) {
+      await t.runAsync(() => book.create('Tag $i'));
+    }
+    await t.pumpWidget(w);
+    await t.pumpAndSettle();
+    await t.drag(find.byType(ListView), const Offset(0, -3000));
+    await t.pumpAndSettle();
+    final last = book.byName('Tag 13')!;
+    final menu = t.getRect(find.byKey(ValueKey('tag-menu-${last.id}')));
+    final fab = t.getRect(find.byKey(const ValueKey('tag-new')));
+    expect(menu.overlaps(fab), isFalse);
+  });
+
   testWidgets('rename refuses a duplicate name', (t) async {
     final (w, book) = await host(t);
     final a = await t.runAsync(() => book.create('Work'));
