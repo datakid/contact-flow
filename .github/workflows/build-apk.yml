@@ -51,7 +51,7 @@ jobs:
           flutter build web
           (cd build/web && zip -qr ../../dist/contact-flow-web.zip .)
       - run: ls -l dist
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: contact-flow-builds
           path: dist/*
