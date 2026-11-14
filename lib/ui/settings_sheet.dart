@@ -21,7 +21,7 @@ import 'ignored_sheet.dart';
 import 'tags_screen.dart';
 import 'group_tags_sheet.dart';
 
-const appVersion = '3.0.0';
+const appVersion = '3.0.1';
 
 Future<void> showSettings(BuildContext context) {
   return showModalBottomSheet(

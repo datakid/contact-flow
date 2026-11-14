@@ -1,0 +1,6 @@
+3.0.1 — steadier swipes and fixes
+• Swipe to call or message needs a deliberate drag, with a buzz when armed
+• Tabs keep your scroll position and search
+• Calls refreshes when you return to it
+• The contact editor asks before discarding changes
+• Tags and selection bar fixes

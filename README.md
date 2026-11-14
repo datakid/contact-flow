@@ -12,6 +12,12 @@ Batch import and export phone contacts in every common format, with fuzzy search
 
 ---
 
+## What's new in 3.0.1
+
+- **Steadier swipes** — a deliberate drag is needed to call or message, quick flicks no longer fire, flicking back cancels, and a small vibration tells you the action is armed. Vertical scrolling never starts a swipe, and swipes from the screen edge are left to the system back gesture
+- **Tabs keep your place** — scroll position, search and selection stay as you left them, and Calls refreshes when you come back to it
+- **Fixes** — the contact editor asks before discarding changes, the selection bar no longer blocks scrolling, and the Tags list and colour choices are easier to use
+
 ## What's new in 3.0.0
 
 - **Two builds** — Lite never asks for the call log. Full adds a Calls tab that groups the numbers you called but never saved, with filters (2+ calls, talked 30 s+, last 30 days, missed only, outgoing only), a live "selected · excluded" counter, and Save, Tag only and Never suggest actions
